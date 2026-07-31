@@ -2,7 +2,22 @@
 
 Offline-first personal finance app (Android-first). Local SQLite storage, CSV export, and JSON backups — no account, no cloud, no paywall.
 
-> Status: design docs only. Implementation follows [`docs/HLD.md`](docs/HLD.md).
+> Status: **P0 shell running** — tabs, theme, SQLite schema, settings store. Feature slices continue per [`docs/HLD.md`](docs/HLD.md).
+
+## Quick start
+
+```bash
+npm install
+npm start
+```
+
+Then press `a` for Android emulator/device, `i` for iOS simulator, or scan the QR code with Expo Go.
+
+```bash
+npm run android   # Expo + Android (primary target)
+```
+
+Web is not a v1 target (SQLite WASM bundling); use a device or emulator.
 
 ## Docs
 
@@ -23,7 +38,7 @@ Use feature branches and GitHub PRs — do not push ordinary work straight to `m
 
 By participating, you agree to the [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 
-## Stack (planned)
+## Stack
 
 Expo · React Native · TypeScript · expo-router · expo-sqlite · Zustand
 

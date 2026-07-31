@@ -48,3 +48,29 @@ coverage/
 
 # Metro
 .metro-health-check*
+
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+
+# Expo
+
+# Native
+.kotlin/
+*.key
+
+# debug
+
+# macOS
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+
+example
+
+# generated native folders
+/ios
+/android
