@@ -56,16 +56,24 @@ type Sheet =
   | "decimals"
   | null;
 
+function reloadAppSafely() {
+  if (Platform.OS !== "web") return;
+  // Defer past React commit so expo-router doesn't throw onUnhandledAction.
+  window.setTimeout(() => {
+    window.location.reload();
+  }, 0);
+}
+
 export default function PreferencesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const currencySign = useSettingsStore((s) => s.currencySign);
-  const currencyPosition = useSettingsStore((s) => s.currencyPosition);
-  const decimalPlaces = useSettingsStore((s) => s.decimalPlaces);
-  const notesInList = useSettingsStore((s) => s.notesInList);
-  const themeId = useSettingsStore((s) => s.themeId);
-  const uiMode = useSettingsStore((s) => s.uiMode);
+  const storedSign = useSettingsStore((s) => s.currencySign);
+  const storedPosition = useSettingsStore((s) => s.currencyPosition);
+  const storedDecimals = useSettingsStore((s) => s.decimalPlaces);
+  const storedNotes = useSettingsStore((s) => s.notesInList);
+  const storedTheme = useSettingsStore((s) => s.themeId);
+  const storedUi = useSettingsStore((s) => s.uiMode);
   const passcodeEnabled = useSettingsStore((s) => s.passcodeEnabled);
   const remindEveryday = useSettingsStore((s) => s.remindEveryday);
   const crashStats = useSettingsStore((s) => s.crashStats);
@@ -74,10 +82,51 @@ export default function PreferencesScreen() {
   const persistRemind = useSettingsStore((s) => s.persistRemind);
   const persistCrashStats = useSettingsStore((s) => s.persistCrashStats);
 
+  const [themeId, setThemeId] = useState<ThemeId>(storedTheme);
+  const [uiMode, setUiMode] = useState<UiMode>(storedUi);
+  const [currencySign, setCurrencySign] = useState(storedSign);
+  const [currencyPosition, setCurrencyPosition] = useState(storedPosition);
+  const [decimalPlaces, setDecimalPlaces] = useState(storedDecimals);
+  const [notesInList, setNotesInList] = useState(storedNotes);
+
   const [sheet, setSheet] = useState<Sheet>(null);
   const [passcodeSetup, setPasscodeSetup] = useState(false);
   const [disablePasscode, setDisablePasscode] = useState(false);
-  const [savedNote, setSavedNote] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+
+  const onSave = useCallback(async () => {
+    setBusy(true);
+    setStatus(null);
+    try {
+      const { themeChanged } = await persistAppearance({
+        currencySign: currencySign || "₹",
+        currencyPosition,
+        decimalPlaces: Math.max(0, Math.min(4, decimalPlaces)),
+        notesInList,
+        themeId,
+        uiMode,
+      });
+      if (themeChanged) {
+        setStatus("Saved — reloading theme…");
+        reloadAppSafely();
+      } else {
+        setStatus("Saved");
+      }
+    } catch (e) {
+      setStatus(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setBusy(false);
+    }
+  }, [
+    currencyPosition,
+    currencySign,
+    decimalPlaces,
+    notesInList,
+    persistAppearance,
+    themeId,
+    uiMode,
+  ]);
 
   useKeydown(
     true,
@@ -86,39 +135,18 @@ export default function PreferencesScreen() {
         if (event.key === "Escape" && !sheet && !passcodeSetup && !disablePasscode) {
           router.back();
         }
+        if (
+          (event.key === "s" || event.key === "S") &&
+          (event.metaKey || event.ctrlKey) &&
+          !sheet
+        ) {
+          event.preventDefault();
+          void onSave();
+        }
       },
-      [disablePasscode, passcodeSetup, router, sheet],
+      [disablePasscode, onSave, passcodeSetup, router, sheet],
     ),
-  );
-
-  async function saveAppearance(patch: {
-    currencySign?: string;
-    currencyPosition?: "start" | "end";
-    decimalPlaces?: number;
-    notesInList?: boolean;
-    themeId?: ThemeId;
-    uiMode?: UiMode;
-  }) {
-    const next = {
-      currencySign: patch.currencySign ?? currencySign,
-      currencyPosition: patch.currencyPosition ?? currencyPosition,
-      decimalPlaces: patch.decimalPlaces ?? decimalPlaces,
-      notesInList: patch.notesInList ?? notesInList,
-      themeId: patch.themeId ?? themeId,
-      uiMode: patch.uiMode ?? uiMode,
-    };
-    const { themeChanged } = await persistAppearance(next);
-    if (themeChanged) {
-      setSavedNote("Theme applied — reloading…");
-      if (Platform.OS === "web") {
-        window.setTimeout(() => window.location.reload(), 350);
-      } else {
-        setSavedNote("Theme saved. Restart the app to refresh all screens.");
-      }
-    } else {
-      setSavedNote("Saved");
-    }
-  }
+  )
 
   const version =
     Constants.expoConfig?.version ??
@@ -154,7 +182,19 @@ export default function PreferencesScreen() {
           <Text style={styles.back}>✕ CLOSE</Text>
         </Pressable>
         <Text style={styles.title}>Preferences</Text>
-        <View style={{ width: 64 }} />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Save preferences"
+          onPress={() => void onSave()}
+          hitSlop={10}
+          disabled={busy}
+          style={webClickable}
+          {...webFocusableProps}
+        >
+          <Text style={[styles.save, busy && styles.saveBusy]}>
+            {busy ? "…" : "SAVE"}
+          </Text>
+        </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -188,7 +228,7 @@ export default function PreferencesScreen() {
           label="Notes in record list"
           description="Preview notes where space allows."
           switchValue={notesInList}
-          onSwitch={(v) => void saveAppearance({ notesInList: v })}
+          onSwitch={setNotesInList}
         />
 
         <Text style={[styles.section, styles.sectionSpaced]}>Security</Text>
@@ -212,13 +252,13 @@ export default function PreferencesScreen() {
               if (v) {
                 const ok = await ensureRemindPermission();
                 if (!ok && Platform.OS === "web") {
-                  setSavedNote(
+                  setStatus(
                     "Notification permission blocked — enable it in site settings.",
                   );
                 }
               }
               await persistRemind(v);
-              setSavedNote(v ? "Daily remind on" : "Daily remind off");
+              setStatus(v ? "Daily remind on" : "Daily remind off");
             })();
           }}
         />
@@ -234,7 +274,7 @@ export default function PreferencesScreen() {
           switchValue={crashStats}
           onSwitch={(v) => {
             void persistCrashStats(v).then(() =>
-              setSavedNote(v ? "Stats preference saved (no data sent yet)" : "Stats off"),
+              setStatus(v ? "Stats preference saved (no data sent yet)" : "Stats off"),
             );
           }}
         />
@@ -242,7 +282,7 @@ export default function PreferencesScreen() {
           label="Privacy"
           description="All ledger data stays on this device. MIT licensed."
           onPress={() =>
-            setSavedNote("Privacy: local-only storage · no accounts · no cloud sync in v1")
+            setStatus("Privacy: local-only storage · no accounts · no cloud sync in v1")
           }
         />
         <PreferenceRow
@@ -250,7 +290,11 @@ export default function PreferencesScreen() {
           description="Offline personal finance · nandgatelabs"
         />
 
-        {savedNote ? <Text style={styles.saved}>{savedNote}</Text> : null}
+        {status ? <Text style={styles.status}>{status}</Text> : null}
+        <Text style={styles.hint}>
+          Change Appearance options, then press SAVE. Theme / UI mode reloads the app
+          once after save.
+        </Text>
       </ScrollView>
 
       <ChoiceSheet
@@ -258,7 +302,7 @@ export default function PreferencesScreen() {
         title="Theme"
         options={THEME_OPTIONS.map((t) => ({ id: t.id, label: t.label }))}
         selected={themeId}
-        onSelect={(id) => void saveAppearance({ themeId: id })}
+        onSelect={setThemeId}
         onClose={() => setSheet(null)}
       />
       <ChoiceSheet
@@ -266,7 +310,7 @@ export default function PreferencesScreen() {
         title="UI mode"
         options={UI_MODE_OPTIONS.map((t) => ({ id: t.id, label: t.label }))}
         selected={uiMode}
-        onSelect={(id) => void saveAppearance({ uiMode: id })}
+        onSelect={setUiMode}
         onClose={() => setSheet(null)}
       />
       <ChoiceSheet
@@ -280,7 +324,7 @@ export default function PreferencesScreen() {
         selected={
           CURRENCY_OPTIONS.some((c) => c.id === currencySign) ? currencySign : "₹"
         }
-        onSelect={(id) => void saveAppearance({ currencySign: id })}
+        onSelect={setCurrencySign}
         onClose={() => setSheet(null)}
       />
       <ChoiceSheet
@@ -288,7 +332,7 @@ export default function PreferencesScreen() {
         title="Currency position"
         options={POSITION_OPTIONS}
         selected={currencyPosition}
-        onSelect={(id) => void saveAppearance({ currencyPosition: id })}
+        onSelect={setCurrencyPosition}
         onClose={() => setSheet(null)}
       />
       <ChoiceSheet
@@ -296,9 +340,7 @@ export default function PreferencesScreen() {
         title="Decimal places"
         options={DECIMAL_OPTIONS}
         selected={String(decimalPlaces)}
-        onSelect={(id) =>
-          void saveAppearance({ decimalPlaces: Math.max(0, Math.min(4, Number(id))) })
-        }
+        onSelect={(id) => setDecimalPlaces(Math.max(0, Math.min(4, Number(id))))}
         onClose={() => setSheet(null)}
       />
 
@@ -308,7 +350,7 @@ export default function PreferencesScreen() {
         onEnabled={(salt, hash) => {
           setPasscodeSetup(false);
           void persistPasscode({ enabled: true, salt, hash }).then(() =>
-            setSavedNote("Passcode enabled"),
+            setStatus("Passcode enabled"),
           );
         }}
       />
@@ -323,7 +365,7 @@ export default function PreferencesScreen() {
         onConfirm={() => {
           setDisablePasscode(false);
           void persistPasscode({ enabled: false, salt: "", hash: "" }).then(() =>
-            setSavedNote("Passcode disabled"),
+            setStatus("Passcode disabled"),
           );
         }}
       />
@@ -344,6 +386,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   back: { color: colors.accent, fontWeight: "600", fontSize: 13, width: 64 },
+  save: {
+    color: colors.accent,
+    fontWeight: "700",
+    fontSize: 13,
+    width: 64,
+    textAlign: "right",
+  },
+  saveBusy: { opacity: 0.5 },
   title: { color: colors.accent, fontSize: 17, fontWeight: "700" },
   scroll: {
     paddingHorizontal: 20,
@@ -357,11 +407,17 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   sectionSpaced: { marginTop: 28 },
-  saved: {
+  status: {
     color: colors.income,
     marginTop: 20,
     fontWeight: "600",
     fontSize: 13,
     lineHeight: 18,
+  },
+  hint: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 12,
   },
 });

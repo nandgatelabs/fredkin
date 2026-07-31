@@ -54,9 +54,9 @@ export function maybeFireDailyRemind(enabled: boolean) {
 }
 
 export function openSystemNotificationSettings() {
-  if (Platform.OS === "web") {
-    window.alert(
-      "Use your browser’s site settings to manage notification permission for this app.",
-    );
-  }
+  if (Platform.OS !== "web") return;
+  // Avoid window.alert — it can fight focus with React Native Web modals.
+  console.info(
+    "[money-money] Manage notification permission in the browser’s site settings for this origin.",
+  );
 }
