@@ -1,23 +1,51 @@
-export const colors = {
-  background: "#24231F",
-  surface: "#2F2E29",
-  surfaceElevated: "#3A3831",
-  border: "#5C5748",
-  borderSubtle: "#3F3D34",
-  accent: "#E8D48A",
-  accentMuted: "#B0A88E",
-  accentPressed: "#C9B56E",
-  onAccent: "#1F1E1A",
-  text: "#F5EDD6",
-  textSecondary: "#B0A88E",
-  expense: "#E89A84",
-  income: "#8FCF92",
-  transfer: "#74BBEF",
-  danger: "#E87B7B",
-  dangerMuted: "rgba(232, 123, 123, 0.16)",
-  tabInactive: "#7A7463",
-  fab: "#3A3831",
-  overlay: "rgba(10, 9, 7, 0.72)",
-  focusRing: "rgba(232, 212, 138, 0.45)",
-  inputBg: "#1C1B18",
-} as const;
+import { Platform } from "react-native";
+
+import {
+  resolvePalette,
+  type ColorTokens,
+  type ThemeId,
+  type UiMode,
+} from "./palettes";
+
+const MIRROR_KEY = "money-money.themeMirror";
+
+type Mirror = { themeId: ThemeId; uiMode: UiMode };
+
+function readMirror(): Mirror {
+  if (Platform.OS === "web") {
+    try {
+      const raw = window.localStorage.getItem(MIRROR_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Mirror;
+        if (parsed?.themeId && parsed?.uiMode) return parsed;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return { themeId: "original", uiMode: "dark" };
+}
+
+function writeMirror(themeId: ThemeId, uiMode: UiMode) {
+  if (Platform.OS !== "web") return;
+  try {
+    window.localStorage.setItem(MIRROR_KEY, JSON.stringify({ themeId, uiMode }));
+  } catch {
+    /* ignore */
+  }
+}
+
+const boot = readMirror();
+
+/** Active palette. Seeded sync from localStorage on web so StyleSheet.create sees the right tokens after reload. */
+export const colors: ColorTokens = { ...resolvePalette(boot.themeId, boot.uiMode) };
+
+export function applyPalette(themeId: ThemeId, uiMode: UiMode) {
+  const next = resolvePalette(themeId, uiMode);
+  (Object.keys(next) as (keyof ColorTokens)[]).forEach((key) => {
+    colors[key] = next[key];
+  });
+  writeMirror(themeId, uiMode);
+}
+
+export type { ColorTokens, ThemeId, UiMode };

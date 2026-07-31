@@ -308,7 +308,7 @@ docs/              # HLD + BLUEPRINT (this folder)
 | P4 Search + CSV import/export | Search, CSV import/export incl. opening balances (done) |
 | P5 Analysis | Overview, flow, calendar, account bars (done) |
 | P6 Budgets + portability + prefs | Budgets, drawer, backup/wipe, prefs (done) |
-| P7 Preferences polish | Themes / UI mode, passcode lock, daily remind (next) |
+| P7 Preferences polish | Themes / UI mode, passcode lock, daily remind (done) |
 
 ---
 
