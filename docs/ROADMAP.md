@@ -9,24 +9,31 @@ Living plan after **v1.0.0**. Priorities change when a maintainer schedules work
 - Preferences: themes, passcode, web daily remind
 - Ubuntu desktop install (`desktop:install-user`)
 - Docs + open-source baseline (MIT)
+- Versioning / changelog / release process
 
 ## Near term (candidates)
 
-Pull from deferred issues when scheduled:
-
-| Theme | Issues / notes |
-|-------|----------------|
-| Export polish | [#19](https://github.com/nandgatelabs/money-money/issues/19) CSV date range |
-| Backup UX | [#20](https://github.com/nandgatelabs/money-money/issues/20) backup directory + restore list |
-| Help / About | [#21](https://github.com/nandgatelabs/money-money/issues/21), [#22](https://github.com/nandgatelabs/money-money/issues/22) |
-| Native remind | [#23](https://github.com/nandgatelabs/money-money/issues/23) |
-| Desktop distribution | Attach AppImage/`.deb` to GitHub Releases; Windows/macOS shells later |
+| Theme | Issue |
+|-------|--------|
+| Publish GitHub Release v1.0.0 | [#33](https://github.com/nandgatelabs/money-money/issues/33) |
+| Attach AppImage / `.deb` to Releases | [#27](https://github.com/nandgatelabs/money-money/issues/27) |
+| CSV export date range | [#19](https://github.com/nandgatelabs/money-money/issues/19) |
+| Backup directory + restore list | [#20](https://github.com/nandgatelabs/money-money/issues/20) |
+| Help / Feedback drawer | [#21](https://github.com/nandgatelabs/money-money/issues/21) |
+| About privacy + license links | [#22](https://github.com/nandgatelabs/money-money/issues/22) |
+| Native daily remind | [#23](https://github.com/nandgatelabs/money-money/issues/23) |
 
 ## Later
 
-- Android (and optional iOS) store / EAS packaging
-- Public **web hosting** (parked; needs COOP/COEP + save-folder story — [#16](https://github.com/nandgatelabs/money-money/issues/16))
-- Older deferred bugs (#12–#15) only if explicitly revived
+| Theme | Issue |
+|-------|--------|
+| Windows desktop shell | [#28](https://github.com/nandgatelabs/money-money/issues/28) |
+| macOS desktop shell | [#29](https://github.com/nandgatelabs/money-money/issues/29) |
+| Android EAS / store packaging | [#30](https://github.com/nandgatelabs/money-money/issues/30) |
+| iOS EAS / store packaging (optional) | [#31](https://github.com/nandgatelabs/money-money/issues/31) |
+| Public web hosting (COOP/COEP) | [#32](https://github.com/nandgatelabs/money-money/issues/32) |
+| Web save-location picker | [#16](https://github.com/nandgatelabs/money-money/issues/16) |
+| Older deferred bugs | [#12](https://github.com/nandgatelabs/money-money/issues/12), [#13](https://github.com/nandgatelabs/money-money/issues/13), [#15](https://github.com/nandgatelabs/money-money/issues/15) — only if explicitly revived |
 
 ## Non-goals (still)
 
