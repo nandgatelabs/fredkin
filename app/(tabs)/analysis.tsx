@@ -247,12 +247,18 @@ export default function AnalysisScreen() {
               <AccountBars
                 accounts={accounts}
                 selectedId={selectedAccount}
-                onSelect={setSelectedAccount}
+                onSelect={(id) => {
+                  if (id) router.push(`/account/${id}` as never);
+                  else setSelectedAccount(null);
+                }}
               />
               <AccountPeriodList
                 accounts={accounts}
                 selectedId={selectedAccount}
-                onSelect={setSelectedAccount}
+                onSelect={(id) => {
+                  if (id) router.push(`/account/${id}` as never);
+                  else setSelectedAccount(null);
+                }}
               />
             </>
           )}

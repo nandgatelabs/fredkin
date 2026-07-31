@@ -99,7 +99,9 @@ export function AccountBars({
               return (
                 <Pressable
                   key={a.accountId}
-                  onPress={() => onSelect?.(active ? null : a.accountId)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${a.name} details`}
+                  onPress={() => onSelect?.(a.accountId)}
                   style={[styles.group, webClickable, active && styles.groupActive]}
                 >
                   <View style={[styles.bars, { height: CHART_H }]}>
