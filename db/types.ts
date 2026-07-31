@@ -24,6 +24,17 @@ export type Category = {
   archived: number;
 };
 
+export type MoneyRecord = {
+  id: string;
+  type: RecordType;
+  amount: number;
+  category_id: string | null;
+  account_id: string;
+  to_account_id: string | null;
+  note: string;
+  occurred_at: string;
+};
+
 export type Totals = {
   expenseSoFar: number;
   incomeSoFar: number;

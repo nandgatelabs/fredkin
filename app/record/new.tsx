@@ -1,29 +1,390 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { AccountPickerModal } from "@/components/AccountPickerModal";
+import { CalculatorKeypad } from "@/components/CalculatorKeypad";
+import { CategoryEditorModal } from "@/components/CategoryEditorModal";
+import { CategoryPickerModal } from "@/components/CategoryPickerModal";
+import { DatePickerModal, TimePickerModal } from "@/components/DateTimePickers";
+import { listAccounts } from "@/db/accounts";
+import { createCategory, listCategories } from "@/db/categories";
+import { createRecord } from "@/db/records";
+import type { AccountWithBalance, Category, RecordType } from "@/db/types";
+import {
+  appendDecimal,
+  appendDigit,
+  appendOperator,
+  backspace,
+  evaluateExpression,
+  formatResult,
+  resolveAmount,
+} from "@/lib/calculator";
+import {
+  formatComposerDate,
+  formatComposerTime,
+  toIsoLocal,
+} from "@/lib/datetime";
+import { accountIcon, categoryColor, categoryIcon } from "@/lib/icons";
 import { colors } from "@/theme";
+
+const TYPES: RecordType[] = ["income", "expense", "transfer"];
 
 export default function NewRecordScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  const [type, setType] = useState<RecordType>("expense");
+  const [accounts, setAccounts] = useState<AccountWithBalance[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [account, setAccount] = useState<AccountWithBalance | null>(null);
+  const [toAccount, setToAccount] = useState<AccountWithBalance | null>(null);
+  const [category, setCategory] = useState<Category | null>(null);
+  const [note, setNote] = useState("");
+  const [expression, setExpression] = useState("0");
+  const [occurredAt, setOccurredAt] = useState(() => new Date());
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [accountPicker, setAccountPicker] = useState<"from" | "to" | null>(null);
+  const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
+  const [categoryEditorOpen, setCategoryEditorOpen] = useState(false);
+  const [dateOpen, setDateOpen] = useState(false);
+  const [timeOpen, setTimeOpen] = useState(false);
+
+  const categoryType = type === "income" ? "income" : "expense";
+
+  const reloadMeta = useCallback(async () => {
+    const [accs, cats] = await Promise.all([
+      listAccounts(),
+      type === "transfer" ? Promise.resolve([] as Category[]) : listCategories(categoryType),
+    ]);
+    setAccounts(accs);
+    setCategories(cats);
+    setAccount((prev) => {
+      if (prev && accs.some((a) => a.id === prev.id)) return prev;
+      return accs[0] ?? null;
+    });
+    setToAccount((prev) => {
+      if (prev && accs.some((a) => a.id === prev.id)) return prev;
+      return accs.length > 1 ? accs[1] : null;
+    });
+    setCategory((prev) => {
+      if (type === "transfer") return null;
+      if (prev && cats.some((c) => c.id === prev.id)) return prev;
+      return cats[0] ?? null;
+    });
+  }, [categoryType, type]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    reloadMeta()
+      .catch((e) => {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadMeta]);
+
+  const filteredCategories = useMemo(
+    () => (type === "transfer" ? [] : categories),
+    [categories, type],
+  );
+
+  function handleTypeChange(next: RecordType) {
+    setType(next);
+    setCategory(null);
+    setError(null);
+  }
+
+  async function handleSave() {
+    const amount = resolveAmount(expression);
+    if (amount == null || amount <= 0) {
+      setError("Enter an amount greater than 0");
+      return;
+    }
+    if (!account) {
+      setError("Select an account");
+      return;
+    }
+    if (type === "transfer") {
+      if (!toAccount) {
+        setError("Select a destination account");
+        return;
+      }
+      if (toAccount.id === account.id) {
+        setError("From and To accounts must be different");
+        return;
+      }
+    } else if (!category) {
+      setError("Select a category");
+      return;
+    }
+
+    try {
+      setBusy(true);
+      setError(null);
+      await createRecord({
+        type,
+        amount,
+        account_id: account.id,
+        to_account_id: type === "transfer" ? toAccount!.id : null,
+        category_id: type === "transfer" ? null : category!.id,
+        note,
+        occurred_at: toIsoLocal(occurredAt),
+      });
+      router.back();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Save failed");
+      setBusy(false);
+    }
+  }
+
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + 8 }]}>
+    <View style={[styles.screen, { paddingTop: insets.top + 8, paddingBottom: insets.bottom }]}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={10}>
+        <Pressable onPress={() => router.back()} hitSlop={10} disabled={busy}>
           <Text style={styles.action}>✕ CANCEL</Text>
         </Pressable>
-        <Pressable onPress={() => router.back()} hitSlop={10}>
-          <Text style={styles.action}>✓ SAVE</Text>
+        <Pressable onPress={() => void handleSave()} hitSlop={10} disabled={busy}>
+          <Text style={[styles.action, busy && styles.actionDisabled]}>✓ SAVE</Text>
         </Pressable>
       </View>
-      <View style={styles.body}>
-        <Text style={styles.title}>Add record</Text>
-        <Text style={styles.subtitle}>
-          Composer with calculator keypad ships in P2. Shell navigation is wired.
-        </Text>
+
+      <View style={styles.typeRow}>
+        {TYPES.map((t, i) => {
+          const selected = type === t;
+          return (
+            <View key={t} style={styles.typeCell}>
+              {i > 0 ? <Text style={styles.typeDivider}>|</Text> : null}
+              <Pressable style={styles.typeBtn} onPress={() => handleTypeChange(t)}>
+                {selected ? (
+                  <Ionicons name="checkmark-circle" size={16} color={colors.accent} />
+                ) : (
+                  <View style={styles.typeSpacer} />
+                )}
+                <Text style={[styles.typeLabel, selected && styles.typeLabelOn]}>
+                  {t.toUpperCase()}
+                </Text>
+              </Pressable>
+            </View>
+          );
+        })}
       </View>
+
+      {loading ? (
+        <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
+      ) : (
+        <>
+          <View style={styles.pickRow}>
+            <PickerField
+              label={type === "transfer" ? "From" : "Account"}
+              onPress={() => setAccountPicker("from")}
+            >
+              {account ? (
+                <>
+                  <Ionicons
+                    name={accountIcon(account.icon_key)}
+                    size={18}
+                    color={colors.accent}
+                  />
+                  <Text style={styles.pickValue} numberOfLines={1}>
+                    {account.name}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Ionicons name="wallet-outline" size={18} color={colors.accentMuted} />
+                  <Text style={styles.pickPlaceholder}>Account</Text>
+                </>
+              )}
+            </PickerField>
+
+            {type === "transfer" ? (
+              <PickerField label="To" onPress={() => setAccountPicker("to")}>
+                {toAccount ? (
+                  <>
+                    <Ionicons
+                      name={accountIcon(toAccount.icon_key)}
+                      size={18}
+                      color={colors.accent}
+                    />
+                    <Text style={styles.pickValue} numberOfLines={1}>
+                      {toAccount.name}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="wallet-outline" size={18} color={colors.accentMuted} />
+                    <Text style={styles.pickPlaceholder}>Account</Text>
+                  </>
+                )}
+              </PickerField>
+            ) : (
+              <PickerField label="Category" onPress={() => setCategoryPickerOpen(true)}>
+                {category ? (
+                  <>
+                    <View
+                      style={[
+                        styles.catDot,
+                        {
+                          backgroundColor:
+                            category.color ?? categoryColor(category.icon_key),
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        name={categoryIcon(category.icon_key)}
+                        size={12}
+                        color="#fff"
+                      />
+                    </View>
+                    <Text style={styles.pickValue} numberOfLines={1}>
+                      {category.name}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="pricetag-outline" size={18} color={colors.accentMuted} />
+                    <Text style={styles.pickPlaceholder}>Category</Text>
+                  </>
+                )}
+              </PickerField>
+            )}
+          </View>
+
+          <TextInput
+            style={styles.notes}
+            placeholder="Add notes"
+            placeholderTextColor={colors.textSecondary}
+            value={note}
+            onChangeText={setNote}
+            multiline
+          />
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <View style={styles.keypadGrow}>
+            <CalculatorKeypad
+              expression={expression}
+              onDigit={(d) => setExpression((e) => appendDigit(e, d))}
+              onDecimal={() => setExpression((e) => appendDecimal(e))}
+              onOperator={(op) => setExpression((e) => appendOperator(e, op))}
+              onBackspace={() => setExpression((e) => backspace(e))}
+              onEquals={() =>
+                setExpression((e) => {
+                  const v = evaluateExpression(e);
+                  return v == null ? "Error" : formatResult(v);
+                })
+              }
+            />
+          </View>
+
+          <View style={styles.footer}>
+            <Pressable onPress={() => setDateOpen(true)} style={styles.footerBtn}>
+              <Text style={styles.footerText}>{formatComposerDate(occurredAt)}</Text>
+            </Pressable>
+            <View style={styles.footerDivider} />
+            <Pressable onPress={() => setTimeOpen(true)} style={styles.footerBtn}>
+              <Text style={styles.footerText}>{formatComposerTime(occurredAt)}</Text>
+            </Pressable>
+          </View>
+        </>
+      )}
+
+      <AccountPickerModal
+        visible={accountPicker != null}
+        accounts={accounts}
+        selectedId={accountPicker === "to" ? toAccount?.id : account?.id}
+        excludeId={accountPicker === "to" ? account?.id : accountPicker === "from" && type === "transfer" ? toAccount?.id : null}
+        onClose={() => setAccountPicker(null)}
+        onSelect={(a) => {
+          if (accountPicker === "to") setToAccount(a);
+          else setAccount(a);
+          setAccountPicker(null);
+        }}
+      />
+
+      <CategoryPickerModal
+        visible={categoryPickerOpen}
+        categories={filteredCategories}
+        selectedId={category?.id}
+        onClose={() => setCategoryPickerOpen(false)}
+        onSelect={(c) => {
+          setCategory(c);
+          setCategoryPickerOpen(false);
+        }}
+        onAddNew={() => {
+          setCategoryPickerOpen(false);
+          setCategoryEditorOpen(true);
+        }}
+      />
+
+      <CategoryEditorModal
+        visible={categoryEditorOpen}
+        mode="create"
+        initial={{ type: categoryType }}
+        onCancel={() => setCategoryEditorOpen(false)}
+        onSave={async (values) => {
+          const created = await createCategory(values);
+          await reloadMeta();
+          setCategory(created);
+          setCategoryEditorOpen(false);
+        }}
+      />
+
+      <DatePickerModal
+        visible={dateOpen}
+        value={occurredAt}
+        onCancel={() => setDateOpen(false)}
+        onConfirm={(d) => {
+          setOccurredAt(d);
+          setDateOpen(false);
+        }}
+      />
+      <TimePickerModal
+        visible={timeOpen}
+        value={occurredAt}
+        onCancel={() => setTimeOpen(false)}
+        onConfirm={(d) => {
+          setOccurredAt(d);
+          setTimeOpen(false);
+        }}
+      />
+    </View>
+  );
+}
+
+function PickerField({
+  label,
+  onPress,
+  children,
+}: {
+  label: string;
+  onPress: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <View style={styles.pickField}>
+      <Text style={styles.pickLabel}>{label}</Text>
+      <Pressable style={styles.pickBox} onPress={onPress}>
+        {children}
+      </Pressable>
     </View>
   );
 }
@@ -32,34 +393,137 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 24,
+    marginBottom: 16,
+    paddingHorizontal: 4,
   },
   action: {
     color: colors.accent,
     fontSize: 14,
     fontWeight: "600",
   },
-  body: {
-    flex: 1,
+  actionDisabled: {
+    opacity: 0.5,
+  },
+  typeRow: {
+    flexDirection: "row",
     justifyContent: "center",
-    gap: 10,
-    paddingBottom: 80,
+    alignItems: "center",
+    marginBottom: 18,
   },
-  title: {
-    color: colors.accent,
-    fontSize: 22,
+  typeCell: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  typeDivider: {
+    color: colors.border,
+    marginHorizontal: 6,
+  },
+  typeBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+  },
+  typeSpacer: {
+    width: 16,
+  },
+  typeLabel: {
+    color: colors.textSecondary,
+    fontSize: 13,
     fontWeight: "600",
-    textAlign: "center",
+    letterSpacing: 0.3,
   },
-  subtitle: {
+  typeLabelOn: {
+    color: colors.accent,
+  },
+  pickRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 10,
+  },
+  pickField: {
+    flex: 1,
+  },
+  pickLabel: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    marginBottom: 4,
+    marginLeft: 2,
+  },
+  pickBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    minHeight: 48,
+  },
+  pickValue: {
+    flex: 1,
+    color: colors.accent,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  pickPlaceholder: {
+    flex: 1,
     color: colors.textSecondary,
     fontSize: 14,
+  },
+  catDot: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  notes: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    color: colors.text,
+    fontSize: 15,
+    minHeight: 72,
+    textAlignVertical: "top",
+    marginBottom: 8,
+  },
+  error: {
+    color: colors.danger,
+    fontSize: 13,
     textAlign: "center",
-    lineHeight: 20,
+    marginBottom: 4,
+  },
+  keypadGrow: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  footer: {
+    flexDirection: "row",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    paddingVertical: 14,
+  },
+  footerBtn: {
+    flex: 1,
+    alignItems: "center",
+  },
+  footerDivider: {
+    width: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border,
+  },
+  footerText: {
+    color: colors.accent,
+    fontSize: 15,
+    fontWeight: "500",
   },
 });
