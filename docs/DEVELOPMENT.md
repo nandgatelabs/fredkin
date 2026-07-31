@@ -27,6 +27,16 @@ If the DB fails to start:
 
 On web, if persistent OPFS fails, the app falls back to an in-memory DB for that session (data resets on refresh, but UI is testable). A small `patch-package` fix lets that fallback work after an OPFS lock error.
 
+## Desktop offline (Ubuntu)
+
+Electron shell around the web export. Full guide: [`DESKTOP.md`](./DESKTOP.md).
+
+```bash
+npm run desktop:install        # once
+npm run desktop:dev            # export + window window
+npm run desktop:install-user   # install into app grid (~/.local)
+```
+
 ## Android (Expo Go)
 
 Physical phones work, but the toolchain is more fragile than web.

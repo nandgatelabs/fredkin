@@ -10,6 +10,10 @@ dist/
 web-build/
 expo-env.d.ts
 
+# Desktop (Electron) packaging output — source under desktop/ is tracked
+desktop/release/
+desktop/dist/
+
 # Native build artifacts
 android/app/build/
 ios/build/

@@ -1,0 +1,56 @@
+{
+  "name": "money-money-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Offline desktop shell for money-money (Electron + static web export)",
+  "author": "Shivamrut <gshivamrut@gmail.com>",
+  "homepage": "https://github.com/nandgatelabs/money-money",
+  "desktopName": "money-money.desktop",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --linux AppImage deb",
+    "pack:dir": "electron-builder --linux AppImage --dir",
+    "install-user": "bash scripts/install-user.sh"
+  },
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "labs.nandgatelabs.moneymoney",
+    "productName": "money-money",
+    "executableName": "money-money",
+    "copyright": "Copyright © 2026 Shivamrut (NandGateLabs)",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.cjs",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../dist",
+        "to": "dist",
+        "filter": ["**/*"]
+      }
+    ],
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Office",
+      "icon": "../assets/images/icon.png",
+      "synopsis": "Offline personal finance tracker",
+      "description": "Offline-first personal finance app (expenses, income, budgets, analysis).",
+      "syncDesktopName": true,
+      "desktop": {
+        "entry": {
+          "Name": "money-money",
+          "Comment": "Offline personal finance tracker",
+          "Categories": "Office;Finance;"
+        }
+      }
+    }
+  }
+}

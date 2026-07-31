@@ -43,6 +43,11 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "web:export": "expo export --platform web",
+    "desktop:install": "npm install --prefix desktop",
+    "desktop:dev": "npm run web:export && npm --prefix desktop start",
+    "desktop:pack": "npm run web:export && npm --prefix desktop run pack",
+    "desktop:install-user": "npm run desktop:pack && npm --prefix desktop run install-user",
     "lint": "expo lint",
     "postinstall": "patch-package"
   },
