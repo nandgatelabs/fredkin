@@ -1,0 +1,50 @@
+# Personal local data (exports, backups, screenshots — do not publish)
+private/
+
+# Dependencies
+node_modules/
+
+# Expo / React Native
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native build artifacts
+android/app/build/
+ios/build/
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+*.orig.*
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Logs & debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# TypeScript / test
+*.tsbuildinfo
+coverage/
+
+# Runtime local databases (device/dev copies)
+*.db
+*.db-journal
+
+# Metro
+.metro-health-check*
