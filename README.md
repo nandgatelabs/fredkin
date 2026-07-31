@@ -2,34 +2,16 @@
 
 Offline-first personal finance app (Android-first). Local SQLite storage, CSV export, and JSON backups — no account, no cloud, no paywall.
 
-> Status: **P0 shell running** — tabs, theme, SQLite schema, settings store. Feature slices continue per [`docs/HLD.md`](docs/HLD.md).
+> Status: implementing feature slices per [`docs/HLD.md`](docs/HLD.md). **Prefer web** for local runs.
 
-## Quick start (laptop browser)
-
-Easiest way to try the app while phone Expo Go is flaky:
+## Quick start (web — recommended)
 
 ```bash
 npm install
 npm run web
 ```
 
-Chrome/Edge should open at `http://localhost:8081`. You should see the dark **Records** screen with tabs and a **+** button.
-
-## Phone / emulator
-
-```bash
-npm start
-```
-
-Then press `a` (Android) or scan the QR in **Expo Go for SDK 57** from [expo.dev/go](https://expo.dev/go) (Play Store build may lag).
-
-USB (more stable than Wi‑Fi):
-
-```bash
-adb devices          # must say "device", not unauthorized
-adb reverse tcp:8081 tcp:8081
-npx expo start --localhost
-```
+Opens in Chrome/Edge at `http://localhost:8081`. Full runbook (Android caveats, USB, Expo Go SDK mismatch): [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
 ## Docs
 
@@ -37,6 +19,7 @@ npx expo start --localhost
 |-----|-------------|
 | [`docs/HLD.md`](docs/HLD.md) | High-level design: architecture, data model, flows, phases |
 | [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) | Screen-by-screen feature / UI blueprint |
+| [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | How to run on web and Android |
 | [`AGENTS.md`](AGENTS.md) | Instructions for AI coding agents |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Branch → PR → merge workflow (`gh`) |
 | [`SECURITY.md`](SECURITY.md) | Vulnerability reporting |

@@ -300,7 +300,7 @@ docs/              # HLD + BLUEPRINT (this folder)
 | Phase | Outcome |
 |-------|---------|
 | P0 Shell + DB | Tabs, theme, schema, settings store (done) |
-| P1 Accounts & Categories | CRUD + icons unlocked |
+| P1 Accounts & Categories | CRUD + icons unlocked (in progress / PR) |
 | P2 Composer | Expense/Income/Transfer + balances |
 | P3 Records + periods | All view modes incl. 3/6/yearly, carry-over |
 | P4 Search + CSV import | Local export can be loaded |

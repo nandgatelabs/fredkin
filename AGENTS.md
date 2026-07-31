@@ -33,8 +33,9 @@ Full detail: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 2. Create a branch: `feature/…`, `fix/…`, `docs/…`, or `chore/…`.
 3. Make focused commits; **subject must start with an intent prefix** (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`, `test:`, `perf:`, `style:`). See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 4. Open an **elaborate PR** with `gh pr create` (Summary + Test plan + Notes); prefer a prefixed title too.
-5. Merge with `gh pr merge` (prefer `--squash`), then sync local `main`.
+5. **Do not merge the PR** until a maintainer has tested usability and **explicitly says to merge** (e.g. “go ahead / merge it”). After approval: `gh pr merge` (prefer `--squash`), then sync local `main`.
 6. If product/architecture behavior changes, update `docs/HLD.md` and/or `docs/BLUEPRINT.md` in the **same PR**.
+7. How to run locally (web recommended, Android caveats): [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
 ## Open source hygiene
 
