@@ -5,7 +5,7 @@ import { createId } from "@/lib/id";
 const DEFAULT_ACCOUNTS = [
   { name: "Cash", icon_key: "cash", opening_balance: 0 },
   { name: "Primary", icon_key: "card", opening_balance: 0 },
-  { name: "Savings", icon_key: "wallet", opening_balance: 0 },
+  { name: "Savings", icon_key: "piggy", opening_balance: 0 },
 ] as const;
 
 const DEFAULT_EXPENSE_CATEGORIES = [

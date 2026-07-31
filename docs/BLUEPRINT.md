@@ -138,9 +138,22 @@ FAB still opens add-record.
 ## 7. Accounts
 
 - Header: `[ All Accounts ₹… ]` + **EXPENSE SO FAR** / **INCOME SO FAR**.
-- Card: icon, name, Balance (signed color), `⋯`.
-- **ADD NEW ACCOUNT** at list end.
+- Card (gold border): illustrative icon · name · `Balance:` (signed color) · `⋯`.
+- **+ ADD NEW ACCOUNT** ghost button at list end (and FAB still available).
 - Balance = opening + income − expense ± transfers.
+
+### Account `⋯` menu
+
+**Edit** · **Delete** · **Ignore** (Ignore = hide/archive from list; data kept).
+
+### Add / Edit account modal
+
+| Field | Behavior |
+|-------|----------|
+| Initial amount | Number input; note: *Initial amount will not be reflected in analysis* |
+| Name | Text (default “Untitled” on create) |
+| Icon | Horizontal picker: cash, card, piggy, mastercard-style, visa-style |
+| Actions | **CANCEL** · **SAVE** |
 
 ---
 
@@ -148,8 +161,25 @@ FAB still opens add-record.
 
 - Same all-accounts summary header as Accounts.
 - Sections: **Income categories** then **Expense categories**.
-- Row: icon · name · `⋯`.
-- **ADD NEW CATEGORY** CTA.
+- Row: colored circle icon · name · `⋯`.
+- **+ ADD NEW CATEGORY** CTA.
+
+### Category `⋯` menu
+
+**Edit** · **Delete** · **Ignore** (Ignore = hide from lists).
+
+### Add new category modal
+
+| Field | Behavior |
+|-------|----------|
+| Type | **INCOME** \| **EXPENSE** (radio with check on selected) |
+| Name | Text (default “Untitled”) |
+| Icon | Grid of colored category glyphs (scrollable set) |
+| Actions | **CANCEL** · **SAVE** |
+
+### Edit category modal
+
+Same as add, but **without** type switch (type is fixed after create): Name + Icon + CANCEL/SAVE.
 
 ---
 

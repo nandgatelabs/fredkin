@@ -1,6 +1,6 @@
 /** SQL schema for money-money (HLD §6). */
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const CREATE_TABLES_SQL = `
 PRAGMA foreign_keys = ON;
@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS categories (
   type TEXT NOT NULL CHECK(type IN ('income', 'expense')),
   icon_key TEXT NOT NULL,
   color TEXT,
-  sort_order INTEGER NOT NULL DEFAULT 0
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  archived INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS records (

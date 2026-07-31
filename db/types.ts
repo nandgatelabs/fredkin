@@ -21,6 +21,7 @@ export type Category = {
   icon_key: string;
   color: string | null;
   sort_order: number;
+  archived: number;
 };
 
 export type Totals = {

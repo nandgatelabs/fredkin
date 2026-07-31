@@ -12,14 +12,15 @@ import { useFocusEffect } from "expo-router";
 
 import { ActionMenu } from "@/components/ActionMenu";
 import { AppHeader } from "@/components/AppHeader";
+import { CategoryEditorModal } from "@/components/CategoryEditorModal";
 import { Fab } from "@/components/Fab";
 import { GhostButton } from "@/components/GhostButton";
-import { NameEditorModal } from "@/components/NameEditorModal";
 import { TotalsHeader } from "@/components/TotalsHeader";
 import { getLifetimeTotals } from "@/db/accounts";
 import {
   createCategory,
   deleteCategory,
+  ignoreCategory,
   listCategories,
   updateCategory,
 } from "@/db/categories";
@@ -35,9 +36,8 @@ export default function CategoriesScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [menuCategory, setMenuCategory] = useState<Category | null>(null);
-  const [typePickerOpen, setTypePickerOpen] = useState(false);
   const [editor, setEditor] = useState<
-    | { mode: "create"; type: CategoryType }
+    | { mode: "create" }
     | { mode: "edit"; category: Category }
     | null
   >(null);
@@ -109,7 +109,7 @@ export default function CategoriesScreen() {
           ListFooterComponent={
             <GhostButton
               label="+ ADD NEW CATEGORY"
-              onPress={() => setTypePickerOpen(true)}
+              onPress={() => setEditor({ mode: "create" })}
               style={{ marginTop: 16 }}
             />
           }
@@ -119,28 +119,12 @@ export default function CategoriesScreen() {
       <Fab />
 
       <ActionMenu
-        visible={typePickerOpen}
-        title="Add category"
-        onClose={() => setTypePickerOpen(false)}
-        items={[
-          {
-            label: "Income",
-            onPress: () => setEditor({ mode: "create", type: "income" }),
-          },
-          {
-            label: "Expense",
-            onPress: () => setEditor({ mode: "create", type: "expense" }),
-          },
-        ]}
-      />
-
-      <ActionMenu
         visible={menuCategory != null}
         title={menuCategory?.name}
         onClose={() => setMenuCategory(null)}
         items={[
           {
-            label: "Rename",
+            label: "Edit",
             onPress: () => {
               if (menuCategory) setEditor({ mode: "edit", category: menuCategory });
             },
@@ -157,25 +141,43 @@ export default function CategoriesScreen() {
                 );
             },
           },
+          {
+            label: "Ignore",
+            onPress: () => {
+              if (!menuCategory) return;
+              void ignoreCategory(menuCategory.id)
+                .then(reload)
+                .catch((e) =>
+                  setError(e instanceof Error ? e.message : "Ignore failed"),
+                );
+            },
+          },
         ]}
       />
 
-      <NameEditorModal
+      <CategoryEditorModal
         visible={editor != null}
-        title={
+        mode={editor?.mode === "edit" ? "edit" : "create"}
+        initial={
           editor?.mode === "edit"
-            ? "Rename category"
-            : editor?.type === "income"
-              ? "New income category"
-              : "New expense category"
+            ? {
+                name: editor.category.name,
+                type: editor.category.type,
+                icon_key: editor.category.icon_key,
+                color: editor.category.color ?? undefined,
+              }
+            : undefined
         }
-        initialName={editor?.mode === "edit" ? editor.category.name : ""}
         onCancel={() => setEditor(null)}
-        onConfirm={async (name) => {
+        onSave={async (values) => {
           if (editor?.mode === "edit") {
-            await updateCategory(editor.category.id, { name });
-          } else if (editor?.mode === "create") {
-            await createCategory({ name, type: editor.type });
+            await updateCategory(editor.category.id, {
+              name: values.name,
+              icon_key: values.icon_key,
+              color: values.color,
+            });
+          } else {
+            await createCategory(values);
           }
           setEditor(null);
           await reload();

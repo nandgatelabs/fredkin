@@ -14,6 +14,16 @@ async function migrate(db: SQLite.SQLiteDatabase) {
   );
   const current = row?.version ?? 0;
 
+  if (current < 2) {
+    try {
+      await db.execAsync(
+        "ALTER TABLE categories ADD COLUMN archived INTEGER NOT NULL DEFAULT 0",
+      );
+    } catch {
+      // column already exists
+    }
+  }
+
   if (current < SCHEMA_VERSION) {
     await db.runAsync(
       "INSERT OR REPLACE INTO schema_migrations (version, applied_at) VALUES (?, ?)",

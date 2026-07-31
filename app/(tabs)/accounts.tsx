@@ -10,12 +10,12 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 
+import { AccountEditorModal } from "@/components/AccountEditorModal";
 import { ActionMenu } from "@/components/ActionMenu";
 import { AppHeader } from "@/components/AppHeader";
 import { Fab } from "@/components/Fab";
 import { GhostButton } from "@/components/GhostButton";
 import { MoneyText } from "@/components/MoneyText";
-import { NameEditorModal } from "@/components/NameEditorModal";
 import { TotalsHeader } from "@/components/TotalsHeader";
 import {
   archiveAccount,
@@ -110,20 +110,9 @@ export default function AccountsScreen() {
         onClose={() => setMenuAccount(null)}
         items={[
           {
-            label: "Rename",
+            label: "Edit",
             onPress: () => {
               if (menuAccount) setEditor({ mode: "edit", account: menuAccount });
-            },
-          },
-          {
-            label: "Archive",
-            onPress: () => {
-              if (!menuAccount) return;
-              void archiveAccount(menuAccount.id)
-                .then(reload)
-                .catch((e) =>
-                  setError(e instanceof Error ? e.message : "Archive failed"),
-                );
             },
           },
           {
@@ -138,19 +127,38 @@ export default function AccountsScreen() {
                 );
             },
           },
+          {
+            label: "Ignore",
+            onPress: () => {
+              if (!menuAccount) return;
+              void archiveAccount(menuAccount.id)
+                .then(reload)
+                .catch((e) =>
+                  setError(e instanceof Error ? e.message : "Ignore failed"),
+                );
+            },
+          },
         ]}
       />
 
-      <NameEditorModal
+      <AccountEditorModal
         visible={editor != null}
-        title={editor?.mode === "edit" ? "Rename account" : "New account"}
-        initialName={editor?.mode === "edit" ? editor.account.name : ""}
+        mode={editor?.mode === "edit" ? "edit" : "create"}
+        initial={
+          editor?.mode === "edit"
+            ? {
+                name: editor.account.name,
+                opening_balance: editor.account.opening_balance,
+                icon_key: editor.account.icon_key,
+              }
+            : undefined
+        }
         onCancel={() => setEditor(null)}
-        onConfirm={async (name) => {
+        onSave={async (values) => {
           if (editor?.mode === "edit") {
-            await updateAccount(editor.account.id, { name });
+            await updateAccount(editor.account.id, values);
           } else {
-            await createAccount({ name });
+            await createAccount(values);
           }
           setEditor(null);
           await reload();
@@ -173,7 +181,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.accentMuted,
     borderRadius: 12,
     padding: 12,
     gap: 12,
@@ -188,7 +196,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   cardBody: { flex: 1, gap: 4 },
-  name: { color: colors.text, fontSize: 16, fontWeight: "500" },
+  name: { color: colors.accent, fontSize: 16, fontWeight: "500" },
   balanceRow: { flexDirection: "row", alignItems: "center" },
   balanceLabel: { color: colors.textSecondary, fontSize: 13 },
   more: { padding: 4 },

@@ -7,12 +7,12 @@ export async function listCategories(type?: CategoryType): Promise<Category[]> {
   const db = await getDb();
   if (type) {
     return db.getAllAsync<Category>(
-      `SELECT * FROM categories WHERE type = ? ORDER BY sort_order ASC, name ASC`,
+      `SELECT * FROM categories WHERE archived = 0 AND type = ? ORDER BY sort_order ASC, name ASC`,
       type,
     );
   }
   return db.getAllAsync<Category>(
-    `SELECT * FROM categories ORDER BY type ASC, sort_order ASC, name ASC`,
+    `SELECT * FROM categories WHERE archived = 0 ORDER BY type ASC, sort_order ASC, name ASC`,
   );
 }
 
@@ -36,8 +36,8 @@ export async function createCategory(input: {
   const sort_order = (max?.m ?? -1) + 1;
 
   await db.runAsync(
-    `INSERT INTO categories (id, name, type, icon_key, color, sort_order)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO categories (id, name, type, icon_key, color, sort_order, archived)
+     VALUES (?, ?, ?, ?, ?, ?, 0)`,
     id,
     name,
     input.type,
@@ -46,7 +46,15 @@ export async function createCategory(input: {
     sort_order,
   );
 
-  return { id, name, type: input.type, icon_key, color, sort_order };
+  return {
+    id,
+    name,
+    type: input.type,
+    icon_key,
+    color,
+    sort_order,
+    archived: 0,
+  };
 }
 
 export async function updateCategory(
@@ -86,4 +94,9 @@ export async function deleteCategory(id: string): Promise<void> {
     throw new Error("Cannot delete a category that has budgets.");
   }
   await db.runAsync("DELETE FROM categories WHERE id = ?", id);
+}
+
+export async function ignoreCategory(id: string): Promise<void> {
+  const db = await getDb();
+  await db.runAsync("UPDATE categories SET archived = 1 WHERE id = ?", id);
 }
