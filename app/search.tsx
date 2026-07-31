@@ -86,12 +86,20 @@ export default function SearchScreen() {
           <Text style={styles.hint}>
             Search records by notes, category name or account name
           </Text>
-          <Button
-            label="IMPORT CSV"
-            variant="secondary"
-            onPress={() => router.push("/import-csv" as never)}
-            style={styles.importBtn}
-          />
+          <View style={styles.csvActions}>
+            <Button
+              label="IMPORT CSV"
+              variant="secondary"
+              onPress={() => router.push("/import-csv" as never)}
+              style={styles.csvBtn}
+            />
+            <Button
+              label="EXPORT CSV"
+              variant="secondary"
+              onPress={() => router.push("/export-csv" as never)}
+              style={styles.csvBtn}
+            />
+          </View>
         </View>
       ) : loading && results.length === 0 ? (
         <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
@@ -181,9 +189,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  importBtn: {
+  csvActions: {
     marginTop: 8,
-    minWidth: 180,
+    gap: 10,
+    width: "100%",
+    maxWidth: 280,
+  },
+  csvBtn: {
+    width: "100%",
   },
   count: {
     color: colors.textSecondary,

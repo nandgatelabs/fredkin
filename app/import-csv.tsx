@@ -104,6 +104,8 @@ export default function ImportCsvScreen() {
       <Text style={styles.body}>
         Load a worksheet export with columns TIME, TYPE, AMOUNT, CATEGORY,
         ACCOUNT, NOTES. Missing accounts and categories are created automatically.
+        Rows typed `(#) Opening` restore each account’s initial balance (money-money
+        extension).
       </Text>
 
       <Text style={styles.label}>What should happen to existing data?</Text>
@@ -138,6 +140,9 @@ export default function ImportCsvScreen() {
             Mode: {mode === "replace" ? "Override (CSV only)" : "Append"}
           </Text>
           <Text style={styles.resultLine}>Imported: {result.imported}</Text>
+          <Text style={styles.resultLine}>
+            Opening balances applied: {result.openingsApplied}
+          </Text>
           <Text style={styles.resultLine}>Skipped: {result.skipped}</Text>
           <Text style={styles.resultLine}>
             Accounts created: {result.accountsCreated}

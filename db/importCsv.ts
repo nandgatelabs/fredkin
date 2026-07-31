@@ -1,4 +1,5 @@
 import {
+  isOpeningType,
   parseCsvTime,
   parseMoneyCsv,
   parseTransferAccounts,
@@ -15,6 +16,7 @@ export type ImportMode = "append" | "replace";
 
 export type ImportResult = {
   imported: number;
+  openingsApplied: number;
   skipped: number;
   accountsCreated: number;
   categoriesCreated: number;
@@ -23,6 +25,7 @@ export type ImportResult = {
 
 function mapType(raw: string): RecordType | null {
   const t = raw.toLowerCase();
+  if (isOpeningType(raw)) return null;
   if (t.includes("expense")) return "expense";
   if (t.includes("income")) return "income";
   if (t.includes("transfer")) return "transfer";
@@ -46,6 +49,7 @@ export async function importMoneyCsv(
   const db = await getDb();
   const result: ImportResult = {
     imported: 0,
+    openingsApplied: 0,
     skipped: 0,
     accountsCreated: 0,
     categoriesCreated: 0,
@@ -136,8 +140,13 @@ export async function importMoneyCsv(
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       try {
-        await importOneRow(row, ensureAccount, ensureCategory);
-        result.imported += 1;
+        if (isOpeningType(row.type)) {
+          await importOpeningRow(row, ensureAccount);
+          result.openingsApplied += 1;
+        } else {
+          await importOneRow(row, ensureAccount, ensureCategory);
+          result.imported += 1;
+        }
       } catch (e) {
         result.skipped += 1;
         if (result.errors.length < 25) {
@@ -150,6 +159,24 @@ export async function importMoneyCsv(
   });
 
   return result;
+}
+
+async function importOpeningRow(
+  row: CsvRow,
+  ensureAccount: (name: string) => Promise<string>,
+) {
+  const db = await getDb();
+  if (!row.account.trim()) throw new Error("ACCOUNT is required for opening balance");
+  const amount = Number(row.amount);
+  if (Number.isNaN(amount) || !Number.isFinite(amount)) {
+    throw new Error(`Invalid opening AMOUNT "${row.amount}"`);
+  }
+  const accountId = await ensureAccount(row.account);
+  await db.runAsync(
+    "UPDATE accounts SET opening_balance = ? WHERE id = ?",
+    amount,
+    accountId,
+  );
 }
 
 async function importOneRow(

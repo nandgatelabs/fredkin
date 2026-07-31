@@ -1,4 +1,4 @@
-/** Minimal quoted-CSV parser for MyMoney-style exports. */
+/** Minimal quoted-CSV parser / serializer for MyMoney-style exports. */
 
 export type CsvRow = {
   time: string;
@@ -8,6 +8,37 @@ export type CsvRow = {
   account: string;
   notes: string;
 };
+
+/** money-money extension: account opening balance (not a ledger record). */
+export const CSV_TYPE_OPENING = "(#) Opening";
+export const CSV_TYPE_EXPENSE = "(-) Expense";
+export const CSV_TYPE_INCOME = "(+) Income";
+export const CSV_TYPE_TRANSFER = "(*) Transfer";
+
+/** Placeholder TIME for opening-balance rows (not used as a transaction date). */
+export const CSV_OPENING_TIME = "Jan 01, 2000 12:00 AM";
+
+export function csvEscape(value: string): string {
+  return `"${String(value).replace(/"/g, '""')}"`;
+}
+
+export function formatCsvAmount(amount: number): string {
+  return amount.toFixed(2);
+}
+
+export function serializeMoneyCsv(rows: CsvRow[]): string {
+  const header = ["TIME", "TYPE", "AMOUNT", "CATEGORY", "ACCOUNT", "NOTES"]
+    .map(csvEscape)
+    .join(",");
+  const lines = rows.map((r) =>
+    [r.time, r.type, r.amount, r.category, r.account, r.notes].map(csvEscape).join(","),
+  );
+  return [header, ...lines].join("\n") + "\n";
+}
+
+export function isOpeningType(raw: string): boolean {
+  return raw.toLowerCase().includes("opening");
+}
 
 export function parseCsv(text: string): string[][] {
   const rows: string[][] = [];
