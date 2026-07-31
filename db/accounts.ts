@@ -3,10 +3,11 @@ import { createId } from "@/lib/id";
 import { getDb } from "./client";
 import type { Account, AccountWithBalance, Totals } from "./types";
 
-export async function listAccounts(): Promise<AccountWithBalance[]> {
+async function listAccountsByArchived(archived: 0 | 1): Promise<AccountWithBalance[]> {
   const db = await getDb();
   const rows = await db.getAllAsync<Account>(
-    `SELECT * FROM accounts WHERE archived = 0 ORDER BY sort_order ASC, name ASC`,
+    `SELECT * FROM accounts WHERE archived = ? ORDER BY sort_order ASC, name ASC`,
+    archived,
   );
 
   const result: AccountWithBalance[] = [];
@@ -15,6 +16,14 @@ export async function listAccounts(): Promise<AccountWithBalance[]> {
     result.push({ ...account, balance });
   }
   return result;
+}
+
+export async function listAccounts(): Promise<AccountWithBalance[]> {
+  return listAccountsByArchived(0);
+}
+
+export async function listIgnoredAccounts(): Promise<AccountWithBalance[]> {
+  return listAccountsByArchived(1);
 }
 
 export async function computeAccountBalance(
@@ -152,4 +161,9 @@ export async function deleteAccount(id: string): Promise<{ deletedRecords: numbe
 export async function archiveAccount(id: string): Promise<void> {
   const db = await getDb();
   await db.runAsync("UPDATE accounts SET archived = 1 WHERE id = ?", id);
+}
+
+export async function restoreAccount(id: string): Promise<void> {
+  const db = await getDb();
+  await db.runAsync("UPDATE accounts SET archived = 0 WHERE id = ?", id);
 }

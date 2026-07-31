@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 import {
-  Alert,
   Platform,
   Pressable,
   StyleSheet,
@@ -12,10 +11,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as DocumentPicker from "expo-document-picker";
 
 import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import { importMoneyCsv, type ImportMode, type ImportResult } from "@/db/importCsv";
 import { useKeydown } from "@/hooks/useKeydown";
 import { webClickable } from "@/lib/web";
 import { colors } from "@/theme";
+
+type PendingFile = { text: string; name: string };
 
 export default function ImportCsvScreen() {
   const router = useRouter();
@@ -25,40 +27,17 @@ export default function ImportCsvScreen() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [pending, setPending] = useState<PendingFile | null>(null);
 
   useKeydown(
     true,
     useCallback(
       (event) => {
-        if (event.key === "Escape" && !busy) router.back();
+        if (event.key === "Escape" && !busy && !pending) router.back();
       },
-      [busy, router],
+      [busy, pending, router],
     ),
   );
-
-  async function confirmImport(): Promise<boolean> {
-    if (mode === "append") {
-      const message =
-        "Add every row from this CSV on top of your current records? Duplicate rows are possible if you import the same file twice.";
-      if (Platform.OS === "web") return window.confirm(message);
-      return new Promise((resolve) => {
-        Alert.alert("Append to existing data?", message, [
-          { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
-          { text: "Append", onPress: () => resolve(true) },
-        ]);
-      });
-    }
-
-    const message =
-      "Override everything with this CSV? Existing records, accounts, and categories will be deleted. Only the imported file will remain.";
-    if (Platform.OS === "web") return window.confirm(message);
-    return new Promise((resolve) => {
-      Alert.alert("Override with CSV?", message, [
-        { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
-        { text: "Override", style: "destructive", onPress: () => resolve(true) },
-      ]);
-    });
-  }
 
   async function runImport(text: string, name: string) {
     setBusy(true);
@@ -75,15 +54,20 @@ export default function ImportCsvScreen() {
     }
   }
 
+  /** Open the file picker immediately (must stay in the user-gesture chain on web). */
   async function pickFile() {
     setError(null);
     setResult(null);
 
-    const ok = await confirmImport();
-    if (!ok) return;
-
     if (Platform.OS === "web") {
-      await pickWebFile(runImport, (msg) => setError(msg));
+      await pickWebFile(
+        (text, name) => {
+          setPending({ text, name });
+          setFileName(name);
+          return Promise.resolve();
+        },
+        (msg) => setError(msg),
+      );
       return;
     }
 
@@ -95,8 +79,17 @@ export default function ImportCsvScreen() {
     const asset = picked.assets[0];
     const res = await fetch(asset.uri);
     const text = await res.text();
-    await runImport(text, asset.name ?? "export.csv");
+    const name = asset.name ?? "export.csv";
+    setFileName(name);
+    setPending({ text, name });
   }
+
+  const confirmTitle =
+    mode === "replace" ? "Override with CSV?" : "Append to existing data?";
+  const confirmMessage =
+    mode === "replace"
+      ? `Override everything with “${pending?.name ?? "this file"}”? Existing records, accounts, and categories will be deleted. Only the imported file will remain.`
+      : `Add every row from “${pending?.name ?? "this file"}” on top of your current records? Duplicate rows are possible if you import the same file twice.`;
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 }]}>
@@ -135,7 +128,7 @@ export default function ImportCsvScreen() {
         style={{ marginTop: 20 }}
       />
 
-      {fileName ? <Text style={styles.file}>File: {fileName}</Text> : null}
+      {fileName && !result ? <Text style={styles.file}>File: {fileName}</Text> : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       {result ? (
@@ -163,6 +156,24 @@ export default function ImportCsvScreen() {
           />
         </View>
       ) : null}
+
+      <ConfirmModal
+        visible={pending != null}
+        title={confirmTitle}
+        message={confirmMessage}
+        confirmLabel={mode === "replace" ? "Override" : "Append"}
+        destructive={mode === "replace"}
+        onCancel={() => {
+          setPending(null);
+          setFileName(null);
+        }}
+        onConfirm={() => {
+          if (!pending) return;
+          const file = pending;
+          setPending(null);
+          void runImport(file.text, file.name);
+        }}
+      />
     </View>
   );
 }

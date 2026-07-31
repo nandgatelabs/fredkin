@@ -1,9 +1,7 @@
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -15,8 +13,10 @@ import { useFocusEffect } from "expo-router";
 import { AccountEditorModal } from "@/components/AccountEditorModal";
 import { ActionMenu } from "@/components/ActionMenu";
 import { AppHeader } from "@/components/AppHeader";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import { Fab } from "@/components/Fab";
 import { GhostButton } from "@/components/GhostButton";
+import { IgnoredAccountsModal } from "@/components/IgnoredAccountsModal";
 import { MoneyText } from "@/components/MoneyText";
 import { TotalsHeader } from "@/components/TotalsHeader";
 import {
@@ -38,6 +38,11 @@ export default function AccountsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [menuAccount, setMenuAccount] = useState<AccountWithBalance | null>(null);
+  const [ignoredOpen, setIgnoredOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    account: AccountWithBalance;
+    related: number;
+  } | null>(null);
   const [editor, setEditor] = useState<
     | { mode: "create" }
     | { mode: "edit"; account: AccountWithBalance }
@@ -79,11 +84,16 @@ export default function AccountsScreen() {
           contentContainerStyle={styles.list}
           ListHeaderComponent={<Text style={styles.section}>Accounts</Text>}
           ListFooterComponent={
-            <GhostButton
-              label="+ ADD NEW ACCOUNT"
-              onPress={() => setEditor({ mode: "create" })}
-              style={{ marginTop: 8 }}
-            />
+            <View style={styles.footer}>
+              <GhostButton
+                label="+ ADD NEW ACCOUNT"
+                onPress={() => setEditor({ mode: "create" })}
+              />
+              <GhostButton
+                label="RETRIEVE IGNORED ACCOUNTS"
+                onPress={() => setIgnoredOpen(true)}
+              />
+            </View>
           }
           renderItem={({ item }) => (
             <View style={styles.card}>
@@ -124,33 +134,9 @@ export default function AccountsScreen() {
             onPress: () => {
               if (!menuAccount) return;
               const account = menuAccount;
-              void (async () => {
-                const related = await countAccountRecords(account.id);
-                const message =
-                  related > 0
-                    ? `Delete “${account.name}”? All ${related} related record${related === 1 ? "" : "s"} (including transfers) will be deleted as well. This cannot be undone.`
-                    : `Delete “${account.name}”? This cannot be undone.`;
-                const ok =
-                  Platform.OS === "web"
-                    ? window.confirm(message)
-                    : await new Promise<boolean>((resolve) => {
-                        Alert.alert("Delete account?", message, [
-                          { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
-                          {
-                            text: "Delete",
-                            style: "destructive",
-                            onPress: () => resolve(true),
-                          },
-                        ]);
-                      });
-                if (!ok) return;
-                try {
-                  await deleteAccount(account.id);
-                  await reload();
-                } catch (e) {
-                  setError(e instanceof Error ? e.message : "Delete failed");
-                }
-              })();
+              void countAccountRecords(account.id).then((related) => {
+                setDeleteTarget({ account, related });
+              });
             },
           },
           {
@@ -165,6 +151,35 @@ export default function AccountsScreen() {
             },
           },
         ]}
+      />
+
+      <ConfirmModal
+        visible={deleteTarget != null}
+        title="Delete account?"
+        message={
+          deleteTarget
+            ? deleteTarget.related > 0
+              ? `Delete “${deleteTarget.account.name}”? All ${deleteTarget.related} related record${deleteTarget.related === 1 ? "" : "s"} (including transfers) will be deleted as well. This cannot be undone.`
+              : `Delete “${deleteTarget.account.name}”? This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete"
+        destructive
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          const id = deleteTarget.account.id;
+          setDeleteTarget(null);
+          void deleteAccount(id)
+            .then(reload)
+            .catch((e) => setError(e instanceof Error ? e.message : "Delete failed"));
+        }}
+      />
+
+      <IgnoredAccountsModal
+        visible={ignoredOpen}
+        onClose={() => setIgnoredOpen(false)}
+        onChanged={() => void reload()}
       />
 
       <AccountEditorModal
@@ -202,6 +217,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 8,
+  },
+  footer: {
+    marginTop: 8,
+    gap: 10,
   },
   card: {
     flexDirection: "row",
