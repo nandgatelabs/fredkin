@@ -8,6 +8,9 @@ This repo is **money-money**: an offline-first personal finance app.
 |-----|------|----------|
 | High-level design | [`docs/HLD.md`](docs/HLD.md) | Architecture, modules, data rules, phases |
 | Feature blueprint | [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) | Screen-by-screen UI/behavior, acceptance checklist |
+| Changelog | [`CHANGELOG.md`](CHANGELOG.md) | Note user-facing changes under `[Unreleased]` |
+| Roadmap | [`docs/ROADMAP.md`](docs/ROADMAP.md) | What’s deferred vs next (do not invent scope) |
+| Versioning / release | [`docs/VERSIONING.md`](docs/VERSIONING.md), [`docs/RELEASE.md`](docs/RELEASE.md) | Bumps, tags, GitHub Releases (maintainer) |
 
 Do **not** invent paywalls, premium locks, or cloud sync unless a human explicitly asks.
 
@@ -21,7 +24,7 @@ Do **not** invent paywalls, premium locks, or cloud sync unless a human explicit
 
 ## Implementation order
 
-Follow phases in `docs/HLD.md` § Delivery plan (P0 → P6). Prefer small vertical slices over large unfinished surfaces.
+v1 baseline (P0–P8) is shipped. Prefer small vertical slices from [`docs/ROADMAP.md`](docs/ROADMAP.md) / scheduled issues — do not pull deferred issues unless a human asks.
 
 ## GitHub workflow (required)
 

@@ -1,6 +1,6 @@
 {
   "name": "money-money-desktop",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Offline desktop shell for money-money (Electron + static web export)",
   "author": "Shivamrut <gshivamrut@gmail.com>",
@@ -34,11 +34,16 @@
       {
         "from": "../dist",
         "to": "dist",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "category": "Office",
       "icon": "../assets/images/icon.png",
       "synopsis": "Offline personal finance tracker",

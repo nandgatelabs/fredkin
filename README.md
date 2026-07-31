@@ -1,8 +1,8 @@
 # money-money
 
-Offline-first personal finance app (Android-first). Local SQLite storage, CSV export, and JSON backups — no account, no cloud, no paywall.
+Offline-first personal finance app. Local SQLite storage, CSV export, and JSON backups — no account, no cloud, no paywall.
 
-> Status: implementing feature slices per [`docs/HLD.md`](docs/HLD.md). **Prefer web** for local runs.
+> **v1.0.0** baseline shipped. Prefer **web** for day-to-day runs; Ubuntu desktop install below. See [`CHANGELOG.md`](CHANGELOG.md) and [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Quick start (web — recommended)
 
@@ -42,6 +42,10 @@ Full detail (`.deb`, AppImage/FUSE notes, persistence): [`docs/DESKTOP.md`](docs
 | [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) | Screen-by-screen feature / UI blueprint |
 | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | How to run on web and Android |
 | [`docs/DESKTOP.md`](docs/DESKTOP.md) | Offline Ubuntu/desktop Electron shell |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | What’s next after v1 |
+| [`docs/VERSIONING.md`](docs/VERSIONING.md) | SemVer rules |
+| [`docs/RELEASE.md`](docs/RELEASE.md) | How to cut a release |
+| [`CHANGELOG.md`](CHANGELOG.md) | Notable changes per version |
 | [`AGENTS.md`](AGENTS.md) | Instructions for AI coding agents |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Branch → PR → merge workflow (`gh`) |
 | [`SECURITY.md`](SECURITY.md) | Vulnerability reporting |
