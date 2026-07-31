@@ -6,7 +6,7 @@ import {
   type ViewStyle,
 } from "react-native";
 
-import { webClickable } from "@/lib/web";
+import { webClickable, webFocusableProps } from "@/lib/web";
 import { colors } from "@/theme";
 
 type Variant = "primary" | "secondary" | "danger" | "ghost";
@@ -33,8 +33,10 @@ export function Button({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{ disabled: !!isDisabled, busy: !!busy }}
       disabled={isDisabled}
       onPress={onPress}
+      {...webFocusableProps}
       style={({ pressed }) => [
         styles.base,
         variantStyles[variant],

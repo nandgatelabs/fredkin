@@ -14,13 +14,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { RecordDetailModal } from "@/components/RecordDetailModal";
 import { SearchResultRow } from "@/components/SearchResultRow";
-import { Button } from "@/components/ui/Button";
 import {
   deleteRecord,
   searchRecords,
   type RecordListItem,
 } from "@/db/records";
-import { webClickable } from "@/lib/web";
+import { useKeydown } from "@/hooks/useKeydown";
+import { webClickable, webFocusableProps } from "@/lib/web";
 import { colors } from "@/theme";
 
 export default function SearchScreen() {
@@ -31,6 +31,20 @@ export default function SearchScreen() {
   const [results, setResults] = useState<RecordListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<RecordListItem | null>(null);
+
+  useKeydown(
+    true,
+    useCallback(
+      (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          if (selected) setSelected(null);
+          else router.back();
+        }
+      },
+      [router, selected],
+    ),
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -74,8 +88,16 @@ export default function SearchScreen() {
           returnKeyType="search"
           autoCorrect={false}
           autoCapitalize="none"
+          accessibilityLabel="Search records"
         />
-        <Pressable onPress={() => router.back()} hitSlop={10} style={webClickable}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Cancel search"
+          onPress={() => router.back()}
+          hitSlop={10}
+          style={webClickable}
+          {...webFocusableProps}
+        >
           <Text style={styles.cancel}>Cancel</Text>
         </Pressable>
       </View>
@@ -86,20 +108,7 @@ export default function SearchScreen() {
           <Text style={styles.hint}>
             Search records by notes, category name or account name
           </Text>
-          <View style={styles.csvActions}>
-            <Button
-              label="IMPORT CSV"
-              variant="secondary"
-              onPress={() => router.push("/import-csv" as never)}
-              style={styles.csvBtn}
-            />
-            <Button
-              label="EXPORT CSV"
-              variant="secondary"
-              onPress={() => router.push("/export-csv" as never)}
-              style={styles.csvBtn}
-            />
-          </View>
+          <Text style={styles.kbdHint}>Esc close · type to search</Text>
         </View>
       ) : loading && results.length === 0 ? (
         <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
@@ -189,14 +198,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  csvActions: {
-    marginTop: 8,
-    gap: 10,
-    width: "100%",
-    maxWidth: 280,
-  },
-  csvBtn: {
-    width: "100%",
+  kbdHint: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    marginTop: 4,
   },
   count: {
     color: colors.textSecondary,

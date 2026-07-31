@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import { webClickable, webFontDisplay } from "@/lib/web";
+import { AppDrawer } from "@/components/AppDrawer";
+import { webClickable, webFocusableProps, webFontDisplay } from "@/lib/web";
 import { colors } from "@/theme";
 
 type Props = {
@@ -13,14 +15,19 @@ type Props = {
 export function AppHeader({ onMenuPress }: Props) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
     <View style={[styles.wrap, { paddingTop: insets.top + 8 }]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Open menu"
-        onPress={onMenuPress}
+        onPress={() => {
+          if (onMenuPress) onMenuPress();
+          else setDrawerOpen(true);
+        }}
         hitSlop={12}
+        {...webFocusableProps}
         style={({ pressed }) => [
           styles.iconBtn,
           webClickable,
@@ -30,13 +37,16 @@ export function AppHeader({ onMenuPress }: Props) {
         <Ionicons name="menu" size={24} color={colors.accent} />
       </Pressable>
 
-      <Text style={styles.logo}>money-money</Text>
+      <Text style={styles.logo} accessibilityRole="header">
+        money-money
+      </Text>
 
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Search records"
         onPress={() => router.push("/search")}
         hitSlop={12}
+        {...webFocusableProps}
         style={({ pressed }) => [
           styles.iconBtn,
           webClickable,
@@ -45,6 +55,8 @@ export function AppHeader({ onMenuPress }: Props) {
       >
         <Ionicons name="search" size={22} color={colors.accent} />
       </Pressable>
+
+      <AppDrawer visible={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </View>
   );
 }

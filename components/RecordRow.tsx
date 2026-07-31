@@ -9,7 +9,7 @@ import {
   categoryIcon,
 } from "@/lib/icons";
 import { recordTitle, signedDisplayAmount } from "@/lib/recordsUi";
-import { webClickable } from "@/lib/web";
+import { webClickable, webFocusableProps } from "@/lib/web";
 import { useSettingsStore } from "@/store/settings";
 import { colors } from "@/theme";
 
@@ -41,7 +41,10 @@ export function RecordRow({ item, onPress }: Props) {
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={title}
       onPress={onPress}
+      {...webFocusableProps}
       style={({ pressed }) => [styles.row, webClickable, pressed && styles.pressed]}
     >
       <View style={[styles.icon, { backgroundColor: iconBg }]}>

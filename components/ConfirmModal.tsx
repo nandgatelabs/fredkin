@@ -35,9 +35,14 @@ export function ConfirmModal({
         if (event.key === "Escape") {
           event.preventDefault();
           onCancel();
+          return;
+        }
+        if (event.key === "Enter") {
+          event.preventDefault();
+          onConfirm();
         }
       },
-      [onCancel],
+      [onCancel, onConfirm],
     ),
   );
 

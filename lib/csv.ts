@@ -1,4 +1,4 @@
-/** Minimal quoted-CSV parser / serializer for MyMoney-style exports. */
+/** Minimal quoted-CSV parser / serializer for money-money worksheet exports. */
 
 export type CsvRow = {
   time: string;

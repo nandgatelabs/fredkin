@@ -1,7 +1,19 @@
 import { Platform, Share } from "react-native";
 
-/** Download or share a text file (CSV). Web uses a Blob download; native uses Share. */
-export async function downloadTextFile(fileName: string, text: string, mime = "text/csv") {
+/**
+ * Save a text file.
+ * Web: browser download to the default Downloads folder.
+ * Native: system Share sheet (user picks destination / app).
+ *
+ * TODO: optional folder/file picker on web — tracked in GitHub
+ * (File System Access API / showSaveFilePicker). Parked: Expo web
+ * currently falls through to Downloads without a chooser.
+ */
+export async function downloadTextFile(
+  fileName: string,
+  text: string,
+  mime = "text/csv",
+): Promise<void> {
   if (Platform.OS === "web") {
     const blob = new Blob([text], { type: `${mime};charset=utf-8` });
     const url = URL.createObjectURL(blob);

@@ -42,12 +42,28 @@ body {
 input, textarea, button {
   font-family: inherit;
 }
-input:focus, textarea:focus {
+input:focus, textarea:focus, select:focus {
   outline: 2px solid rgba(232, 212, 138, 0.45);
   outline-offset: 1px;
 }
-[role="button"], button, a {
+[role="button"], button, a, [tabindex]:not([tabindex="-1"]) {
   cursor: pointer;
+}
+/* Clear keyboard focus ring for laptop Tab navigation */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid rgba(232, 212, 138, 0.75);
+  outline-offset: 2px;
+}
+[role="button"]:focus-visible,
+button:focus-visible,
+a:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid rgba(232, 212, 138, 0.85);
+  outline-offset: 2px;
+  border-radius: 8px;
 }
 * {
   box-sizing: border-box;
