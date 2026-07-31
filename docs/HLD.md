@@ -317,15 +317,24 @@ docs/              # HLD + BLUEPRINT (this folder)
 
 Offline desktop is the Expo **web** static export wrapped in Electron (`desktop/`). Install for Ubuntu via `npm run desktop:install-user` (unpacked app + `.desktop` launcher). Public web hosting remains parked. See [`DESKTOP.md`](./DESKTOP.md).
 
-### Deferred polish (post–v1)
+### Deferred / roadmap issues (post–v1)
+
+Full table: [`ROADMAP.md`](./ROADMAP.md). Highlights:
 
 | Issue | Topic |
 |-------|--------|
+| [#33](https://github.com/nandgatelabs/money-money/issues/33) | Publish GitHub Release v1.0.0 |
+| [#27](https://github.com/nandgatelabs/money-money/issues/27) | Attach Ubuntu AppImage/`.deb` to Releases |
 | [#19](https://github.com/nandgatelabs/money-money/issues/19) | CSV export From/To date range |
 | [#20](https://github.com/nandgatelabs/money-money/issues/20) | Backup directory + `.mbak` restore list |
 | [#21](https://github.com/nandgatelabs/money-money/issues/21) | Optional Help / Feedback drawer entry |
 | [#22](https://github.com/nandgatelabs/money-money/issues/22) | About: privacy + license links |
 | [#23](https://github.com/nandgatelabs/money-money/issues/23) | Daily remind on native (iOS/Android) |
+| [#28](https://github.com/nandgatelabs/money-money/issues/28) | Windows desktop shell |
+| [#29](https://github.com/nandgatelabs/money-money/issues/29) | macOS desktop shell |
+| [#30](https://github.com/nandgatelabs/money-money/issues/30) | Android EAS / store packaging |
+| [#31](https://github.com/nandgatelabs/money-money/issues/31) | iOS EAS / store packaging (optional) |
+| [#32](https://github.com/nandgatelabs/money-money/issues/32) | Public web hosting (COOP/COEP) |
 | [#16](https://github.com/nandgatelabs/money-money/issues/16) | Web save-location picker (parked) |
 
 Earlier analysis/preferences bug issues (#12–#15) remain deferred indefinitely unless explicitly scheduled.
