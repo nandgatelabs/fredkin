@@ -12,13 +12,18 @@ npm run web
 
 Chrome or Edge should open (or go to `http://localhost:8081`). You should see the dark shell with bottom tabs.
 
-Web uses SQLite via WebAssembly (still alpha upstream). Prefer a normal Chrome/Edge window (not private/incognito). If the DB fails to start:
+Web uses SQLite via WebAssembly (still alpha upstream). Prefer a normal Chrome/Edge window (not private/incognito).
 
-1. Stop Metro (`Ctrl+C`) and run `npm run web` again  
-2. Hard-refresh the browser (or clear site data for `localhost:8081`)  
-3. Confirm you checked out the branch under test (`git branch`)
+**Only one browser tab** may hold the web DB (OPFS access-handle lock). A second tab usually fails with `NoModificationAllowedError` / `Invalid VFS state`.
 
-On web, if persistent storage fails, the app falls back to an in-memory DB for that session (data resets on refresh, but UI is testable).
+If the DB fails to start:
+
+1. Close every other `localhost:8081` tab (and old Expo windows)  
+2. Hard-refresh the remaining tab  
+3. If still stuck: DevTools → Application → Storage → **Clear site data** for `localhost:8081`, then refresh  
+4. Confirm the branch under test: `git branch` (for P2 composer: `feature/p2-record-composer`)
+
+On web, if persistent OPFS fails, the app falls back to an in-memory DB for that session (data resets on refresh, but UI is testable). A small `patch-package` fix lets that fallback work after an OPFS lock error.
 
 ## Android (Expo Go)
 
@@ -67,7 +72,7 @@ Open `exp://127.0.0.1:8081` in Expo Go, or press `a` in the Metro terminal.
 
 - Dark charcoal UI, **money-money** header  
 - Tabs: Records, Analysis, Budgets, Accounts, Categories  
-- Records empty state until data exists; **+** opens add-record (stub until composer lands)
+- Records empty state until data exists; **+** opens the add-record composer
 
 ## Agents / PR merges
 

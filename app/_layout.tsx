@@ -51,8 +51,9 @@ export default function RootLayout() {
         <Text style={styles.errorTitle}>Could not start local database</Text>
         <Text style={styles.errorBody}>{bootError}</Text>
         <Text style={styles.errorHint}>
-          On web: hard-refresh after restarting `npm run web`. If it persists,
-          try a normal (non-private) Chrome/Edge window.
+          On web: close every other tab on localhost:8081 (SQLite OPFS allows
+          only one tab), then hard-refresh. Prefer a normal Chrome/Edge window
+          (not private/incognito).
         </Text>
       </View>
     );

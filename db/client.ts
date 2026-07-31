@@ -54,10 +54,10 @@ async function openAppDatabase(): Promise<SQLite.SQLiteDatabase> {
     return SQLite.openDatabaseAsync("money-money.db");
   }
 
-  // Web SQLite (OPFS) needs COOP/COEP and can fail in some browsers / private mode.
+  // Web SQLite (OPFS) needs COOP/COEP and exclusive access — a second tab
+  // often throws NoModificationAllowedError. Fall back to :memory: for the session.
   try {
     const db = await SQLite.openDatabaseAsync("money-money.db");
-    // Touch the DB so worker/VFS errors surface here, not later.
     await db.execAsync("PRAGMA user_version;");
     return db;
   } catch (err) {
@@ -65,7 +65,9 @@ async function openAppDatabase(): Promise<SQLite.SQLiteDatabase> {
       "Persistent web SQLite failed; using in-memory DB for this session.",
       err,
     );
-    return SQLite.openDatabaseAsync(":memory:");
+    const memory = await SQLite.openDatabaseAsync(":memory:");
+    await memory.execAsync("PRAGMA user_version;");
+    return memory;
   }
 }
 
@@ -75,7 +77,11 @@ export async function getDb(): Promise<SQLite.SQLiteDatabase> {
       const db = await openAppDatabase();
       await migrate(db);
       return db;
-    })();
+    })().catch((err) => {
+      // Allow a later retry after the user closes a conflicting tab / reloads.
+      dbPromise = null;
+      throw err;
+    });
   }
   return dbPromise;
 }
