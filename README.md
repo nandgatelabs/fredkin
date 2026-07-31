@@ -11,6 +11,13 @@ Offline-first personal finance app (Android-first). Local SQLite storage, CSV ex
 | [`docs/HLD.md`](docs/HLD.md) | High-level design: architecture, data model, flows, phases |
 | [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) | Screen-by-screen feature / UI blueprint |
 | [`AGENTS.md`](AGENTS.md) | Instructions for AI coding agents |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Branch → PR → merge workflow (`gh`) |
+
+Repo: [nandgatelabs/money-money](https://github.com/nandgatelabs/money-money)
+
+## Development
+
+Use feature branches and GitHub PRs — do not push ordinary work straight to `main`. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Stack (planned)
 
