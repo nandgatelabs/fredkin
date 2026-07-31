@@ -4,10 +4,12 @@ Canonical remote: [nandgatelabs/money-money](https://github.com/nandgatelabs/mon
 
 Owner org: **nandgatelabs**. Use **GitHub CLI (`gh`)** for branches, PRs, and merges. Do not push straight to `main` for normal work.
 
+Please follow the [Code of Conduct](CODE_OF_CONDUCT.md). Report security issues via [SECURITY.md](SECURITY.md), not public issues.
+
 ## Workflow
 
 ```
-main (protected by convention)
+main (PR required; no direct pushes)
   └── feature/<short-name>  →  PR  →  review / CI  →  merge into main
 ```
 

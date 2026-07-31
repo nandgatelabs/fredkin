@@ -1,0 +1,40 @@
+name: Feature request
+description: Suggest an improvement or new capability
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check docs/HLD.md and docs/BLUEPRINT.md first so the request fits the offline-first product.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What user need does this address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should change in the product?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Likely docs impact
+      options:
+        - None / unclear
+        - Update BLUEPRINT.md
+        - Update HLD.md
+        - Update both HLD and BLUEPRINT
+    validations:
+      required: true
