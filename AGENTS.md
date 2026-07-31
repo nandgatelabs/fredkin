@@ -31,8 +31,8 @@ Full detail: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 1. **Never commit straight to `main`** for normal work.
 2. Create a branch: `feature/…`, `fix/…`, `docs/…`, or `chore/…`.
-3. Make focused commits with clear why-oriented messages.
-4. Open an **elaborate PR** with `gh pr create` (Summary + Test plan + Notes).
+3. Make focused commits; **subject must start with an intent prefix** (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`, `test:`, `perf:`, `style:`). See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+4. Open an **elaborate PR** with `gh pr create` (Summary + Test plan + Notes); prefer a prefixed title too.
 5. Merge with `gh pr merge` (prefer `--squash`), then sync local `main`.
 6. If product/architecture behavior changes, update `docs/HLD.md` and/or `docs/BLUEPRINT.md` in the **same PR**.
 

@@ -31,14 +31,37 @@ Branch naming:
 ### 2. Commit with intent
 
 - Prefer **small, focused commits** that each leave the tree coherent.
-- Message style: short summary line, then a blank line and 1–2 sentences on **why** when useful.
-- Example:
+- **Required:** every commit subject starts with an intent prefix (`type: summary`).
+- Optional body after a blank line: 1–2 sentences on **why**.
+
+| Prefix | Intent |
+|--------|--------|
+| `feat:` | New user-facing capability |
+| `fix:` | Bug fix |
+| `docs:` | Documentation only |
+| `refactor:` | Internal restructure, no behavior change |
+| `chore:` | Tooling, deps, repo hygiene |
+| `test:` | Tests only |
+| `perf:` | Performance improvement |
+| `style:` | Formatting / non-semantic code style |
+
+Examples:
 
 ```text
-Add period range helpers for monthly and yearly views.
+feat: add period range helpers for monthly and yearly views
 
 Centralizes date math so Records and Analysis share one source of truth.
 ```
+
+```text
+docs: clarify backup restore confirmation flow
+```
+
+```text
+fix: correct transfer balance when from and to are swapped
+```
+
+Squash-merge PR titles should keep the same prefix style when practical (e.g. `docs: … (#12)`).
 
 Do not commit `private/`, `.env*`, secrets, or real ledgers.
 
