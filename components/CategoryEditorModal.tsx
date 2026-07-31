@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Modal,
   Pressable,
@@ -10,13 +10,17 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
+import { Button } from "@/components/ui/Button";
 import type { CategoryType } from "@/db/types";
+import { useKeydown } from "@/hooks/useKeydown";
 import {
   CATEGORY_ICON_OPTIONS,
   categoryColor,
   categoryIcon,
 } from "@/lib/icons";
+import { webClickable } from "@/lib/web";
 import { colors } from "@/theme";
+import { layout } from "@/theme/layout";
 
 export type CategoryEditorValues = {
   name: string;
@@ -56,7 +60,7 @@ export function CategoryEditorModal({
     setBusy(false);
   }, [visible, initial, mode]);
 
-  async function handleSave() {
+  const handleSave = useCallback(async () => {
     const trimmed = name.trim() || "Untitled";
     try {
       setBusy(true);
@@ -70,19 +74,38 @@ export function CategoryEditorModal({
       setError(e instanceof Error ? e.message : "Save failed");
       setBusy(false);
     }
-  }
+  }, [iconKey, name, onSave, type]);
+
+  useKeydown(
+    visible,
+    useCallback(
+      (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          if (!busy) onCancel();
+          return;
+        }
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          if (!busy) void handleSave();
+        }
+      },
+      [busy, handleSave, onCancel],
+    ),
+  );
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View style={styles.backdrop}>
-        <View style={styles.card}>
+      <Pressable style={styles.backdrop} onPress={onCancel}>
+        <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
           <Text style={styles.title}>
             {mode === "edit" ? "Edit category" : "Add new category"}
           </Text>
+          <Text style={styles.hint}>Esc cancel · Enter save</Text>
 
           {mode === "create" ? (
             <View style={styles.typeRow}>
-              <Text style={styles.label}>Type:</Text>
+              <Text style={styles.label}>Type</Text>
               <TypeOption
                 label="INCOME"
                 selected={type === "income"}
@@ -97,7 +120,13 @@ export function CategoryEditorModal({
           ) : null}
 
           <Text style={styles.label}>Name</Text>
-          <TextInput value={name} onChangeText={setName} style={styles.input} />
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            style={styles.input}
+            selectTextOnFocus
+            autoFocus
+          />
 
           <Text style={[styles.label, { marginTop: 8 }]}>Icon</Text>
           <ScrollView style={styles.iconScroll} contentContainerStyle={styles.iconGrid}>
@@ -107,7 +136,11 @@ export function CategoryEditorModal({
                 <Pressable
                   key={opt.key}
                   onPress={() => setIconKey(opt.key)}
-                  style={[styles.iconCell, selected && styles.iconCellSelected]}
+                  style={[
+                    styles.iconCell,
+                    webClickable,
+                    selected && styles.iconCellSelected,
+                  ]}
                 >
                   <View style={[styles.iconCircle, { backgroundColor: opt.color }]}>
                     <Ionicons name={categoryIcon(opt.key)} size={18} color="#fff" />
@@ -120,15 +153,23 @@ export function CategoryEditorModal({
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <View style={styles.actions}>
-            <Pressable style={styles.actionBtn} onPress={onCancel} disabled={busy}>
-              <Text style={styles.actionLabel}>CANCEL</Text>
-            </Pressable>
-            <Pressable style={styles.actionBtn} onPress={handleSave} disabled={busy}>
-              <Text style={styles.actionLabel}>{busy ? "…" : "SAVE"}</Text>
-            </Pressable>
+            <Button
+              label="CANCEL"
+              variant="ghost"
+              onPress={onCancel}
+              disabled={busy}
+              style={styles.actionBtn}
+            />
+            <Button
+              label="SAVE"
+              variant="primary"
+              onPress={() => void handleSave()}
+              busy={busy}
+              style={styles.actionBtn}
+            />
           </View>
-        </View>
-      </View>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 }
@@ -143,7 +184,10 @@ function TypeOption({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={styles.typeOpt}>
+    <Pressable
+      onPress={onPress}
+      style={[styles.typeOpt, webClickable, selected && styles.typeOptOn]}
+    >
       <Ionicons
         name={selected ? "checkmark-circle" : "ellipse-outline"}
         size={18}
@@ -157,43 +201,66 @@ function TypeOption({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.55)",
+    backgroundColor: colors.overlay,
     justifyContent: "center",
     padding: 20,
   },
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.accentMuted,
-    padding: 18,
+    borderColor: colors.border,
+    padding: 20,
     gap: 8,
     maxHeight: "90%",
+    width: "100%",
+    maxWidth: layout.dialogMaxWidth,
+    alignSelf: "center",
   },
   title: {
     color: colors.accent,
     fontSize: 18,
     fontWeight: "600",
     textAlign: "center",
-    marginBottom: 8,
   },
-  label: { color: colors.accent, fontSize: 14, fontWeight: "500" },
+  hint: {
+    color: colors.textSecondary,
+    fontSize: 11,
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  label: { color: colors.accentMuted, fontSize: 13, fontWeight: "600" },
   input: {
     borderWidth: 1,
-    borderColor: colors.accentMuted,
-    borderRadius: 8,
+    borderColor: colors.border,
+    borderRadius: 10,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 12,
     color: colors.text,
     fontSize: 16,
+    backgroundColor: colors.inputBg,
   },
   typeRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 10,
     marginBottom: 4,
+    flexWrap: "wrap",
   },
-  typeOpt: { flexDirection: "row", alignItems: "center", gap: 4 },
+  typeOpt: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+  },
+  typeOptOn: {
+    borderColor: colors.accent,
+    backgroundColor: "rgba(232, 212, 138, 0.1)",
+  },
   typeLabel: { color: colors.accent, fontWeight: "600", fontSize: 13 },
   iconScroll: { maxHeight: 160 },
   iconGrid: {
@@ -201,9 +268,10 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 8,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
+    borderColor: colors.borderSubtle,
+    borderRadius: 10,
     padding: 10,
+    backgroundColor: colors.inputBg,
   },
   iconCell: {
     padding: 4,
@@ -213,7 +281,7 @@ const styles = StyleSheet.create({
   },
   iconCellSelected: {
     borderColor: colors.accent,
-    backgroundColor: "rgba(229,211,138,0.12)",
+    backgroundColor: "rgba(232, 212, 138, 0.12)",
   },
   iconCircle: {
     width: 36,
@@ -224,13 +292,5 @@ const styles = StyleSheet.create({
   },
   error: { color: colors.danger, fontSize: 13 },
   actions: { flexDirection: "row", gap: 12, marginTop: 12 },
-  actionBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.accent,
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  actionLabel: { color: colors.accent, fontWeight: "700", fontSize: 14 },
+  actionBtn: { flex: 1 },
 });

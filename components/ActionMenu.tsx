@@ -1,6 +1,10 @@
+import { useCallback } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { useKeydown } from "@/hooks/useKeydown";
+import { webClickable } from "@/lib/web";
 import { colors } from "@/theme";
+import { layout } from "@/theme/layout";
 
 export type ActionMenuItem = {
   label: string;
@@ -16,6 +20,19 @@ type Props = {
 };
 
 export function ActionMenu({ visible, title, items, onClose }: Props) {
+  useKeydown(
+    visible,
+    useCallback(
+      (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          onClose();
+        }
+      },
+      [onClose],
+    ),
+  );
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
@@ -24,7 +41,11 @@ export function ActionMenu({ visible, title, items, onClose }: Props) {
           {items.map((item) => (
             <Pressable
               key={item.label}
-              style={styles.item}
+              style={({ pressed }) => [
+                styles.item,
+                webClickable,
+                pressed && styles.itemPressed,
+              ]}
               onPress={() => {
                 onClose();
                 item.onPress();
@@ -35,7 +56,14 @@ export function ActionMenu({ visible, title, items, onClose }: Props) {
               </Text>
             </Pressable>
           ))}
-          <Pressable style={styles.item} onPress={onClose}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.item,
+              webClickable,
+              pressed && styles.itemPressed,
+            ]}
+            onPress={onClose}
+          >
             <Text style={styles.cancel}>Cancel</Text>
           </Pressable>
         </View>
@@ -47,34 +75,41 @@ export function ActionMenu({ visible, title, items, onClose }: Props) {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.55)",
-    justifyContent: "flex-end",
+    backgroundColor: colors.overlay,
+    justifyContent: "center",
     padding: 16,
   },
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
     overflow: "hidden",
+    width: "100%",
+    maxWidth: layout.dialogMaxWidth,
+    alignSelf: "center",
   },
   title: {
     color: colors.accentMuted,
     textAlign: "center",
-    paddingVertical: 12,
+    paddingVertical: 14,
     fontSize: 13,
+    fontWeight: "600",
   },
   item: {
-    paddingVertical: 14,
+    paddingVertical: 15,
     paddingHorizontal: 16,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
+    borderTopColor: colors.borderSubtle,
+  },
+  itemPressed: {
+    backgroundColor: "rgba(232, 212, 138, 0.08)",
   },
   itemLabel: {
     color: colors.accent,
     textAlign: "center",
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   destructive: {
     color: colors.danger,

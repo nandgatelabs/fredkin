@@ -1,7 +1,8 @@
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
+import { webFontBody } from "@/lib/web";
 import { colors } from "@/theme";
 
 export default function TabsLayout() {
@@ -13,16 +14,18 @@ export default function TabsLayout() {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
-          height: 64,
+          height: Platform.OS === "web" ? 60 : 64,
           paddingTop: 6,
-          paddingBottom: 8,
+          paddingBottom: Platform.OS === "web" ? 8 : 8,
         },
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.tabInactive,
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: "500",
+          fontFamily: webFontBody,
         },
+        tabBarItemStyle: Platform.OS === "web" ? { cursor: "pointer" } : undefined,
       }}
     >
       <Tabs.Screen

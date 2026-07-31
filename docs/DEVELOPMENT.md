@@ -10,7 +10,9 @@ npm install
 npm run web
 ```
 
-Chrome or Edge should open (or go to `http://localhost:8081`). You should see the dark shell with bottom tabs.
+Chrome or Edge should open (or go to `http://localhost:8081`). You should see the full-width dark shell with bottom tabs.
+
+**Web keyboard tips:** in the add-record composer, type digits/`+ − * /`/Enter; Esc cancels. In editor modals, Esc cancels and Enter saves.
 
 Web uses SQLite via WebAssembly (still alpha upstream). Prefer a normal Chrome/Edge window (not private/incognito).
 

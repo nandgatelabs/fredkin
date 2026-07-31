@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
+import { webClickable } from "@/lib/web";
 import { colors } from "@/theme";
 
 type Props = {
@@ -53,7 +54,11 @@ export function CalculatorKeypad({
         <Text style={styles.display} numberOfLines={1} adjustsFontSizeToFit>
           {expression}
         </Text>
-        <Pressable onPress={onBackspace} hitSlop={8} style={styles.backspace}>
+        <Pressable
+          onPress={onBackspace}
+          hitSlop={8}
+          style={[styles.backspace, webClickable]}
+        >
           <Ionicons name="backspace-outline" size={22} color={colors.accent} />
         </Pressable>
       </View>
@@ -64,11 +69,23 @@ export function CalculatorKeypad({
             {row.map((key) => {
               const isOp = key.kind === "op" || key.kind === "eq";
               const opValue =
-                key.label === "−" ? "-" : key.label === "×" ? "×" : key.label === "÷" ? "÷" : key.label;
+                key.label === "−"
+                  ? "-"
+                  : key.label === "×"
+                    ? "×"
+                    : key.label === "÷"
+                      ? "÷"
+                      : key.label;
               return (
                 <Pressable
                   key={key.label}
-                  style={[styles.key, isOp && styles.keyOp, key.kind === "zero" && styles.keyZero]}
+                  style={({ pressed }) => [
+                    styles.key,
+                    isOp && styles.keyOp,
+                    key.kind === "eq" && styles.keyEq,
+                    webClickable,
+                    pressed && styles.keyPressed,
+                  ]}
                   onPress={() => {
                     if (key.kind === "digit" || key.kind === "zero") onDigit(key.label);
                     else if (key.kind === "dot") onDecimal();
@@ -76,7 +93,9 @@ export function CalculatorKeypad({
                     else onOperator(opValue === "+" ? "+" : opValue);
                   }}
                 >
-                  <Text style={[styles.keyLabel, isOp && styles.keyLabelOp]}>{key.label}</Text>
+                  <Text style={[styles.keyLabel, isOp && styles.keyLabelOp]}>
+                    {key.label}
+                  </Text>
                 </Pressable>
               );
             })}
@@ -94,53 +113,58 @@ const styles = StyleSheet.create({
   displayRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: colors.inputBg,
+    borderTopWidth: 1,
+    borderColor: colors.borderSubtle,
   },
   display: {
     flex: 1,
-    color: colors.accent,
+    color: colors.text,
     fontSize: 36,
     fontWeight: "300",
     textAlign: "right",
     paddingRight: 8,
   },
   backspace: {
-    padding: 6,
+    padding: 8,
+    borderRadius: 8,
   },
   grid: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
+    borderTopWidth: 1,
+    borderColor: colors.borderSubtle,
   },
   row: {
     flexDirection: "row",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
+    borderBottomWidth: 1,
+    borderColor: colors.borderSubtle,
   },
   key: {
     flex: 1,
-    height: 52,
+    height: 54,
     alignItems: "center",
     justifyContent: "center",
-    borderRightWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
-  },
-  keyZero: {
-    // 0 is single cell; layout already 4 cols
+    borderRightWidth: 1,
+    borderColor: colors.borderSubtle,
+    backgroundColor: colors.surface,
   },
   keyOp: {
-    backgroundColor: "#4A4638",
+    backgroundColor: colors.surfaceElevated,
+  },
+  keyEq: {
+    backgroundColor: colors.accentPressed,
+  },
+  keyPressed: {
+    opacity: 0.75,
   },
   keyLabel: {
-    color: colors.accent,
+    color: colors.text,
     fontSize: 22,
-    fontWeight: "400",
+    fontWeight: "500",
   },
   keyLabelOp: {
-    color: colors.text,
-    fontWeight: "500",
+    color: colors.accent,
+    fontWeight: "600",
   },
 });
