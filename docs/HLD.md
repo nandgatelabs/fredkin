@@ -311,7 +311,7 @@ docs/              # HLD + BLUEPRINT (this folder)
 | P7 Preferences polish | Themes / UI mode, passcode lock, daily remind (done) |
 | P8 Account + Category details | Tap account/category → detail stats + record lists (done) |
 
-**v1 baseline:** P0–P8 shipped. Further work is optional polish tracked as GitHub issues — pull into a phase only when explicitly prioritized.
+**v1 baseline:** P0–P8 shipped as **1.0.0**. Further work is optional polish tracked as GitHub issues and [`ROADMAP.md`](./ROADMAP.md) — pull into a phase only when explicitly prioritized. Releases: [`VERSIONING.md`](./VERSIONING.md), [`RELEASE.md`](./RELEASE.md), [`CHANGELOG.md`](../CHANGELOG.md).
 
 ### Desktop packaging (Ubuntu)
 

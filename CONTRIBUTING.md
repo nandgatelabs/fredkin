@@ -112,8 +112,18 @@ If behavior or architecture changes, update the matching source of truth in the 
 
 - [`docs/HLD.md`](docs/HLD.md) — architecture, data, phases  
 - [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) — screens / product behavior  
+- [`CHANGELOG.md`](CHANGELOG.md) — user-facing notes under `[Unreleased]` when shipping behavior  
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — only when priorities / milestones change  
 - [`AGENTS.md`](AGENTS.md) — agent hard rules  
+
+## Releases (maintainers)
+
+Versioning and cutting GitHub Releases: [`docs/VERSIONING.md`](docs/VERSIONING.md) and [`docs/RELEASE.md`](docs/RELEASE.md).
+
+```bash
+npm run version:set -- X.Y.Z   # sync package.json, app.json, desktop/
+```
 
 ## Agents
 
-AI agents **must** follow this workflow: feature branch → commits → `gh pr create` → merge. See [`AGENTS.md`](AGENTS.md).
+AI agents **must** follow this workflow: feature branch → commits → `gh pr create` → wait for explicit merge approval. See [`AGENTS.md`](AGENTS.md).

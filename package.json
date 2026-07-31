@@ -1,7 +1,7 @@
 {
   "name": "money-money",
   "main": "expo-router/entry",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "dependencies": {
     "@expo/ui": "~57.0.8",
     "@expo/vector-icons": "^15.0.2",
@@ -48,6 +48,8 @@
     "desktop:dev": "npm run web:export && npm --prefix desktop start",
     "desktop:pack": "npm run web:export && npm --prefix desktop run pack",
     "desktop:install-user": "npm run desktop:pack && npm --prefix desktop run install-user",
+    "version:sync": "node scripts/sync-version.mjs",
+    "version:set": "node scripts/sync-version.mjs",
     "lint": "expo lint",
     "postinstall": "patch-package"
   },

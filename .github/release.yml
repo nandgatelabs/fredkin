@@ -1,0 +1,22 @@
+# Categories for GitHub-generated release notes (optional helper).
+# Canonical human-edited history remains CHANGELOG.md.
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+  categories:
+    - title: Features
+      labels:
+        - enhancement
+        - feature
+    - title: Fixes
+      labels:
+        - bug
+        - fix
+    - title: Documentation
+      labels:
+        - documentation
+        - docs
+    - title: Other
+      labels:
+        - "*"
