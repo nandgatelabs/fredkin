@@ -4,20 +4,32 @@ Offline-first personal finance app (Android-first). Local SQLite storage, CSV ex
 
 > Status: **P0 shell running** — tabs, theme, SQLite schema, settings store. Feature slices continue per [`docs/HLD.md`](docs/HLD.md).
 
-## Quick start
+## Quick start (laptop browser)
+
+Easiest way to try the app while phone Expo Go is flaky:
 
 ```bash
 npm install
+npm run web
+```
+
+Chrome/Edge should open at `http://localhost:8081`. You should see the dark **Records** screen with tabs and a **+** button.
+
+## Phone / emulator
+
+```bash
 npm start
 ```
 
-Then press `a` for Android emulator/device, `i` for iOS simulator, or scan the QR code with Expo Go.
+Then press `a` (Android) or scan the QR in **Expo Go for SDK 57** from [expo.dev/go](https://expo.dev/go) (Play Store build may lag).
+
+USB (more stable than Wi‑Fi):
 
 ```bash
-npm run android   # Expo + Android (primary target)
+adb devices          # must say "device", not unauthorized
+adb reverse tcp:8081 tcp:8081
+npx expo start --localhost
 ```
-
-Web is not a v1 target (SQLite WASM bundling); use a device or emulator.
 
 ## Docs
 
