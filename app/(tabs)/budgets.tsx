@@ -28,7 +28,7 @@ import {
 import { categoryIcon } from "@/lib/icons";
 import { formatMoney } from "@/lib/money";
 import { analysisColor } from "@/lib/analysisPalette";
-import { webClickable } from "@/lib/web";
+import { webClickable, webFocusableProps } from "@/lib/web";
 import { usePeriodStore } from "@/store/period";
 import { colors } from "@/theme";
 
@@ -128,16 +128,24 @@ export default function BudgetsScreen() {
 
       <View style={styles.periodRow}>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Previous month"
           onPress={() => setAnchorDate(shiftMonthIso(anchorDate, -1))}
           hitSlop={10}
+          {...webFocusableProps}
           style={[styles.chevron, webClickable]}
         >
           <Ionicons name="chevron-back" size={20} color={colors.accent} />
         </Pressable>
-        <Text style={styles.periodLabel}>{monthLabel(anchorDate)}</Text>
+        <Text style={styles.periodLabel} accessibilityRole="header">
+          {monthLabel(anchorDate)}
+        </Text>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Next month"
           onPress={() => setAnchorDate(shiftMonthIso(anchorDate, 1))}
           hitSlop={10}
+          {...webFocusableProps}
           style={[styles.chevron, webClickable]}
         >
           <Ionicons name="chevron-forward" size={20} color={colors.accent} />

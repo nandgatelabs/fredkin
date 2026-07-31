@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useKeydown } from "@/hooks/useKeydown";
-import { webClickable, webFontDisplay } from "@/lib/web";
+import { webClickable, webFocusableProps, webFontDisplay } from "@/lib/web";
 import { colors } from "@/theme";
 
 type Props = {
@@ -50,13 +50,17 @@ export function AppDrawer({ visible, onClose }: Props) {
           <Text style={styles.brand}>money-money</Text>
           <Text style={styles.sub}>Local · offline · no paywall</Text>
           <View style={styles.list}>
-            {ITEMS.map((item) => (
+            {ITEMS.map((item, index) => (
               <Pressable
                 key={item.href}
+                accessibilityRole="button"
+                accessibilityLabel={item.label}
+                accessibilityHint={`Menu item ${index + 1} of ${ITEMS.length}`}
                 onPress={() => {
                   onClose();
                   router.push(item.href as never);
                 }}
+                {...webFocusableProps}
                 style={({ pressed }) => [
                   styles.item,
                   webClickable,

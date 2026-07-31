@@ -6,8 +6,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/Button";
 import { exportMoneyCsv } from "@/db/exportCsv";
 import { useKeydown } from "@/hooks/useKeydown";
-import { downloadTextFile } from "@/lib/download";
-import { webClickable } from "@/lib/web";
+import { SaveCancelledError, saveTextFile } from "@/lib/download";
+import { webClickable, webFocusableProps } from "@/lib/web";
 import { colors } from "@/theme";
 
 export default function ExportCsvScreen() {
@@ -33,11 +33,12 @@ export default function ExportCsvScreen() {
     setSummary(null);
     try {
       const result = await exportMoneyCsv();
-      await downloadTextFile(result.fileName, result.text);
+      await saveTextFile(result.fileName, result.text, "text/csv");
       setSummary(
         `Saved ${result.fileName}\n${result.accountOpenings} account opening balance${result.accountOpenings === 1 ? "" : "s"}, ${result.records} record${result.records === 1 ? "" : "s"}.`,
       );
     } catch (e) {
+      if (e instanceof SaveCancelledError) return;
       setError(e instanceof Error ? e.message : "Export failed");
     } finally {
       setBusy(false);
@@ -52,7 +53,14 @@ export default function ExportCsvScreen() {
       ]}
     >
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={10} style={webClickable}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+          onPress={() => router.back()}
+          hitSlop={10}
+          style={webClickable}
+          {...webFocusableProps}
+        >
           <Text style={styles.back}>✕ CLOSE</Text>
         </Pressable>
         <Text style={styles.title}>Export CSV</Text>
@@ -60,12 +68,11 @@ export default function ExportCsvScreen() {
       </View>
 
       <Text style={styles.body}>
-        Download your ledger as a worksheet CSV (TIME, TYPE, AMOUNT, CATEGORY,
-        ACCOUNT, NOTES).
+        Save your ledger as a worksheet CSV (TIME, TYPE, AMOUNT, CATEGORY,
+        ACCOUNT, NOTES). You’ll pick where the file is saved.
       </Text>
       <Text style={styles.body}>
-        Unlike the original MyMoney export, money-money also writes each account’s
-        initial (opening) balance as a{" "}
+        Each account’s initial (opening) balance is written as a{" "}
         <Text style={styles.em}>(#) Opening</Text> row so a later import can restore
         it.
       </Text>

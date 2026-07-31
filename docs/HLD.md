@@ -231,15 +231,16 @@ Columns: `TIME`, `TYPE`, `AMOUNT`, `CATEGORY`, `ACCOUNT`, `NOTES`
 | `(-) Expense` | Expense |
 | `(+) Income` | Income |
 | `(*) Transfer` | Transfer; `ACCOUNT` is `From->To`; category blank |
-| `(#) Opening` | **money-money extension** (not in original MyMoney): sets the account’s opening/initial balance; not a ledger record |
+| `(#) Opening` | Sets the account’s opening/initial balance; not a ledger record |
 
-Not a full backup (budgets/settings still need `.mbak`). Opening rows make account initial balances round-trip via CSV.
+Not a full backup (budgets/settings still need `.mbak`). Opening rows make account initial balances round-trip via CSV. Export prompts for a save location (File System Access API on Chromium web; Share sheet on native).
 
 ### Backup (`.mbak`)
 
 - Versioned JSON.
 - Includes: records, accounts, categories, budgets, settings.
 - Filename pattern: `money-money-backup_DD_MM_YY_XXX.mbak`.
+- Backup also prompts for a save location (same picker / Share path as CSV export).
 - Real user exports live under gitignored `private/` and must never be committed.
 
 ---

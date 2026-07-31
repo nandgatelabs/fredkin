@@ -1,13 +1,16 @@
-import { Platform, StyleSheet } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
+import { WebAppShortcuts } from "@/components/WebAppShortcuts";
 import { webFontBody } from "@/lib/web";
 import { colors } from "@/theme";
 
 export default function TabsLayout() {
   return (
-    <Tabs
+    <View style={{ flex: 1 }}>
+      <WebAppShortcuts />
+      <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -74,5 +77,6 @@ export default function TabsLayout() {
         }}
       />
     </Tabs>
+    </View>
   );
 }

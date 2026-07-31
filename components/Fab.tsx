@@ -2,7 +2,7 @@ import { Platform, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import { webClickable } from "@/lib/web";
+import { webClickable, webFocusableProps } from "@/lib/web";
 import { colors } from "@/theme";
 
 export function Fab() {
@@ -12,7 +12,9 @@ export function Fab() {
     <Pressable
       accessibilityRole="button"
       accessibilityLabel="Add record"
+      accessibilityHint="Shortcut: N"
       onPress={() => router.push("/record/new")}
+      {...webFocusableProps}
       style={({ pressed }) => [
         styles.fab,
         webClickable,

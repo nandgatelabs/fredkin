@@ -13,7 +13,7 @@ import {
   recordTitle,
   signedDisplayAmount,
 } from "@/lib/recordsUi";
-import { webClickable } from "@/lib/web";
+import { webClickable, webFocusableProps } from "@/lib/web";
 import { colors } from "@/theme";
 
 const MONTHS = [
@@ -67,7 +67,10 @@ export function SearchResultRow({ item, query, onPress }: Props) {
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={title}
       onPress={onPress}
+      {...webFocusableProps}
       style={({ pressed }) => [styles.row, webClickable, pressed && styles.pressed]}
     >
       <View style={[styles.icon, { backgroundColor: iconBg }]}>

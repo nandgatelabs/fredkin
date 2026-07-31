@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { formatMoney } from "@/lib/money";
 import { formatPeriodLabel } from "@/lib/period";
-import { webClickable } from "@/lib/web";
+import { webClickable, webFocusableProps } from "@/lib/web";
 import { usePeriodStore } from "@/store/period";
 import { useSettingsStore } from "@/store/settings";
 import { colors } from "@/theme";
@@ -40,32 +40,39 @@ export function PeriodHeader({
           accessibilityLabel="Previous period"
           onPress={() => shiftPeriod(-1)}
           hitSlop={10}
+          {...webFocusableProps}
           style={[styles.chevron, webClickable]}
         >
           <Ionicons name="chevron-back" size={20} color={colors.accent} />
         </Pressable>
 
-        <Text style={styles.periodLabel}>{label}</Text>
+        <Text style={styles.periodLabel} accessibilityRole="header">
+          {label}
+        </Text>
 
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Next period"
           onPress={() => shiftPeriod(1)}
           hitSlop={10}
+          {...webFocusableProps}
           style={[styles.chevron, webClickable]}
         >
           <Ionicons name="chevron-forward" size={20} color={colors.accent} />
         </Pressable>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Display options"
-          onPress={onFilterPress}
-          hitSlop={10}
-          style={[styles.filter, webClickable]}
-        >
-          <Ionicons name="options-outline" size={18} color={colors.accent} />
-        </Pressable>
+        {onFilterPress ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Display options"
+            onPress={onFilterPress}
+            hitSlop={10}
+            {...webFocusableProps}
+            style={[styles.filter, webClickable]}
+          >
+            <Ionicons name="options-outline" size={18} color={colors.accent} />
+          </Pressable>
+        ) : null}
       </View>
 
       {showSummary && showTotal ? (

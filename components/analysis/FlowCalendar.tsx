@@ -44,7 +44,7 @@ function heatStyle(amount: number, max: number, tone: "expense" | "income") {
   return { backgroundColor: `rgba(143, 207, 146, ${a})` };
 }
 
-/** Big outlined month grid (MyMoney-style) with richer color. */
+/** Big outlined month grid with richer color. */
 export function FlowCalendar({
   rangeStart,
   rangeEnd,

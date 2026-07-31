@@ -13,8 +13,8 @@ import {
   type MoneyBackup,
 } from "@/db/backup";
 import { useKeydown } from "@/hooks/useKeydown";
-import { downloadTextFile } from "@/lib/download";
-import { webClickable } from "@/lib/web";
+import { SaveCancelledError, saveTextFile } from "@/lib/download";
+import { webClickable, webFocusableProps } from "@/lib/web";
 import { useSettingsStore } from "@/store/settings";
 import { colors } from "@/theme";
 
@@ -44,11 +44,16 @@ export default function BackupScreen() {
     try {
       const payload = await createBackupPayload();
       const name = backupFileName();
-      await downloadTextFile(name, JSON.stringify(payload, null, 2), "application/json");
+      await saveTextFile(
+        name,
+        JSON.stringify(payload, null, 2),
+        "application/json",
+      );
       setMessage(
         `Backup saved as ${name} (${payload.records.length} records, ${payload.accounts.length} accounts).`,
       );
     } catch (e) {
+      if (e instanceof SaveCancelledError) return;
       setError(e instanceof Error ? e.message : "Backup failed");
     } finally {
       setBusy(false);
@@ -108,7 +113,14 @@ export default function BackupScreen() {
       ]}
     >
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={10} style={webClickable}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+          onPress={() => router.back()}
+          hitSlop={10}
+          style={webClickable}
+          {...webFocusableProps}
+        >
           <Text style={styles.back}>✕ CLOSE</Text>
         </Pressable>
         <Text style={styles.title}>Backup</Text>
@@ -118,6 +130,7 @@ export default function BackupScreen() {
       <Text style={styles.body}>
         A `.mbak` file is a full local snapshot: accounts, categories, records,
         budgets, and settings. Prefer this over CSV when you want a complete restore.
+        You’ll pick where the backup file is saved.
       </Text>
 
       <Button
