@@ -81,7 +81,7 @@ export default function RootLayout() {
       </Stack>
 
       {!ready ? (
-        <View style={styles.overlay} pointerEvents="auto">
+        <View style={[styles.overlay, styles.overlayCentered]} pointerEvents="auto">
           <ActivityIndicator color={colors.accent} size="large" />
           {bootError ? (
             <>
@@ -115,11 +115,13 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     backgroundColor: colors.background,
+    zIndex: 100,
+  },
+  overlayCentered: {
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 24,
     gap: 12,
-    zIndex: 100,
   },
   errorTitle: {
     color: colors.expense,
