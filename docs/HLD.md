@@ -311,7 +311,20 @@ docs/              # HLD + BLUEPRINT (this folder)
 | P7 Preferences polish | Themes / UI mode, passcode lock, daily remind (done) |
 | P8 Account + Category details | Tap account/category → detail stats + record lists (done) |
 
-Open GitHub issues filed during earlier phases are **deferred indefinitely** unless explicitly pulled into a phase. Prefer blueprint gaps over issue triage.
+**v1 baseline:** P0–P8 shipped. Further work is optional polish tracked as GitHub issues — pull into a phase only when explicitly prioritized.
+
+### Deferred polish (post–v1)
+
+| Issue | Topic |
+|-------|--------|
+| [#19](https://github.com/nandgatelabs/money-money/issues/19) | CSV export From/To date range |
+| [#20](https://github.com/nandgatelabs/money-money/issues/20) | Backup directory + `.mbak` restore list |
+| [#21](https://github.com/nandgatelabs/money-money/issues/21) | Optional Help / Feedback drawer entry |
+| [#22](https://github.com/nandgatelabs/money-money/issues/22) | About: privacy + license links |
+| [#23](https://github.com/nandgatelabs/money-money/issues/23) | Daily remind on native (iOS/Android) |
+| [#16](https://github.com/nandgatelabs/money-money/issues/16) | Web save-location picker (parked) |
+
+Earlier analysis/preferences bug issues (#12–#15) remain deferred indefinitely unless explicitly scheduled.
 
 ---
 
