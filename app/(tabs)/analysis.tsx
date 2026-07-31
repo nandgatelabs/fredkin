@@ -153,7 +153,7 @@ export default function AnalysisScreen() {
                   label={tone === "expense" ? "Expenses" : "Income"}
                   segments={slices.map((s, i) => ({
                     amount: s.amount,
-                    color: donutColor(i, s.color),
+                    color: donutColor(i),
                   }))}
                 />
                 <CategoryLegend slices={slices} tone={tone} />

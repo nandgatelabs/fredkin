@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, G } from "react-native-svg";
 
+import { analysisColor } from "@/lib/analysisPalette";
 import { colors } from "@/theme";
 
 export type DonutSegment = {
@@ -14,24 +15,8 @@ type Props = {
   size?: number;
 };
 
-const FALLBACK = [
-  "#E07A62",
-  "#E8C84A",
-  "#9B7BB8",
-  "#6BBF7A",
-  "#E89AB8",
-  "#5BB8B0",
-  "#6BC4D8",
-  "#E8A06A",
-  "#A05A5A",
-  "#A8A05A",
-  "#74BBEF",
-  "#C9B56E",
-];
-
-export function donutColor(index: number, preferred?: string | null) {
-  if (preferred) return preferred;
-  return FALLBACK[index % FALLBACK.length];
+export function donutColor(index: number, _preferred?: string | null) {
+  return analysisColor(index);
 }
 
 /** Simple donut via stroke-dasharray circles (no path math). */
@@ -78,11 +63,9 @@ export function DonutChart({ segments, label, size = 160 }: Props) {
           strokeWidth={stroke}
           fill="none"
         />
-        <G rotation={-90} origin={`${cx}, ${cy}`}>
-          {arcs}
-        </G>
+        <G transform={`rotate(-90 ${cx} ${cy})`}>{arcs}</G>
       </Svg>
-      <View style={styles.center} pointerEvents="none">
+      <View style={styles.center}>
         <Text style={styles.label}>{label}</Text>
       </View>
     </View>
@@ -95,6 +78,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 24,
+    pointerEvents: "none",
   },
   label: {
     color: colors.accentMuted,

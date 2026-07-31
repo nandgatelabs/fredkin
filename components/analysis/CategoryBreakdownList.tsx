@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { donutColor } from "@/components/analysis/DonutChart";
 import type { CategorySlice } from "@/db/analysis";
-import { categoryColor, categoryIcon } from "@/lib/icons";
+import { categoryIcon } from "@/lib/icons";
 import { formatMoney } from "@/lib/money";
 import { colors } from "@/theme";
 
@@ -43,7 +43,7 @@ export function CategoryBreakdownList({ slices, tone }: Props) {
   return (
     <View style={styles.list}>
       {slices.map((s, i) => {
-        const color = donutColor(i, s.color ?? categoryColor(s.iconKey));
+        const color = donutColor(i);
         const signed = tone === "expense" ? -s.amount : s.amount;
         return (
           <View key={s.categoryId ?? s.name} style={styles.row}>
