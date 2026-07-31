@@ -87,7 +87,11 @@ EOF
 
 PR body should be enough for a future reader (or agent) to understand the change without the chat history.
 
-### 4. Merge via PR
+### 4. Merge via PR (maintainer only, after testing)
+
+**Do not merge until a maintainer has tried the change (usability) and explicitly approves merge.**
+
+Agents and contributors: open the PR and wait. Maintainers merge only after a go-ahead.
 
 ```bash
 gh pr merge --squash   # default preference for this repo

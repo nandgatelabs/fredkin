@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -12,16 +12,23 @@ export default function RootLayout() {
   const hydrate = useSettingsStore((s) => s.hydrate);
   const hydrated = useSettingsStore((s) => s.hydrated);
   const [dbReady, setDbReady] = useState(false);
+  const [bootError, setBootError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       await getDb();
       await hydrate();
-      if (!cancelled) setDbReady(true);
+      if (!cancelled) {
+        setBootError(null);
+        setDbReady(true);
+      }
     })().catch((err) => {
       console.error("Failed to boot database", err);
-      if (!cancelled) setDbReady(true);
+      if (!cancelled) {
+        setBootError(err instanceof Error ? err.message : String(err));
+        setDbReady(true);
+      }
     });
     return () => {
       cancelled = true;
@@ -33,6 +40,20 @@ export default function RootLayout() {
       <View style={styles.boot}>
         <StatusBar style="light" />
         <ActivityIndicator color={colors.accent} size="large" />
+      </View>
+    );
+  }
+
+  if (bootError) {
+    return (
+      <View style={styles.boot}>
+        <StatusBar style="light" />
+        <Text style={styles.errorTitle}>Could not start local database</Text>
+        <Text style={styles.errorBody}>{bootError}</Text>
+        <Text style={styles.errorHint}>
+          On web: hard-refresh after restarting `npm run web`. If it persists,
+          try a normal (non-private) Chrome/Edge window.
+        </Text>
       </View>
     );
   }
@@ -65,5 +86,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 24,
+    gap: 12,
+  },
+  errorTitle: {
+    color: colors.expense,
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  errorBody: {
+    color: colors.text,
+    fontSize: 14,
+    textAlign: "center",
+  },
+  errorHint: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    textAlign: "center",
+    lineHeight: 18,
   },
 });

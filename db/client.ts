@@ -1,11 +1,37 @@
+import { Platform } from "react-native";
 import * as SQLite from "expo-sqlite";
 
 import { CREATE_TABLES_SQL, SCHEMA_VERSION } from "./schema";
+import { seedDefaultsIfEmpty } from "./seed";
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
+async function tableHasColumn(
+  db: SQLite.SQLiteDatabase,
+  table: string,
+  column: string,
+): Promise<boolean> {
+  const rows = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(${table})`);
+  return rows.some((r) => r.name === column);
+}
+
+/** Idempotent column add — safe even if a previous migration marked the version early. */
+async function ensureColumn(
+  db: SQLite.SQLiteDatabase,
+  table: string,
+  column: string,
+  definition: string,
+): Promise<void> {
+  if (await tableHasColumn(db, table, column)) return;
+  await db.execAsync(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+}
+
 async function migrate(db: SQLite.SQLiteDatabase) {
   await db.execAsync(CREATE_TABLES_SQL);
+
+  // Always repair missing columns (fixes DBs stuck after a failed v2 bump).
+  await ensureColumn(db, "categories", "archived", "INTEGER NOT NULL DEFAULT 0");
+  await ensureColumn(db, "accounts", "archived", "INTEGER NOT NULL DEFAULT 0");
 
   const row = await db.getFirstAsync<{ version: number }>(
     "SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1",
@@ -19,17 +45,44 @@ async function migrate(db: SQLite.SQLiteDatabase) {
       new Date().toISOString(),
     );
   }
+
+  await seedDefaultsIfEmpty(db);
+}
+
+async function openAppDatabase(): Promise<SQLite.SQLiteDatabase> {
+  if (Platform.OS !== "web") {
+    return SQLite.openDatabaseAsync("money-money.db");
+  }
+
+  // Web SQLite (OPFS) needs COOP/COEP and can fail in some browsers / private mode.
+  try {
+    const db = await SQLite.openDatabaseAsync("money-money.db");
+    // Touch the DB so worker/VFS errors surface here, not later.
+    await db.execAsync("PRAGMA user_version;");
+    return db;
+  } catch (err) {
+    console.warn(
+      "Persistent web SQLite failed; using in-memory DB for this session.",
+      err,
+    );
+    return SQLite.openDatabaseAsync(":memory:");
+  }
 }
 
 export async function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (!dbPromise) {
     dbPromise = (async () => {
-      const db = await SQLite.openDatabaseAsync("money-money.db");
+      const db = await openAppDatabase();
       await migrate(db);
       return db;
     })();
   }
   return dbPromise;
+}
+
+/** Test helper / recovery: drop cached connection so next getDb() remigrates. */
+export function resetDbConnection() {
+  dbPromise = null;
 }
 
 export async function getSetting(key: string): Promise<string | null> {
