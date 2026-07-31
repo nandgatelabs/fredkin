@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 import { AccountEditorModal } from "@/components/AccountEditorModal";
 import { ActionMenu } from "@/components/ActionMenu";
@@ -33,6 +33,7 @@ import { accountIcon } from "@/lib/icons";
 import { colors } from "@/theme";
 
 export default function AccountsScreen() {
+  const router = useRouter();
   const [accounts, setAccounts] = useState<AccountWithBalance[]>([]);
   const [totals, setTotals] = useState<Totals | null>(null);
   const [loading, setLoading] = useState(true);
@@ -97,17 +98,30 @@ export default function AccountsScreen() {
           }
           renderItem={({ item }) => (
             <View style={styles.card}>
-              <View style={styles.iconWrap}>
-                <Ionicons name={accountIcon(item.icon_key)} size={22} color={colors.accent} />
-              </View>
-              <View style={styles.cardBody}>
-                <Text style={styles.name}>{item.name}</Text>
-                <View style={styles.balanceRow}>
-                  <Text style={styles.balanceLabel}>Balance: </Text>
-                  <MoneyText amount={item.balance} />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${item.name} details`}
+                onPress={() => router.push(`/account/${item.id}` as never)}
+                style={({ pressed }) => [styles.cardMain, pressed && styles.cardPressed]}
+              >
+                <View style={styles.iconWrap}>
+                  <Ionicons name={accountIcon(item.icon_key)} size={22} color={colors.accent} />
                 </View>
-              </View>
-              <Pressable onPress={() => setMenuAccount(item)} hitSlop={10} style={styles.more}>
+                <View style={styles.cardBody}>
+                  <Text style={styles.name}>{item.name}</Text>
+                  <View style={styles.balanceRow}>
+                    <Text style={styles.balanceLabel}>Balance: </Text>
+                    <MoneyText amount={item.balance} />
+                  </View>
+                </View>
+              </Pressable>
+              <Pressable
+                onPress={() => setMenuAccount(item)}
+                hitSlop={10}
+                style={styles.more}
+                accessibilityRole="button"
+                accessibilityLabel={`${item.name} menu`}
+              >
                 <Ionicons name="ellipsis-horizontal" size={20} color={colors.accentMuted} />
               </Pressable>
             </View>
@@ -228,10 +242,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 12,
-    padding: 12,
-    gap: 12,
+    paddingVertical: 4,
+    paddingLeft: 12,
+    paddingRight: 4,
+    gap: 4,
     backgroundColor: colors.surface,
   },
+  cardMain: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 8,
+  },
+  cardPressed: { opacity: 0.9 },
   iconWrap: {
     width: 40,
     height: 40,

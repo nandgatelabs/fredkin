@@ -163,6 +163,58 @@ export async function listRecordsInRange(
   );
 }
 
+/** Records touching an account (as from or to). Optional date range. */
+export async function listRecordsForAccount(
+  accountId: string,
+  range?: { start: Date; end: Date },
+): Promise<RecordListItem[]> {
+  const db = await getDb();
+  if (range) {
+    return db.getAllAsync<RecordListItem>(
+      `${LIST_SELECT}
+       WHERE (r.account_id = ? OR r.to_account_id = ?)
+         AND r.occurred_at >= ? AND r.occurred_at <= ?
+       ORDER BY r.occurred_at DESC, r.id DESC`,
+      accountId,
+      accountId,
+      toIsoBound(range.start),
+      toIsoBound(range.end),
+    );
+  }
+  return db.getAllAsync<RecordListItem>(
+    `${LIST_SELECT}
+     WHERE r.account_id = ? OR r.to_account_id = ?
+     ORDER BY r.occurred_at DESC, r.id DESC`,
+    accountId,
+    accountId,
+  );
+}
+
+/** Records in a category. Optional date range. */
+export async function listRecordsForCategory(
+  categoryId: string,
+  range?: { start: Date; end: Date },
+): Promise<RecordListItem[]> {
+  const db = await getDb();
+  if (range) {
+    return db.getAllAsync<RecordListItem>(
+      `${LIST_SELECT}
+       WHERE r.category_id = ?
+         AND r.occurred_at >= ? AND r.occurred_at <= ?
+       ORDER BY r.occurred_at DESC, r.id DESC`,
+      categoryId,
+      toIsoBound(range.start),
+      toIsoBound(range.end),
+    );
+  }
+  return db.getAllAsync<RecordListItem>(
+    `${LIST_SELECT}
+     WHERE r.category_id = ?
+     ORDER BY r.occurred_at DESC, r.id DESC`,
+    categoryId,
+  );
+}
+
 export async function getPeriodTotals(start: Date, end: Date): Promise<PeriodTotals> {
   const db = await getDb();
   const row = await db.getFirstAsync<{ expense: number; income: number }>(

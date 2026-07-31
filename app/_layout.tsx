@@ -74,6 +74,8 @@ export default function RootLayout() {
         <Stack.Screen name="preferences" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="backup" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="reset" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="account/[id]" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="category/[id]" options={{ animation: "slide_from_right" }} />
         <Stack.Screen
           name="record/new"
           options={{ presentation: "modal", animation: "slide_from_bottom" }}

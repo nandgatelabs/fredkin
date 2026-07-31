@@ -309,6 +309,9 @@ docs/              # HLD + BLUEPRINT (this folder)
 | P5 Analysis | Overview, flow, calendar, account bars (done) |
 | P6 Budgets + portability + prefs | Budgets, drawer, backup/wipe, prefs (done) |
 | P7 Preferences polish | Themes / UI mode, passcode lock, daily remind (done) |
+| P8 Account + Category details | Tap account/category → detail stats + record lists (done) |
+
+Open GitHub issues filed during earlier phases are **deferred indefinitely** unless explicitly pulled into a phase. Prefer blueprint gaps over issue triage.
 
 ---
 
