@@ -202,3 +202,25 @@ export async function countRecords(): Promise<number> {
   );
   return row?.count ?? 0;
 }
+
+/** Case-insensitive substring search on note, category, or account names. */
+export async function searchRecords(query: string): Promise<RecordListItem[]> {
+  const q = query.trim();
+  if (!q) return [];
+  const db = await getDb();
+  const like = `%${q.replace(/%/g, "\\%").replace(/_/g, "\\_")}%`;
+  return db.getAllAsync<RecordListItem>(
+    `${LIST_SELECT}
+     WHERE
+       r.note LIKE ? COLLATE NOCASE ESCAPE '\\'
+       OR IFNULL(c.name, '') LIKE ? COLLATE NOCASE ESCAPE '\\'
+       OR a.name LIKE ? COLLATE NOCASE ESCAPE '\\'
+       OR IFNULL(ta.name, '') LIKE ? COLLATE NOCASE ESCAPE '\\'
+     ORDER BY r.occurred_at DESC, r.id DESC
+     LIMIT 500`,
+    like,
+    like,
+    like,
+    like,
+  );
+}

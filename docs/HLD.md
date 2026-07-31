@@ -231,8 +231,9 @@ Columns: `TIME`, `TYPE`, `AMOUNT`, `CATEGORY`, `ACCOUNT`, `NOTES`
 | `(-) Expense` | Expense |
 | `(+) Income` | Income |
 | `(*) Transfer` | Transfer; `ACCOUNT` is `From->To`; category blank |
+| `(#) Opening` | **money-money extension** (not in original MyMoney): sets the account’s opening/initial balance; not a ledger record |
 
-Not a backup (cannot fully restore accounts/budgets/settings from CSV alone).
+Not a full backup (budgets/settings still need `.mbak`). Opening rows make account initial balances round-trip via CSV.
 
 ### Backup (`.mbak`)
 
@@ -302,8 +303,8 @@ docs/              # HLD + BLUEPRINT (this folder)
 | P0 Shell + DB | Tabs, theme, schema, settings store (done) |
 | P1 Accounts & Categories | CRUD + icons unlocked (done) |
 | P2 Composer | Expense/Income/Transfer + balances (done) |
-| P3 Records + periods | All view modes incl. 3/6/yearly, carry-over (in progress / PR) |
-| P4 Search + CSV import | Local export can be loaded |
+| P3 Records + periods | All view modes incl. 3/6/yearly, carry-over (done) |
+| P4 Search + CSV import/export | Search, CSV import/export incl. opening balances (in progress / PR) |
 | P5 Analysis | Overview, flow, calendar, account bars |
 | P6 Budgets + portability + prefs | Budgets, export, backup, wipe, themes/passcode |
 
