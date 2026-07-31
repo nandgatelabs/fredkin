@@ -7,7 +7,7 @@ import {
 } from "@/lib/csv";
 import { toIsoLocal } from "@/lib/datetime";
 import { createId } from "@/lib/id";
-import { categoryColor } from "@/lib/icons";
+import { analysisColor } from "@/lib/analysisPalette";
 
 import { getDb } from "./client";
 import type { RecordType } from "./types";
@@ -111,6 +111,7 @@ export async function importMoneyCsv(
     );
     const id = createId("cat");
     const icon_key = type === "income" ? "wallet" : "pricetag";
+    const sort_order = (max?.m ?? -1) + 1;
     await db.runAsync(
       `INSERT INTO categories (id, name, type, icon_key, color, sort_order, archived)
        VALUES (?, ?, ?, ?, ?, ?, 0)`,
@@ -118,8 +119,8 @@ export async function importMoneyCsv(
       name.trim(),
       type,
       icon_key,
-      categoryColor(icon_key),
-      (max?.m ?? -1) + 1,
+      analysisColor(sort_order),
+      sort_order,
     );
     categoryIds.set(key, id);
     result.categoriesCreated += 1;
