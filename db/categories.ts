@@ -3,6 +3,11 @@ import { createId } from "@/lib/id";
 import { getDb } from "./client";
 import type { Category, CategoryType } from "./types";
 
+export async function getCategory(id: string): Promise<Category | null> {
+  const db = await getDb();
+  return db.getFirstAsync<Category>("SELECT * FROM categories WHERE id = ?", id);
+}
+
 export async function listCategories(type?: CategoryType): Promise<Category[]> {
   const db = await getDb();
   if (type) {

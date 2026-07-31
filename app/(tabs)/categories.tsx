@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 import { ActionMenu } from "@/components/ActionMenu";
 import { AppHeader } from "@/components/AppHeader";
@@ -31,6 +31,7 @@ import { colors } from "@/theme";
 type Section = { title: string; type: CategoryType; data: Category[] };
 
 export default function CategoriesScreen() {
+  const router = useRouter();
   const [sections, setSections] = useState<Section[]>([]);
   const [totals, setTotals] = useState<Totals | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,16 +93,28 @@ export default function CategoriesScreen() {
           )}
           renderItem={({ item }) => (
             <View style={styles.row}>
-              <View
-                style={[
-                  styles.icon,
-                  { backgroundColor: item.color ?? colors.border },
-                ]}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${item.name} details`}
+                onPress={() => router.push(`/category/${item.id}` as never)}
+                style={({ pressed }) => [styles.rowMain, pressed && styles.rowPressed]}
               >
-                <Ionicons name={categoryIcon(item.icon_key)} size={18} color="#fff" />
-              </View>
-              <Text style={styles.name}>{item.name}</Text>
-              <Pressable onPress={() => setMenuCategory(item)} hitSlop={10}>
+                <View
+                  style={[
+                    styles.icon,
+                    { backgroundColor: item.color ?? colors.border },
+                  ]}
+                >
+                  <Ionicons name={categoryIcon(item.icon_key)} size={18} color="#fff" />
+                </View>
+                <Text style={styles.name}>{item.name}</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setMenuCategory(item)}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel={`${item.name} menu`}
+              >
                 <Ionicons name="ellipsis-horizontal" size={20} color={colors.accentMuted} />
               </Pressable>
             </View>
@@ -200,11 +213,19 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingVertical: 10,
+    gap: 8,
+    paddingVertical: 4,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
   },
+  rowMain: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 6,
+  },
+  rowPressed: { opacity: 0.9 },
   icon: {
     width: 36,
     height: 36,
