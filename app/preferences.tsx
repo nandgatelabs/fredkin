@@ -264,7 +264,12 @@ export default function PreferencesScreen() {
         />
         <PreferenceRow
           label="Notification settings"
-          onPress={() => openSystemNotificationSettings()}
+          onPress={() => {
+            openSystemNotificationSettings();
+            setStatus(
+              "Use the browser lock icon → Site settings to manage notifications.",
+            );
+          }}
         />
 
         <Text style={[styles.section, styles.sectionSpaced]}>About</Text>
