@@ -124,7 +124,13 @@ export async function importMoneyCsv(
 
   await db.withTransactionAsync(async () => {
     if (mode === "replace") {
+      // Full override: ledger matches the CSV only (settings kept).
+      await db.runAsync("DELETE FROM budgets");
       await db.runAsync("DELETE FROM records");
+      await db.runAsync("DELETE FROM categories");
+      await db.runAsync("DELETE FROM accounts");
+      accountIds.clear();
+      categoryIds.clear();
     }
 
     for (let i = 0; i < rows.length; i++) {

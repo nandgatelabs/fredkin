@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import {
+  Alert,
   Platform,
   Pressable,
   StyleSheet,
@@ -35,6 +36,30 @@ export default function ImportCsvScreen() {
     ),
   );
 
+  async function confirmImport(): Promise<boolean> {
+    if (mode === "append") {
+      const message =
+        "Add every row from this CSV on top of your current records? Duplicate rows are possible if you import the same file twice.";
+      if (Platform.OS === "web") return window.confirm(message);
+      return new Promise((resolve) => {
+        Alert.alert("Append to existing data?", message, [
+          { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+          { text: "Append", onPress: () => resolve(true) },
+        ]);
+      });
+    }
+
+    const message =
+      "Override everything with this CSV? Existing records, accounts, and categories will be deleted. Only the imported file will remain.";
+    if (Platform.OS === "web") return window.confirm(message);
+    return new Promise((resolve) => {
+      Alert.alert("Override with CSV?", message, [
+        { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+        { text: "Override", style: "destructive", onPress: () => resolve(true) },
+      ]);
+    });
+  }
+
   async function runImport(text: string, name: string) {
     setBusy(true);
     setError(null);
@@ -53,6 +78,9 @@ export default function ImportCsvScreen() {
   async function pickFile() {
     setError(null);
     setResult(null);
+
+    const ok = await confirmImport();
+    if (!ok) return;
 
     if (Platform.OS === "web") {
       await pickWebFile(runImport, (msg) => setError(msg));
@@ -81,28 +109,23 @@ export default function ImportCsvScreen() {
       </View>
 
       <Text style={styles.body}>
-        Load a money-money / MyMoney worksheet export with columns TIME, TYPE,
-        AMOUNT, CATEGORY, ACCOUNT, NOTES. Accounts and categories are created
-        automatically when missing.
+        Load a worksheet export with columns TIME, TYPE, AMOUNT, CATEGORY,
+        ACCOUNT, NOTES. Missing accounts and categories are created automatically.
       </Text>
 
-      <Text style={styles.label}>Mode</Text>
-      <View style={styles.modeRow}>
-        <ModeChip
-          label="REPLACE records"
-          selected={mode === "replace"}
-          onPress={() => setMode("replace")}
-        />
-        <ModeChip
-          label="APPEND"
-          selected={mode === "append"}
-          onPress={() => setMode("append")}
-        />
-      </View>
-      <Text style={styles.hint}>
-        Replace deletes existing records first (recommended when migrating a full
-        export). Append keeps current records and adds imported rows.
-      </Text>
+      <Text style={styles.label}>What should happen to existing data?</Text>
+      <ModeOption
+        title="Override — keep only this CSV"
+        description="Deletes current records, accounts, and categories, then loads the file. Use for a full migration."
+        selected={mode === "replace"}
+        onPress={() => setMode("replace")}
+      />
+      <ModeOption
+        title="Append — add to existing data"
+        description="Keeps everything you already have and adds imported rows. Can create duplicates."
+        selected={mode === "append"}
+        onPress={() => setMode("append")}
+      />
 
       <Button
         label={busy ? "IMPORTING…" : "CHOOSE CSV FILE"}
@@ -118,6 +141,9 @@ export default function ImportCsvScreen() {
       {result ? (
         <View style={styles.result}>
           <Text style={styles.resultTitle}>Import finished</Text>
+          <Text style={styles.resultLine}>
+            Mode: {mode === "replace" ? "Override (CSV only)" : "Append"}
+          </Text>
           <Text style={styles.resultLine}>Imported: {result.imported}</Text>
           <Text style={styles.resultLine}>Skipped: {result.skipped}</Text>
           <Text style={styles.resultLine}>
@@ -141,21 +167,29 @@ export default function ImportCsvScreen() {
   );
 }
 
-function ModeChip({
-  label,
+function ModeOption({
+  title,
+  description,
   selected,
   onPress,
 }: {
-  label: string;
+  title: string;
+  description: string;
   selected: boolean;
   onPress: () => void;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.chip, webClickable, selected && styles.chipOn]}
+      style={[styles.option, webClickable, selected && styles.optionOn]}
     >
-      <Text style={[styles.chipLabel, selected && styles.chipLabelOn]}>{label}</Text>
+      <View style={[styles.radio, selected && styles.radioOn]}>
+        {selected ? <View style={styles.radioDot} /> : null}
+      </View>
+      <View style={styles.optionBody}>
+        <Text style={[styles.optionTitle, selected && styles.optionTitleOn]}>{title}</Text>
+        <Text style={styles.optionDesc}>{description}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -221,38 +255,57 @@ const styles = StyleSheet.create({
   label: {
     color: colors.accent,
     fontWeight: "600",
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  modeRow: {
+  option: {
     flexDirection: "row",
-    gap: 10,
-    flexWrap: "wrap",
-  },
-  chip: {
+    gap: 12,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    borderRadius: 12,
+    padding: 14,
     backgroundColor: colors.inputBg,
+    marginBottom: 10,
   },
-  chipOn: {
+  optionOn: {
     borderColor: colors.accent,
-    backgroundColor: "rgba(232, 212, 138, 0.12)",
+    backgroundColor: "rgba(232, 212, 138, 0.1)",
   },
-  chipLabel: {
-    color: colors.textSecondary,
+  radio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 2,
+  },
+  radioOn: {
+    borderColor: colors.accent,
+  },
+  radioDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.accent,
+  },
+  optionBody: {
+    flex: 1,
+    gap: 4,
+  },
+  optionTitle: {
+    color: colors.text,
     fontWeight: "600",
-    fontSize: 12,
+    fontSize: 14,
   },
-  chipLabelOn: {
+  optionTitleOn: {
     color: colors.accent,
   },
-  hint: {
+  optionDesc: {
     color: colors.textSecondary,
     fontSize: 12,
     lineHeight: 17,
-    marginTop: 10,
   },
   file: {
     color: colors.textSecondary,

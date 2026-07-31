@@ -120,7 +120,7 @@ export async function updateAccount(
   );
 }
 
-export async function deleteAccount(id: string): Promise<void> {
+export async function countAccountRecords(id: string): Promise<number> {
   const db = await getDb();
   const usage = await db.getFirstAsync<{ count: number }>(
     `SELECT COUNT(*) AS count FROM records
@@ -128,10 +128,25 @@ export async function deleteAccount(id: string): Promise<void> {
     id,
     id,
   );
-  if ((usage?.count ?? 0) > 0) {
-    throw new Error("Cannot delete an account that has records. Archive it instead.");
-  }
-  await db.runAsync("DELETE FROM accounts WHERE id = ?", id);
+  return usage?.count ?? 0;
+}
+
+/** Deletes the account and every record that uses it (as from or to). */
+export async function deleteAccount(id: string): Promise<{ deletedRecords: number }> {
+  const db = await getDb();
+  const deletedRecords = await countAccountRecords(id);
+  await db.withTransactionAsync(async () => {
+    await db.runAsync(
+      `DELETE FROM records WHERE account_id = ? OR to_account_id = ?`,
+      id,
+      id,
+    );
+    const result = await db.runAsync("DELETE FROM accounts WHERE id = ?", id);
+    if ((result.changes ?? 0) === 0) {
+      throw new Error("Account not found");
+    }
+  });
+  return { deletedRecords };
 }
 
 export async function archiveAccount(id: string): Promise<void> {

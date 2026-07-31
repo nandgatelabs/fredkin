@@ -1,7 +1,9 @@
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -19,6 +21,7 @@ import { MoneyText } from "@/components/MoneyText";
 import { TotalsHeader } from "@/components/TotalsHeader";
 import {
   archiveAccount,
+  countAccountRecords,
   createAccount,
   deleteAccount,
   getLifetimeTotals,
@@ -120,11 +123,34 @@ export default function AccountsScreen() {
             destructive: true,
             onPress: () => {
               if (!menuAccount) return;
-              void deleteAccount(menuAccount.id)
-                .then(reload)
-                .catch((e) =>
-                  setError(e instanceof Error ? e.message : "Delete failed"),
-                );
+              const account = menuAccount;
+              void (async () => {
+                const related = await countAccountRecords(account.id);
+                const message =
+                  related > 0
+                    ? `Delete “${account.name}”? All ${related} related record${related === 1 ? "" : "s"} (including transfers) will be deleted as well. This cannot be undone.`
+                    : `Delete “${account.name}”? This cannot be undone.`;
+                const ok =
+                  Platform.OS === "web"
+                    ? window.confirm(message)
+                    : await new Promise<boolean>((resolve) => {
+                        Alert.alert("Delete account?", message, [
+                          { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+                          {
+                            text: "Delete",
+                            style: "destructive",
+                            onPress: () => resolve(true),
+                          },
+                        ]);
+                      });
+                if (!ok) return;
+                try {
+                  await deleteAccount(account.id);
+                  await reload();
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : "Delete failed");
+                }
+              })();
             },
           },
           {
