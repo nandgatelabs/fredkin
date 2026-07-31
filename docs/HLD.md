@@ -313,6 +313,10 @@ docs/              # HLD + BLUEPRINT (this folder)
 
 **v1 baseline:** P0–P8 shipped. Further work is optional polish tracked as GitHub issues — pull into a phase only when explicitly prioritized.
 
+### Desktop packaging (Ubuntu)
+
+Offline desktop is the Expo **web** static export wrapped in Electron (`desktop/`). Install for Ubuntu via `npm run desktop:install-user` (unpacked app + `.desktop` launcher). Public web hosting remains parked. See [`DESKTOP.md`](./DESKTOP.md).
+
 ### Deferred polish (post–v1)
 
 | Issue | Topic |

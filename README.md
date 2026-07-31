@@ -13,6 +13,27 @@ npm run web
 
 Opens in Chrome/Edge at `http://localhost:8081`. Full runbook (Android caveats, USB, Expo Go SDK mismatch): [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
+## Ubuntu desktop (offline install)
+
+Install **money-money** into your app grid (no sudo). Data persists in `~/.config/money-money`.
+
+```bash
+npm install
+npm run desktop:install        # once — Electron tooling
+npm run desktop:install-user   # pack + install launcher
+```
+
+Then open **money-money** from the app grid, or run `money-money` in a terminal.
+
+**Update later** (after `git pull`):
+
+```bash
+npm install
+npm run desktop:install-user
+```
+
+Full detail (`.deb`, AppImage/FUSE notes, persistence): [`docs/DESKTOP.md`](docs/DESKTOP.md).
+
 ## Docs
 
 | Doc | Description |
@@ -20,6 +41,7 @@ Opens in Chrome/Edge at `http://localhost:8081`. Full runbook (Android caveats, 
 | [`docs/HLD.md`](docs/HLD.md) | High-level design: architecture, data model, flows, phases |
 | [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) | Screen-by-screen feature / UI blueprint |
 | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | How to run on web and Android |
+| [`docs/DESKTOP.md`](docs/DESKTOP.md) | Offline Ubuntu/desktop Electron shell |
 | [`AGENTS.md`](AGENTS.md) | Instructions for AI coding agents |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Branch → PR → merge workflow (`gh`) |
 | [`SECURITY.md`](SECURITY.md) | Vulnerability reporting |
