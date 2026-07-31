@@ -1,6 +1,7 @@
 import * as SQLite from "expo-sqlite";
 
 import { CREATE_TABLES_SQL, SCHEMA_VERSION } from "./schema";
+import { seedDefaultsIfEmpty } from "./seed";
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
@@ -19,6 +20,8 @@ async function migrate(db: SQLite.SQLiteDatabase) {
       new Date().toISOString(),
     );
   }
+
+  await seedDefaultsIfEmpty(db);
 }
 
 export async function getDb(): Promise<SQLite.SQLiteDatabase> {
