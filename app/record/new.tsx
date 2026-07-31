@@ -71,18 +71,13 @@ export default function NewRecordScreen() {
     ]);
     setAccounts(accs);
     setCategories(cats);
-    setAccount((prev) => {
-      if (prev && accs.some((a) => a.id === prev.id)) return prev;
-      return accs[0] ?? null;
-    });
-    setToAccount((prev) => {
-      if (prev && accs.some((a) => a.id === prev.id)) return prev;
-      return accs.length > 1 ? accs[1] : null;
-    });
+    // Keep selections only if still valid — never auto-pick account/category.
+    setAccount((prev) => (prev && accs.some((a) => a.id === prev.id) ? prev : null));
+    setToAccount((prev) => (prev && accs.some((a) => a.id === prev.id) ? prev : null));
     setCategory((prev) => {
       if (type === "transfer") return null;
       if (prev && cats.some((c) => c.id === prev.id)) return prev;
-      return cats[0] ?? null;
+      return null;
     });
   }, [categoryType, type]);
 
@@ -119,21 +114,20 @@ export default function NewRecordScreen() {
       return;
     }
     if (!account) {
-      setError("Select an account");
+      setError(
+        type === "transfer" ? "Select a From account" : "Select an account",
+      );
       return;
     }
     if (type === "transfer") {
       if (!toAccount) {
-        setError("Select a destination account");
+        setError("Select a To account");
         return;
       }
       if (toAccount.id === account.id) {
         setError("From and To accounts must be different");
         return;
       }
-    } else if (!category) {
-      setError("Select a category");
-      return;
     }
 
     try {
@@ -144,7 +138,7 @@ export default function NewRecordScreen() {
         amount,
         account_id: account.id,
         to_account_id: type === "transfer" ? toAccount!.id : null,
-        category_id: type === "transfer" ? null : category!.id,
+        category_id: type === "transfer" ? null : (category?.id ?? null),
         note,
         occurred_at: toIsoLocal(occurredAt),
       });
@@ -193,7 +187,7 @@ export default function NewRecordScreen() {
         <>
           <View style={styles.pickRow}>
             <PickerField
-              label={type === "transfer" ? "From" : "Account"}
+              label={type === "transfer" ? "From" : undefined}
               onPress={() => setAccountPicker("from")}
             >
               {account ? (
@@ -236,7 +230,7 @@ export default function NewRecordScreen() {
                 )}
               </PickerField>
             ) : (
-              <PickerField label="Category" onPress={() => setCategoryPickerOpen(true)}>
+              <PickerField onPress={() => setCategoryPickerOpen(true)}>
                 {category ? (
                   <>
                     <View
@@ -375,13 +369,13 @@ function PickerField({
   onPress,
   children,
 }: {
-  label: string;
+  label?: string;
   onPress: () => void;
   children: ReactNode;
 }) {
   return (
     <View style={styles.pickField}>
-      <Text style={styles.pickLabel}>{label}</Text>
+      {label ? <Text style={styles.pickLabel}>{label}</Text> : null}
       <Pressable style={styles.pickBox} onPress={onPress}>
         {children}
       </Pressable>

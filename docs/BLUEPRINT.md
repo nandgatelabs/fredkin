@@ -81,9 +81,10 @@ Persistent chrome on main tabs:
 - Tabs: **INCOME | EXPENSE | TRANSFER**
 - Expense/Income: Account + Category pickers, notes
 - Transfer: From Account + To Account (no category)
+- **Defaults:** account and category start blank (placeholder “Account” / “Category”); notes empty (“Add notes”); amount `0`
 - Custom calculator keypad: `0–9`, `.`, `+ − × ÷ =`, backspace
 - Footer: tappable date + time → calendar / clock modals
-- Validation: amount > 0; account required; category required except transfer; from ≠ to
+- Validation: amount > 0; **account required** (transfer: both From and To, and From ≠ To); **category optional** for income/expense
 - Save: write record + update balances in one transaction
 
 ### Account picker
@@ -95,6 +96,14 @@ List: icon · name · live balance (green/red).
 - 3-column grid of colored circles + labels.
 - Filtered by Income vs Expense type.
 - Footer: **+ ADD NEW CATEGORY**
+
+### Record detail modal (tap a row on Records)
+
+Refs: `private/new/record-detail-expense-modal.jpeg`
+
+- Coral/expense (or green/income, blue/transfer) header: close · delete · edit · type label · large signed amount · date/time
+- Body: Account pill · Category pill · note text
+- Edit opens the composer prefilled; delete confirms then removes record
 
 #### Default income categories
 
@@ -155,6 +164,16 @@ FAB still opens add-record.
 | Icon | Horizontal picker: cash, card, piggy, mastercard-style, visa-style |
 | Actions | **CANCEL** · **SAVE** |
 
+### Account details (tap an account)
+
+Refs: `private/new/account-details-period.jpeg`, `private/new/account-details-all-time.jpeg`
+
+- Header: close · “Account details” · period subtitle (“Time selected: …” or “Records: All time”)
+- Identity: icon · name · current balance (and initial balance when all-time)
+- Period mode: starting balance · expense/income + % of period · transfers in/out · ending balance
+- All-time mode: info callout pointing to Analysis for period stats
+- Record list for that account (date groups or day column) with sort NEW TO OLD
+
 ---
 
 ## 8. Categories
@@ -180,6 +199,15 @@ FAB still opens add-record.
 ### Edit category modal
 
 Same as add, but **without** type switch (type is fixed after create): Name + Icon + CANCEL/SAVE.
+
+### Category details (tap a category)
+
+Refs: `private/new/category-details-expense.jpeg`, `private/new/category-details-income.jpeg`
+
+- Header: close · “Category details” · period subtitle
+- Identity: colored circle icon · name · “Expense category” / “Income category”
+- Summary card: period · pie slice · “% of total … in this period” · period total amount
+- Record list for that category (account + note + amount) with sort NEW TO OLD
 
 ---
 

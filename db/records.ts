@@ -27,9 +27,8 @@ function validateRecordInput(input: CreateRecordInput): void {
     if (input.to_account_id === input.account_id) {
       throw new Error("From and To accounts must be different");
     }
-  } else if (!input.category_id) {
-    throw new Error("Category is required");
   }
+  // Category is optional for income/expense (user may leave blank).
 }
 
 export async function createRecord(input: CreateRecordInput): Promise<MoneyRecord> {
