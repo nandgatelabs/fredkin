@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Platform, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import { WebAppShell } from "@/components/WebAppShell";
 import { getDb } from "@/db/client";
 import { useSettingsStore } from "@/store/settings";
 import { colors } from "@/theme";
-import { layout } from "@/theme/layout";
 
 export default function RootLayout() {
   const hydrate = useSettingsStore((s) => s.hydrate);
@@ -39,69 +37,46 @@ export default function RootLayout() {
 
   if (!dbReady || !hydrated) {
     return (
-      <WebAppShell>
-        <View style={styles.boot}>
-          <StatusBar style="light" />
-          <ActivityIndicator color={colors.accent} size="large" />
-        </View>
-      </WebAppShell>
+      <View style={styles.boot}>
+        <StatusBar style="light" />
+        <ActivityIndicator color={colors.accent} size="large" />
+      </View>
     );
   }
 
   if (bootError) {
     return (
-      <WebAppShell>
-        <View style={styles.boot}>
-          <StatusBar style="light" />
-          <Text style={styles.errorTitle}>Could not start local database</Text>
-          <Text style={styles.errorBody}>{bootError}</Text>
-          <Text style={styles.errorHint}>
-            On web: close every other tab on localhost:8081 (SQLite OPFS allows
-            only one tab), then hard-refresh. Prefer a normal Chrome/Edge window
-            (not private/incognito).
-          </Text>
-        </View>
-      </WebAppShell>
+      <View style={styles.boot}>
+        <StatusBar style="light" />
+        <Text style={styles.errorTitle}>Could not start local database</Text>
+        <Text style={styles.errorBody}>{bootError}</Text>
+        <Text style={styles.errorHint}>
+          On web: close every other tab on localhost:8081 (SQLite OPFS allows
+          only one tab), then hard-refresh. Prefer a normal Chrome/Edge window
+          (not private/incognito).
+        </Text>
+      </View>
     );
   }
 
   return (
-    <WebAppShell>
-      <GestureHandlerRootView style={styles.root}>
-        <StatusBar style="light" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.background },
-            animation: "slide_from_right",
-          }}
-        >
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="search" options={{ animation: "fade" }} />
-          <Stack.Screen
-            name="record/new"
-            options={{
-              presentation: "modal",
-              animation: "slide_from_bottom",
-              contentStyle:
-                Platform.OS === "web"
-                  ? {
-                      backgroundColor: colors.background,
-                      maxWidth: layout.webPhoneWidth,
-                      width: "100%",
-                      alignSelf: "center",
-                      maxHeight: "100%",
-                      marginTop: "auto",
-                      borderTopLeftRadius: 20,
-                      borderTopRightRadius: 20,
-                      overflow: "hidden",
-                    }
-                  : { backgroundColor: colors.background },
-            }}
-          />
-        </Stack>
-      </GestureHandlerRootView>
-    </WebAppShell>
+    <GestureHandlerRootView style={styles.root}>
+      <StatusBar style="light" />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+          animation: "slide_from_right",
+        }}
+      >
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="search" options={{ animation: "fade" }} />
+        <Stack.Screen
+          name="record/new"
+          options={{ presentation: "modal", animation: "slide_from_bottom" }}
+        />
+      </Stack>
+    </GestureHandlerRootView>
   );
 }
 

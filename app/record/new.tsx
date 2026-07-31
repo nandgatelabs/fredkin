@@ -20,6 +20,7 @@ import { listAccounts } from "@/db/accounts";
 import { createCategory, listCategories } from "@/db/categories";
 import { createRecord } from "@/db/records";
 import type { AccountWithBalance, Category, RecordType } from "@/db/types";
+import { useKeydown } from "@/hooks/useKeydown";
 import {
   appendDecimal,
   appendDigit,
@@ -35,6 +36,7 @@ import {
   toIsoLocal,
 } from "@/lib/datetime";
 import { accountIcon, categoryColor, categoryIcon } from "@/lib/icons";
+import { webClickable } from "@/lib/web";
 import { colors } from "@/theme";
 
 const TYPES: RecordType[] = ["income", "expense", "transfer"];
@@ -107,7 +109,7 @@ export default function NewRecordScreen() {
     setError(null);
   }
 
-  async function handleSave() {
+  const handleSave = useCallback(async () => {
     const amount = resolveAmount(expression);
     if (amount == null || amount <= 0) {
       setError("Enter an amount greater than 0");
@@ -147,16 +149,125 @@ export default function NewRecordScreen() {
       setError(e instanceof Error ? e.message : "Save failed");
       setBusy(false);
     }
-  }
+  }, [
+    account,
+    category?.id,
+    expression,
+    occurredAt,
+    router,
+    toAccount,
+    type,
+    note,
+  ]);
+
+  const overlayOpen =
+    accountPicker != null ||
+    categoryPickerOpen ||
+    categoryEditorOpen ||
+    dateOpen ||
+    timeOpen;
+
+  useKeydown(
+    !overlayOpen,
+    useCallback(
+      (event) => {
+        const tag = (event.target as HTMLElement | null)?.tagName?.toLowerCase();
+        const typing = tag === "input" || tag === "textarea";
+
+        if (event.key === "Escape") {
+          event.preventDefault();
+          if (!busy) router.back();
+          return;
+        }
+
+        if (typing) {
+          if (event.key === "Enter" && event.metaKey) {
+            event.preventDefault();
+            if (!busy) void handleSave();
+          }
+          return;
+        }
+
+        if (event.key === "Enter") {
+          event.preventDefault();
+          if (event.shiftKey || event.metaKey || event.ctrlKey) {
+            if (!busy) void handleSave();
+            return;
+          }
+          setExpression((e) => {
+            const v = evaluateExpression(e);
+            return v == null ? "Error" : formatResult(v);
+          });
+          return;
+        }
+
+        if (event.key === "Backspace") {
+          event.preventDefault();
+          setExpression((e) => backspace(e));
+          return;
+        }
+
+        if (/^[0-9]$/.test(event.key)) {
+          event.preventDefault();
+          setExpression((e) => appendDigit(e, event.key));
+          return;
+        }
+        if (event.key === ".") {
+          event.preventDefault();
+          setExpression((e) => appendDecimal(e));
+          return;
+        }
+        if (event.key === "+") {
+          event.preventDefault();
+          setExpression((e) => appendOperator(e, "+"));
+          return;
+        }
+        if (event.key === "-") {
+          event.preventDefault();
+          setExpression((e) => appendOperator(e, "-"));
+          return;
+        }
+        if (event.key === "*" || event.key === "x" || event.key === "X") {
+          event.preventDefault();
+          setExpression((e) => appendOperator(e, "×"));
+          return;
+        }
+        if (event.key === "/") {
+          event.preventDefault();
+          setExpression((e) => appendOperator(e, "÷"));
+          return;
+        }
+        if (event.key === "=") {
+          event.preventDefault();
+          setExpression((e) => {
+            const v = evaluateExpression(e);
+            return v == null ? "Error" : formatResult(v);
+          });
+        }
+      },
+      [busy, handleSave, router],
+    ),
+  );
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 8, paddingBottom: insets.bottom }]}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={10} disabled={busy}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={10}
+          disabled={busy}
+          style={[styles.headerBtn, webClickable]}
+        >
           <Text style={styles.action}>✕ CANCEL</Text>
         </Pressable>
-        <Pressable onPress={() => void handleSave()} hitSlop={10} disabled={busy}>
-          <Text style={[styles.action, busy && styles.actionDisabled]}>✓ SAVE</Text>
+        <Text style={styles.keyboardHint}>keys · Esc · Enter/=</Text>
+        <Pressable
+          onPress={() => void handleSave()}
+          hitSlop={10}
+          disabled={busy}
+          style={[styles.headerBtn, styles.saveBtn, webClickable, busy && styles.actionDisabled]}
+        >
+          <Text style={styles.saveLabel}>{busy ? "…" : "✓ SAVE"}</Text>
         </Pressable>
       </View>
 
@@ -376,7 +487,7 @@ function PickerField({
   return (
     <View style={styles.pickField}>
       {label ? <Text style={styles.pickLabel}>{label}</Text> : null}
-      <Pressable style={styles.pickBox} onPress={onPress}>
+      <Pressable style={[styles.pickBox, webClickable]} onPress={onPress}>
         {children}
       </Pressable>
     </View>
@@ -391,9 +502,28 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 16,
     paddingHorizontal: 4,
+    gap: 8,
+  },
+  headerBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  saveBtn: {
+    backgroundColor: colors.accent,
+  },
+  saveLabel: {
+    color: colors.onAccent,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  keyboardHint: {
+    color: colors.textSecondary,
+    fontSize: 11,
   },
   action: {
     color: colors.accent,
@@ -456,10 +586,11 @@ const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
+    borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 12,
     minHeight: 48,
+    backgroundColor: colors.inputBg,
   },
   pickValue: {
     flex: 1,
@@ -482,7 +613,7 @@ const styles = StyleSheet.create({
   notes: {
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
+    borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 12,
     color: colors.text,
@@ -490,6 +621,7 @@ const styles = StyleSheet.create({
     minHeight: 72,
     textAlignVertical: "top",
     marginBottom: 8,
+    backgroundColor: colors.inputBg,
   },
   error: {
     color: colors.danger,

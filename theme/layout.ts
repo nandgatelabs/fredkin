@@ -1,5 +1,5 @@
-/** Shared layout tokens — web phone preview is sized for desktop testing. */
+/** Shared layout tokens for dialogs and readable content width. */
 export const layout = {
-  webPhoneWidth: 430,
-  webPhoneMaxHeight: 900,
+  dialogMaxWidth: 440,
+  contentMaxWidth: 720,
 } as const;

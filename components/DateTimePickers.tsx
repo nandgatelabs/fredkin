@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Modal,
   Pressable,
@@ -8,8 +8,11 @@ import {
   View,
 } from "react-native";
 
+import { Button } from "@/components/ui/Button";
+import { useKeydown } from "@/hooks/useKeydown";
 import { setDatePart, setTimePart } from "@/lib/datetime";
 import { colors } from "@/theme";
+import { layout } from "@/theme/layout";
 
 type DateProps = {
   visible: boolean;
@@ -44,10 +47,27 @@ export function DatePickerModal({ visible, value, onCancel, onConfirm }: DatePro
     return Array.from({ length: 11 }, (_, i) => y - 5 + i);
   }, [value]);
 
+  useKeydown(
+    visible,
+    useCallback(
+      (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          onCancel();
+        }
+        if (event.key === "Enter") {
+          event.preventDefault();
+          onConfirm(setDatePart(value, year, month, day));
+        }
+      },
+      [day, month, onCancel, onConfirm, value, visible, year],
+    ),
+  );
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View style={styles.backdrop}>
-        <View style={styles.card}>
+      <Pressable style={styles.backdrop} onPress={onCancel}>
+        <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
           <Text style={styles.title}>Pick a date</Text>
           <View style={styles.columns}>
             <Wheel
@@ -70,17 +90,16 @@ export function DatePickerModal({ visible, value, onCancel, onConfirm }: DatePro
             />
           </View>
           <View style={styles.actions}>
-            <Pressable onPress={onCancel}>
-              <Text style={styles.action}>CANCEL</Text>
-            </Pressable>
-            <Pressable
+            <Button label="CANCEL" variant="ghost" onPress={onCancel} style={styles.actionBtn} />
+            <Button
+              label="OK"
+              variant="primary"
               onPress={() => onConfirm(setDatePart(value, year, month, day))}
-            >
-              <Text style={styles.action}>OK</Text>
-            </Pressable>
+              style={styles.actionBtn}
+            />
           </View>
-        </View>
-      </View>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 }
@@ -106,10 +125,33 @@ export function TimePickerModal({ visible, value, onCancel, onConfirm }: TimePro
     setAmpm(t.ampm);
   }, [visible, value]);
 
+  const confirm = useCallback(() => {
+    let h = hour12 % 12;
+    if (ampm === "PM") h += 12;
+    onConfirm(setTimePart(value, h, minute));
+  }, [ampm, hour12, minute, onConfirm, value]);
+
+  useKeydown(
+    visible,
+    useCallback(
+      (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          onCancel();
+        }
+        if (event.key === "Enter") {
+          event.preventDefault();
+          confirm();
+        }
+      },
+      [confirm, onCancel],
+    ),
+  );
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View style={styles.backdrop}>
-        <View style={styles.card}>
+      <Pressable style={styles.backdrop} onPress={onCancel}>
+        <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
           <Text style={styles.title}>Pick a time</Text>
           <View style={styles.columns}>
             <Wheel
@@ -132,21 +174,11 @@ export function TimePickerModal({ visible, value, onCancel, onConfirm }: TimePro
             />
           </View>
           <View style={styles.actions}>
-            <Pressable onPress={onCancel}>
-              <Text style={styles.action}>CANCEL</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                let h = hour12 % 12;
-                if (ampm === "PM") h += 12;
-                onConfirm(setTimePart(value, h, minute));
-              }}
-            >
-              <Text style={styles.action}>OK</Text>
-            </Pressable>
+            <Button label="CANCEL" variant="ghost" onPress={onCancel} style={styles.actionBtn} />
+            <Button label="OK" variant="primary" onPress={confirm} style={styles.actionBtn} />
           </View>
-        </View>
-      </View>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 }
@@ -204,16 +236,19 @@ function Wheel({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.55)",
+    backgroundColor: colors.overlay,
     justifyContent: "center",
     padding: 24,
   },
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 16,
     padding: 16,
     borderWidth: 1,
     borderColor: colors.border,
+    width: "100%",
+    maxWidth: layout.dialogMaxWidth,
+    alignSelf: "center",
   },
   title: {
     color: colors.accent,
@@ -238,7 +273,7 @@ const styles = StyleSheet.create({
   },
   wheelScroll: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.inputBg,
     borderRadius: 8,
   },
   wheelItem: {
@@ -253,13 +288,10 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 24,
+    gap: 12,
     marginTop: 16,
   },
-  action: {
-    color: colors.accent,
-    fontSize: 14,
-    fontWeight: "600",
+  actionBtn: {
+    flex: 1,
   },
 });

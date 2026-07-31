@@ -1,4 +1,4 @@
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -14,10 +14,8 @@ export function AppHeader({ onMenuPress }: Props) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-  const topPad = Platform.OS === "web" ? 12 : insets.top + 8;
-
   return (
-    <View style={[styles.wrap, { paddingTop: topPad }]}>
+    <View style={[styles.wrap, { paddingTop: insets.top + 8 }]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Open menu"
