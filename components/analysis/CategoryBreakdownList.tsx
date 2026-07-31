@@ -1,35 +1,26 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { donutColor } from "@/components/analysis/DonutChart";
 import type { CategorySlice } from "@/db/analysis";
 import { categoryIcon } from "@/lib/icons";
 import { formatMoney } from "@/lib/money";
+import { webClickable } from "@/lib/web";
 import { colors } from "@/theme";
 
 type Props = {
   slices: CategorySlice[];
   tone: "expense" | "income";
+  selectedIndex?: number | null;
+  onSelect?: (index: number | null) => void;
 };
 
-export function CategoryLegend({ slices }: Props) {
-  return (
-    <View style={styles.legend}>
-      {slices.map((s, i) => (
-        <View key={s.categoryId ?? s.name} style={styles.legendRow}>
-          <View
-            style={[styles.swatch, { backgroundColor: donutColor(i, s.color) }]}
-          />
-          <Text style={styles.legendName} numberOfLines={1}>
-            {s.name}
-          </Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-export function CategoryBreakdownList({ slices, tone }: Props) {
+export function CategoryBreakdownList({
+  slices,
+  tone,
+  selectedIndex = null,
+  onSelect,
+}: Props) {
   const amountColor = tone === "expense" ? colors.expense : colors.income;
 
   if (slices.length === 0) {
@@ -45,8 +36,13 @@ export function CategoryBreakdownList({ slices, tone }: Props) {
       {slices.map((s, i) => {
         const color = donutColor(i);
         const signed = tone === "expense" ? -s.amount : s.amount;
+        const active = selectedIndex === i;
         return (
-          <View key={s.categoryId ?? s.name} style={styles.row}>
+          <Pressable
+            key={s.categoryId ?? s.name}
+            onPress={() => onSelect?.(active ? null : i)}
+            style={[styles.row, webClickable, active && styles.rowActive]}
+          >
             <View style={[styles.icon, { backgroundColor: color }]}>
               <Ionicons name={categoryIcon(s.iconKey)} size={18} color="#fff" />
             </View>
@@ -63,13 +59,16 @@ export function CategoryBreakdownList({ slices, tone }: Props) {
                 <View
                   style={[
                     styles.barFill,
-                    { width: `${Math.min(100, s.percent)}%`, backgroundColor: color },
+                    {
+                      width: `${Math.min(100, s.percent)}%`,
+                      backgroundColor: color,
+                    },
                   ]}
                 />
               </View>
               <Text style={styles.percent}>{s.percent.toFixed(2)}%</Text>
             </View>
-          </View>
+          </Pressable>
         );
       })}
     </View>
@@ -77,12 +76,19 @@ export function CategoryBreakdownList({ slices, tone }: Props) {
 }
 
 const styles = StyleSheet.create({
-  legend: { flex: 1, gap: 6, paddingLeft: 8, justifyContent: "center" },
-  legendRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  swatch: { width: 10, height: 10, borderRadius: 2 },
-  legendName: { color: colors.textSecondary, fontSize: 12, flex: 1 },
-  list: { marginTop: 16, gap: 14 },
-  row: { flexDirection: "row", gap: 12 },
+  list: { marginTop: 16, gap: 10 },
+  row: {
+    flexDirection: "row",
+    gap: 12,
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  rowActive: {
+    borderColor: colors.accent,
+    backgroundColor: "rgba(232, 212, 138, 0.08)",
+  },
   icon: {
     width: 40,
     height: 40,

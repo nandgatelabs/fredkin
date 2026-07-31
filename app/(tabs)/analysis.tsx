@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -11,11 +11,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 
 import { AccountBars, AccountPeriodList } from "@/components/analysis/AccountBars";
+import { CategoryBreakdownList } from "@/components/analysis/CategoryBreakdownList";
 import {
-  CategoryBreakdownList,
-  CategoryLegend,
-} from "@/components/analysis/CategoryBreakdownList";
-import { DonutChart, donutColor } from "@/components/analysis/DonutChart";
+  DonutChart,
+  DonutLegend,
+  donutColor,
+} from "@/components/analysis/DonutChart";
 import { FlowCalendar } from "@/components/analysis/FlowCalendar";
 import { FlowLineChart } from "@/components/analysis/FlowLineChart";
 import { ActionMenu } from "@/components/ActionMenu";
@@ -71,10 +72,20 @@ export default function AnalysisScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [selectedSlice, setSelectedSlice] = useState<number | null>(null);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
+
   const range = useMemo(
     () => rangeForViewMode(anchorDate, viewMode),
     [anchorDate, viewMode],
   );
+
+  useEffect(() => {
+    setSelectedSlice(null);
+    setSelectedDay(null);
+    setSelectedAccount(null);
+  }, [mode, range.start, range.end]);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -119,6 +130,13 @@ export default function AnalysisScreen() {
   const tone: "expense" | "income" =
     mode === "income_overview" || mode === "income_flow" ? "income" : "expense";
 
+  const donutSegments = slices.map((s, i) => ({
+    amount: s.amount,
+    color: donutColor(i),
+    name: s.name,
+    percent: s.percent,
+  }));
+
   return (
     <View style={styles.screen}>
       <AppHeader />
@@ -148,17 +166,24 @@ export default function AnalysisScreen() {
         >
           {(mode === "expense_overview" || mode === "income_overview") && (
             <>
-              <View style={styles.donutRow}>
-                <DonutChart
-                  label={tone === "expense" ? "Expenses" : "Income"}
-                  segments={slices.map((s, i) => ({
-                    amount: s.amount,
-                    color: donutColor(i),
-                  }))}
-                />
-                <CategoryLegend slices={slices} tone={tone} />
-              </View>
-              <CategoryBreakdownList slices={slices} tone={tone} />
+              <DonutChart
+                label={tone === "expense" ? "Expenses" : "Income"}
+                tone={tone}
+                segments={donutSegments}
+                selectedIndex={selectedSlice}
+                onSelect={setSelectedSlice}
+              />
+              <DonutLegend
+                segments={donutSegments}
+                selectedIndex={selectedSlice}
+                onSelect={setSelectedSlice}
+              />
+              <CategoryBreakdownList
+                slices={slices}
+                tone={tone}
+                selectedIndex={selectedSlice}
+                onSelect={setSelectedSlice}
+              />
             </>
           )}
 
@@ -169,12 +194,16 @@ export default function AnalysisScreen() {
                 rangeStart={range.start}
                 rangeEnd={range.end}
                 tone={tone}
+                selectedDay={selectedDay}
+                onSelectDay={setSelectedDay}
               />
               <FlowCalendar
                 rangeStart={range.start}
                 rangeEnd={range.end}
                 days={days}
                 tone={tone}
+                selectedDay={selectedDay}
+                onSelectDay={setSelectedDay}
               />
             </>
           )}
@@ -191,8 +220,16 @@ export default function AnalysisScreen() {
                   <Text style={styles.legendText}>Income</Text>
                 </View>
               </View>
-              <AccountBars accounts={accounts} />
-              <AccountPeriodList accounts={accounts} />
+              <AccountBars
+                accounts={accounts}
+                selectedId={selectedAccount}
+                onSelect={setSelectedAccount}
+              />
+              <AccountPeriodList
+                accounts={accounts}
+                selectedId={selectedAccount}
+                onSelect={setSelectedAccount}
+              />
             </>
           )}
         </ScrollView>
@@ -247,12 +284,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 120,
     paddingTop: 8,
-  },
-  donutRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 8,
   },
   legendRow: {
     flexDirection: "row",
