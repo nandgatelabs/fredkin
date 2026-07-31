@@ -1,7 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
+import { formatMoney } from "@/lib/money";
 import { formatPeriodLabel } from "@/lib/period";
+import { webClickable } from "@/lib/web";
 import { usePeriodStore } from "@/store/period";
 import { useSettingsStore } from "@/store/settings";
 import { colors } from "@/theme";
@@ -11,6 +13,8 @@ type Props = {
   showSummary?: boolean;
   expense?: number;
   income?: number;
+  /** Extra amount added to TOTAL (carry-over). */
+  carryAmount?: number;
 };
 
 export function PeriodHeader({
@@ -18,13 +22,14 @@ export function PeriodHeader({
   showSummary = true,
   expense = 0,
   income = 0,
+  carryAmount = 0,
 }: Props) {
   const anchorDate = usePeriodStore((s) => s.anchorDate);
-  const shiftMonths = usePeriodStore((s) => s.shiftMonths);
+  const shiftPeriod = usePeriodStore((s) => s.shiftPeriod);
   const viewMode = useSettingsStore((s) => s.viewMode);
   const showTotal = useSettingsStore((s) => s.showTotal);
 
-  const total = income - expense;
+  const total = income - expense + carryAmount;
   const label = formatPeriodLabel(anchorDate, viewMode);
 
   return (
@@ -33,9 +38,9 @@ export function PeriodHeader({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Previous period"
-          onPress={() => shiftMonths(-1)}
+          onPress={() => shiftPeriod(-1)}
           hitSlop={10}
-          style={styles.chevron}
+          style={[styles.chevron, webClickable]}
         >
           <Ionicons name="chevron-back" size={20} color={colors.accent} />
         </Pressable>
@@ -45,9 +50,9 @@ export function PeriodHeader({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Next period"
-          onPress={() => shiftMonths(1)}
+          onPress={() => shiftPeriod(1)}
           hitSlop={10}
-          style={styles.chevron}
+          style={[styles.chevron, webClickable]}
         >
           <Ionicons name="chevron-forward" size={20} color={colors.accent} />
         </Pressable>
@@ -57,20 +62,21 @@ export function PeriodHeader({
           accessibilityLabel="Display options"
           onPress={onFilterPress}
           hitSlop={10}
-          style={styles.filter}
+          style={[styles.filter, webClickable]}
         >
-          <Ionicons name="filter" size={18} color={colors.accent} />
+          <Ionicons name="options-outline" size={18} color={colors.accent} />
         </Pressable>
       </View>
 
       {showSummary && showTotal ? (
         <View style={styles.summaryRow}>
-          <SummaryCol label="EXPENSE" value={expense} tone="expense" />
-          <SummaryCol label="INCOME" value={income} tone="income" />
+          <SummaryCol label="EXPENSE" value={expense} tone="expense" signed={false} />
+          <SummaryCol label="INCOME" value={income} tone="income" signed={false} />
           <SummaryCol
             label="TOTAL"
             value={total}
             tone={total >= 0 ? "income" : "expense"}
+            signed
           />
         </View>
       ) : null}
@@ -82,20 +88,20 @@ function SummaryCol({
   label,
   value,
   tone,
+  signed,
 }: {
   label: string;
   value: number;
   tone: "expense" | "income";
+  signed: boolean;
 }) {
   const color = tone === "expense" ? colors.expense : colors.income;
-  const abs = Math.abs(value).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  const text = `${value < 0 ? "-" : ""}₹${abs}`;
 
   return (
     <View style={styles.summaryCol}>
       <Text style={styles.summaryLabel}>{label}</Text>
       <Text style={[styles.summaryValue, { color }]} numberOfLines={1}>
-        {text}
+        {formatMoney(value, { sign: signed ? "auto" : "never" })}
       </Text>
     </View>
   );

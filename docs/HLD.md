@@ -301,8 +301,8 @@ docs/              # HLD + BLUEPRINT (this folder)
 |-------|---------|
 | P0 Shell + DB | Tabs, theme, schema, settings store (done) |
 | P1 Accounts & Categories | CRUD + icons unlocked (done) |
-| P2 Composer | Expense/Income/Transfer + balances (in progress / PR) |
-| P3 Records + periods | All view modes incl. 3/6/yearly, carry-over |
+| P2 Composer | Expense/Income/Transfer + balances (done) |
+| P3 Records + periods | All view modes incl. 3/6/yearly, carry-over (in progress / PR) |
 | P4 Search + CSV import | Local export can be loaded |
 | P5 Analysis | Overview, flow, calendar, account bars |
 | P6 Budgets + portability + prefs | Budgets, export, backup, wipe, themes/passcode |

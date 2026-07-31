@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AccountPickerModal } from "@/components/AccountPickerModal";
@@ -18,8 +18,9 @@ import { CategoryPickerModal } from "@/components/CategoryPickerModal";
 import { DatePickerModal, TimePickerModal } from "@/components/DateTimePickers";
 import { listAccounts } from "@/db/accounts";
 import { createCategory, listCategories } from "@/db/categories";
-import { createRecord } from "@/db/records";
+import { createRecord, getRecord, updateRecord } from "@/db/records";
 import type { AccountWithBalance, Category, RecordType } from "@/db/types";
+import { parseOccurredAt } from "@/lib/recordsUi";
 import { useKeydown } from "@/hooks/useKeydown";
 import {
   appendDecimal,
@@ -44,6 +45,8 @@ const TYPES: RecordType[] = ["income", "expense", "transfer"];
 export default function NewRecordScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams<{ id?: string }>();
+  const editId = typeof params.id === "string" ? params.id : undefined;
 
   const [type, setType] = useState<RecordType>("expense");
   const [accounts, setAccounts] = useState<AccountWithBalance[]>([]);
@@ -57,6 +60,7 @@ export default function NewRecordScreen() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hydratedEdit, setHydratedEdit] = useState(false);
 
   const [accountPicker, setAccountPicker] = useState<"from" | "to" | null>(null);
   const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
@@ -86,7 +90,33 @@ export default function NewRecordScreen() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    reloadMeta()
+    (async () => {
+      await reloadMeta();
+      if (!editId || hydratedEdit) return;
+      const existing = await getRecord(editId);
+      if (!existing || cancelled) return;
+      const accs = await listAccounts();
+      const cats =
+        existing.type === "transfer"
+          ? []
+          : await listCategories(existing.type === "income" ? "income" : "expense");
+      setType(existing.type);
+      setExpression(String(existing.amount));
+      setNote(existing.note);
+      setOccurredAt(parseOccurredAt(existing.occurred_at));
+      setAccount(accs.find((a) => a.id === existing.account_id) ?? null);
+      setToAccount(
+        existing.to_account_id
+          ? (accs.find((a) => a.id === existing.to_account_id) ?? null)
+          : null,
+      );
+      setCategory(
+        existing.category_id
+          ? (cats.find((c) => c.id === existing.category_id) ?? null)
+          : null,
+      );
+      setHydratedEdit(true);
+    })()
       .catch((e) => {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load");
       })
@@ -96,7 +126,7 @@ export default function NewRecordScreen() {
     return () => {
       cancelled = true;
     };
-  }, [reloadMeta]);
+  }, [editId, hydratedEdit, reloadMeta]);
 
   const filteredCategories = useMemo(
     () => (type === "transfer" ? [] : categories),
@@ -135,7 +165,7 @@ export default function NewRecordScreen() {
     try {
       setBusy(true);
       setError(null);
-      await createRecord({
+      const payload = {
         type,
         amount,
         account_id: account.id,
@@ -143,7 +173,9 @@ export default function NewRecordScreen() {
         category_id: type === "transfer" ? null : (category?.id ?? null),
         note,
         occurred_at: toIsoLocal(occurredAt),
-      });
+      };
+      if (editId) await updateRecord(editId, payload);
+      else await createRecord(payload);
       router.back();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed");
@@ -152,6 +184,7 @@ export default function NewRecordScreen() {
   }, [
     account,
     category?.id,
+    editId,
     expression,
     occurredAt,
     router,
