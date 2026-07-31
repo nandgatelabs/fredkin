@@ -16,7 +16,11 @@ export function formatMoney(
   const signMode = options?.sign ?? "auto";
 
   const abs = Math.abs(amount).toFixed(decimalPlaces);
-  const withGrouping = abs.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  // Group only the integer side — never the fractional digits.
+  const [intPart, fracPart] = abs.split(".");
+  const groupedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const withGrouping =
+    fracPart !== undefined ? `${groupedInt}.${fracPart}` : groupedInt;
 
   let signPrefix = "";
   if (signMode === "always" || (signMode === "auto" && amount < 0)) {

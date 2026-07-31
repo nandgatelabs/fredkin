@@ -4,9 +4,9 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/Button";
-import { exportMoneyCsv } from "@/db/exportCsv";
+import { exportCsvFileName, exportMoneyCsv } from "@/db/exportCsv";
 import { useKeydown } from "@/hooks/useKeydown";
-import { SaveCancelledError, saveTextFile } from "@/lib/download";
+import { SaveCancelledError, saveProducedTextFile } from "@/lib/download";
 import { webClickable, webFocusableProps } from "@/lib/web";
 import { colors } from "@/theme";
 
@@ -28,14 +28,31 @@ export default function ExportCsvScreen() {
   );
 
   async function onExport() {
-    setBusy(true);
-    setError(null);
-    setSummary(null);
+    // No setState before the picker — keeps the click as a user activation.
+    const suggestedName = exportCsvFileName();
+    let accountOpenings = 0;
+    let records = 0;
+
     try {
-      const result = await exportMoneyCsv();
-      await saveTextFile(result.fileName, result.text, "text/csv");
+      const saved = await saveProducedTextFile(
+        suggestedName,
+        "text/csv",
+        async () => {
+          setBusy(true);
+          const result = await exportMoneyCsv();
+          accountOpenings = result.accountOpenings;
+          records = result.records;
+          return result.text;
+        },
+      );
+
+      setError(null);
       setSummary(
-        `Saved ${result.fileName}\n${result.accountOpenings} account opening balance${result.accountOpenings === 1 ? "" : "s"}, ${result.records} record${result.records === 1 ? "" : "s"}.`,
+        `Saved ${suggestedName}\n${accountOpenings} account opening balance${accountOpenings === 1 ? "" : "s"}, ${records} record${records === 1 ? "" : "s"}.${
+          saved.method === "download"
+            ? "\n(Browser saved via Downloads — use Chrome/Edge for a folder picker.)"
+            : ""
+        }`,
       );
     } catch (e) {
       if (e instanceof SaveCancelledError) return;
@@ -69,7 +86,8 @@ export default function ExportCsvScreen() {
 
       <Text style={styles.body}>
         Save your ledger as a worksheet CSV (TIME, TYPE, AMOUNT, CATEGORY,
-        ACCOUNT, NOTES). You’ll pick where the file is saved.
+        ACCOUNT, NOTES). You’ll choose the folder and file name in the save
+        dialog.
       </Text>
       <Text style={styles.body}>
         Each account’s initial (opening) balance is written as a{" "}

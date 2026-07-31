@@ -13,7 +13,7 @@ import {
   type MoneyBackup,
 } from "@/db/backup";
 import { useKeydown } from "@/hooks/useKeydown";
-import { SaveCancelledError, saveTextFile } from "@/lib/download";
+import { SaveCancelledError, saveProducedTextFile } from "@/lib/download";
 import { webClickable, webFocusableProps } from "@/lib/web";
 import { useSettingsStore } from "@/store/settings";
 import { colors } from "@/theme";
@@ -38,19 +38,29 @@ export default function BackupScreen() {
   );
 
   async function onBackup() {
-    setBusy(true);
-    setError(null);
-    setMessage(null);
+    // No setState before the picker — keeps the click as a user activation.
+    const name = backupFileName();
+    let recordCount = 0;
+    let accountCount = 0;
     try {
-      const payload = await createBackupPayload();
-      const name = backupFileName();
-      await saveTextFile(
+      const saved = await saveProducedTextFile(
         name,
-        JSON.stringify(payload, null, 2),
         "application/json",
+        async () => {
+          setBusy(true);
+          const payload = await createBackupPayload();
+          recordCount = payload.records.length;
+          accountCount = payload.accounts.length;
+          return JSON.stringify(payload, null, 2);
+        },
       );
+      setError(null);
       setMessage(
-        `Backup saved as ${name} (${payload.records.length} records, ${payload.accounts.length} accounts).`,
+        `Backup saved as ${name} (${recordCount} records, ${accountCount} accounts).${
+          saved.method === "download"
+            ? "\n(Browser saved via Downloads — use Chrome/Edge for a folder picker.)"
+            : ""
+        }`,
       );
     } catch (e) {
       if (e instanceof SaveCancelledError) return;

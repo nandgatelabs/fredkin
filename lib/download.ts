@@ -11,6 +11,7 @@ type SavePickerHandle = {
   createWritable: () => Promise<{
     write: (data: string | Blob) => Promise<void>;
     close: () => Promise<void>;
+    abort?: () => Promise<void>;
   }>;
 };
 
@@ -22,85 +23,104 @@ type SavePickerWindow = Window & {
 };
 
 function mimeAccept(mime: string, fileName: string): Record<string, string[]> {
-  const ext = fileName.includes(".")
-    ? `.${fileName.split(".").pop()!.toLowerCase()}`
-    : "";
   if (mime.includes("json") || fileName.endsWith(".mbak")) {
     return {
       "application/json": [".json", ".mbak"],
       "application/octet-stream": [".mbak"],
     };
   }
-  if (mime.includes("csv") || ext === ".csv") {
+  if (mime.includes("csv") || fileName.endsWith(".csv")) {
     return { "text/csv": [".csv"], "text/plain": [".csv", ".txt"] };
   }
+  const ext = fileName.includes(".")
+    ? `.${fileName.split(".").pop()!.toLowerCase()}`
+    : "";
   return { [mime]: ext ? [ext] : [] };
 }
 
+function pickerDescription(fileName: string, mime: string) {
+  if (fileName.endsWith(".mbak")) return "money-money backup";
+  if (mime.includes("csv")) return "CSV spreadsheet";
+  return "File";
+}
+
+function triggerBlobDownload(fileName: string, text: string, mime: string) {
+  const blob = new Blob([text], { type: `${mime};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 /**
- * Let the user choose where to save a text file.
- * Web: File System Access API when available, else browser download.
- * Native: system Share sheet (user picks destination / app).
+ * Open the save-location dialog first (while still in the click gesture),
+ * then run `produce` and write the result. Chromium requires the picker to
+ * open synchronously from a user activation — awaiting DB work first breaks it.
  */
-export async function saveTextFile(
+export async function saveProducedTextFile(
   fileName: string,
-  text: string,
-  mime = "text/csv",
-): Promise<{ method: "picker" | "download" | "share" }> {
+  mime: string,
+  produce: () => Promise<string>,
+): Promise<{ method: "picker" | "download" | "share"; fileName: string }> {
   if (Platform.OS === "web") {
     const w = window as SavePickerWindow;
     if (typeof w.showSaveFilePicker === "function") {
+      let handle: SavePickerHandle;
       try {
-        const handle = await w.showSaveFilePicker({
+        handle = await w.showSaveFilePicker({
           suggestedName: fileName,
           types: [
             {
-              description: fileName.endsWith(".mbak")
-                ? "money-money backup"
-                : mime.includes("csv")
-                  ? "CSV spreadsheet"
-                  : "File",
+              description: pickerDescription(fileName, mime),
               accept: mimeAccept(mime, fileName),
             },
           ],
         });
-        const writable = await handle.createWritable();
-        await writable.write(new Blob([text], { type: `${mime};charset=utf-8` }));
-        await writable.close();
-        return { method: "picker" };
       } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") {
           throw new SaveCancelledError();
         }
-        // Fall through to download if picker unsupported mid-flight.
+        // Picker unavailable / blocked — fall back after producing content.
+        const text = await produce();
+        triggerBlobDownload(fileName, text, mime);
+        return { method: "download", fileName };
       }
+
+      const text = await produce();
+      const writable = await handle.createWritable();
+      try {
+        await writable.write(new Blob([text], { type: `${mime};charset=utf-8` }));
+        await writable.close();
+      } catch (e) {
+        await writable.abort?.().catch(() => undefined);
+        throw e instanceof Error ? e : new Error("Could not write file");
+      }
+      return { method: "picker", fileName };
     }
 
-    const blob = new Blob([text], { type: `${mime};charset=utf-8` });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    a.rel = "noopener";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    return { method: "download" };
+    const text = await produce();
+    triggerBlobDownload(fileName, text, mime);
+    return { method: "download", fileName };
   }
 
+  const text = await produce();
   await Share.share({
     title: fileName,
     message: text,
   });
-  return { method: "share" };
+  return { method: "share", fileName };
 }
 
-/** @deprecated Prefer saveTextFile — kept for any callers expecting auto-download. */
-export async function downloadTextFile(
+/** Convenience when content is already ready (still opens picker first when possible). */
+export async function saveTextFile(
   fileName: string,
   text: string,
   mime = "text/csv",
 ) {
-  await saveTextFile(fileName, text, mime);
+  return saveProducedTextFile(fileName, mime, async () => text);
 }

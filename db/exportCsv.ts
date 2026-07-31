@@ -24,6 +24,12 @@ export type ExportCsvResult = {
   records: number;
 };
 
+/** Suggested download name — sync so the save picker can open on click. */
+export function exportCsvFileName(now = new Date()): string {
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `money-money-export_${pad(now.getDate())}_${pad(now.getMonth() + 1)}_${String(now.getFullYear()).slice(-2)}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
+}
+
 function formatCsvTime(iso: string): string {
   const d = parseOccurredAt(iso);
   return `${formatComposerDate(d)} ${formatComposerTime(d)}`;
@@ -95,13 +101,9 @@ export async function exportMoneyCsv(): Promise<ExportCsvResult> {
     throw new Error("Nothing to export — add an account or record first");
   }
 
-  const now = new Date();
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  const fileName = `money-money-export_${pad(now.getDate())}_${pad(now.getMonth() + 1)}_${String(now.getFullYear()).slice(-2)}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
-
   return {
     text: serializeMoneyCsv(rows),
-    fileName,
+    fileName: exportCsvFileName(),
     accountOpenings: accounts.length,
     records: records.length,
   };
