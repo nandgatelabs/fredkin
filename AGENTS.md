@@ -41,3 +41,5 @@ Full detail: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - Keep secrets and real user ledgers out of git (`private/`, `.env*`).
 - Prefer documented behavior in `docs/` over chat-only decisions; update those docs when product rules change.
 - License is MIT — preserve the `LICENSE` file and copyright notice in distributions.
+- Security reports go to email per [`SECURITY.md`](SECURITY.md) — never invent public “security issue” filings with exploit detail.
+- Community interactions follow [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
