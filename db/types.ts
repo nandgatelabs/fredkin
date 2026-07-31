@@ -40,3 +40,11 @@ export type Totals = {
   incomeSoFar: number;
   allAccountsBalance: number;
 };
+
+export type Budget = {
+  id: string;
+  category_id: string;
+  year: number;
+  month: number;
+  limit_amount: number;
+};
