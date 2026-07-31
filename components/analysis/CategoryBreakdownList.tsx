@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -13,6 +14,8 @@ type Props = {
   tone: "expense" | "income";
   selectedIndex?: number | null;
   onSelect?: (index: number | null) => void;
+  /** Called with the Y offset of a row so the parent can scroll it into view. */
+  onSelectedLayout?: (y: number) => void;
 };
 
 export function CategoryBreakdownList({
@@ -20,8 +23,16 @@ export function CategoryBreakdownList({
   tone,
   selectedIndex = null,
   onSelect,
+  onSelectedLayout,
 }: Props) {
   const amountColor = tone === "expense" ? colors.expense : colors.income;
+  const rowYs = useRef<Record<number, number>>({});
+
+  useEffect(() => {
+    if (selectedIndex == null) return;
+    const y = rowYs.current[selectedIndex];
+    if (y != null) onSelectedLayout?.(y);
+  }, [selectedIndex, onSelectedLayout]);
 
   if (slices.length === 0) {
     return (
@@ -41,14 +52,25 @@ export function CategoryBreakdownList({
           <Pressable
             key={s.categoryId ?? s.name}
             onPress={() => onSelect?.(active ? null : i)}
-            style={[styles.row, webClickable, active && styles.rowActive]}
+            onLayout={(e) => {
+              rowYs.current[i] = e.nativeEvent.layout.y;
+            }}
+            style={[
+              styles.row,
+              webClickable,
+              active && {
+                borderColor: color,
+                backgroundColor: `${color}22`,
+                borderWidth: 2,
+              },
+            ]}
           >
             <View style={[styles.icon, { backgroundColor: color }]}>
               <Ionicons name={categoryIcon(s.iconKey)} size={18} color="#fff" />
             </View>
             <View style={styles.body}>
               <View style={styles.top}>
-                <Text style={styles.name} numberOfLines={1}>
+                <Text style={[styles.name, active && styles.nameActive]} numberOfLines={1}>
                   {s.name}
                 </Text>
                 <Text style={[styles.amount, { color: amountColor }]}>
@@ -62,11 +84,14 @@ export function CategoryBreakdownList({
                     {
                       width: `${Math.min(100, s.percent)}%`,
                       backgroundColor: color,
+                      height: active ? 8 : 6,
                     },
                   ]}
                 />
               </View>
-              <Text style={styles.percent}>{s.percent.toFixed(2)}%</Text>
+              <Text style={[styles.percent, active && { color, fontWeight: "800" }]}>
+                {s.percent.toFixed(2)}%
+              </Text>
             </View>
           </Pressable>
         );
@@ -80,14 +105,11 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     gap: 12,
-    padding: 10,
+    padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "transparent",
-  },
-  rowActive: {
-    borderColor: colors.accent,
-    backgroundColor: "rgba(232, 212, 138, 0.08)",
+    borderColor: colors.borderSubtle,
+    backgroundColor: colors.surface,
   },
   icon: {
     width: 40,
@@ -99,14 +121,16 @@ const styles = StyleSheet.create({
   body: { flex: 1, gap: 4, minWidth: 0 },
   top: { flexDirection: "row", alignItems: "center", gap: 8 },
   name: { flex: 1, color: colors.text, fontWeight: "600", fontSize: 15 },
+  nameActive: { fontWeight: "800" },
   amount: { fontWeight: "700", fontSize: 14 },
   barTrack: {
-    height: 6,
-    borderRadius: 3,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: colors.borderSubtle,
     overflow: "hidden",
+    justifyContent: "center",
   },
-  barFill: { height: "100%", borderRadius: 3 },
+  barFill: { borderRadius: 4 },
   percent: { color: colors.textSecondary, fontSize: 12 },
   empty: {
     color: colors.textSecondary,

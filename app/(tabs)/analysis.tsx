@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Text,
   View,
+  type ScrollView as ScrollViewType,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
@@ -75,6 +76,8 @@ export default function AnalysisScreen() {
   const [selectedSlice, setSelectedSlice] = useState<number | null>(null);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
+  const scrollRef = useRef<ScrollViewType>(null);
+  const listOffsetRef = useRef(0);
 
   const range = useMemo(
     () => rangeForViewMode(anchorDate, viewMode),
@@ -161,6 +164,7 @@ export default function AnalysisScreen() {
         <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
       ) : (
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
@@ -178,12 +182,24 @@ export default function AnalysisScreen() {
                 selectedIndex={selectedSlice}
                 onSelect={setSelectedSlice}
               />
-              <CategoryBreakdownList
-                slices={slices}
-                tone={tone}
-                selectedIndex={selectedSlice}
-                onSelect={setSelectedSlice}
-              />
+              <View
+                onLayout={(e) => {
+                  listOffsetRef.current = e.nativeEvent.layout.y;
+                }}
+              >
+                <CategoryBreakdownList
+                  slices={slices}
+                  tone={tone}
+                  selectedIndex={selectedSlice}
+                  onSelect={setSelectedSlice}
+                  onSelectedLayout={(y) => {
+                    scrollRef.current?.scrollTo({
+                      y: Math.max(0, listOffsetRef.current + y - 24),
+                      animated: true,
+                    });
+                  }}
+                />
+              </View>
             </>
           )}
 
@@ -210,16 +226,6 @@ export default function AnalysisScreen() {
 
           {mode === "account" && (
             <>
-              <View style={styles.legendRow}>
-                <View style={styles.legendItem}>
-                  <View style={[styles.swatch, { backgroundColor: colors.expense }]} />
-                  <Text style={styles.legendText}>Expense</Text>
-                </View>
-                <View style={styles.legendItem}>
-                  <View style={[styles.swatch, { backgroundColor: colors.income }]} />
-                  <Text style={styles.legendText}>Income</Text>
-                </View>
-              </View>
               <AccountBars
                 accounts={accounts}
                 selectedId={selectedAccount}
@@ -285,15 +291,6 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
     paddingTop: 8,
   },
-  legendRow: {
-    flexDirection: "row",
-    gap: 16,
-    marginTop: 8,
-    justifyContent: "center",
-  },
-  legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
-  swatch: { width: 12, height: 12, borderRadius: 2 },
-  legendText: { color: colors.textSecondary, fontSize: 12 },
   error: {
     color: colors.danger,
     paddingHorizontal: 16,

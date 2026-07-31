@@ -15,25 +15,36 @@ type Props = {
   onSelectDay?: (day: string | null) => void;
 };
 
-const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function dayKey(y: number, m: number, d: number) {
   const pad = (n: number) => n.toString().padStart(2, "0");
   return `${y}-${pad(m + 1)}-${pad(d)}`;
 }
 
-function formatCellAmount(amount: number) {
+function formatCellAmount(amount: number, tone: "expense" | "income") {
   if (amount <= 0) return "";
-  if (amount >= 1000) return `${(amount / 1000).toFixed(1)}k`;
-  return amount % 1 === 0 ? String(amount.toFixed(0)) : amount.toFixed(0);
+  const sign = tone === "expense" ? "−" : "+";
+  if (amount >= 10000) return `${sign}${(amount / 1000).toFixed(1)}k`;
+  if (amount >= 1000) return `${sign}${(amount / 1000).toFixed(1)}k`;
+  return `${sign}${amount % 1 === 0 ? amount.toFixed(0) : amount.toFixed(1)}`;
 }
 
-function heatAlpha(amount: number, max: number) {
-  if (amount <= 0 || max <= 0) return 0;
-  return 0.12 + (amount / max) * 0.55;
+function heatStyle(amount: number, max: number, tone: "expense" | "income") {
+  if (amount <= 0 || max <= 0) {
+    return { backgroundColor: colors.surface };
+  }
+  const t = Math.min(1, amount / max);
+  if (tone === "expense") {
+    // soft coral → stronger coral
+    const a = 0.1 + t * 0.45;
+    return { backgroundColor: `rgba(232, 154, 132, ${a})` };
+  }
+  const a = 0.1 + t * 0.45;
+  return { backgroundColor: `rgba(143, 207, 146, ${a})` };
 }
 
-/** Month grid for the period’s primary month (anchor end month). */
+/** Big outlined month grid (MyMoney-style) with richer color. */
 export function FlowCalendar({
   rangeStart,
   rangeEnd,
@@ -44,10 +55,7 @@ export function FlowCalendar({
 }: Props) {
   const amountColor = tone === "expense" ? colors.expense : colors.income;
   const map = useMemo(() => new Map(days.map((d) => [d.day, d.amount])), [days]);
-  const max = useMemo(
-    () => Math.max(...days.map((d) => d.amount), 1),
-    [days],
-  );
+  const max = useMemo(() => Math.max(...days.map((d) => d.amount), 1), [days]);
 
   const year = rangeEnd.getFullYear();
   const month = rangeEnd.getMonth();
@@ -55,12 +63,18 @@ export function FlowCalendar({
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const startWeekday = first.getDay();
 
-  const cells: ({ day: number; key: string; amount: number; inRange: boolean } | null)[] =
-    [];
+  const cells: ({
+    day: number;
+    key: string;
+    amount: number;
+    inRange: boolean;
+    weekend: boolean;
+  } | null)[] = [];
   for (let i = 0; i < startWeekday; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) {
     const key = dayKey(year, month, d);
     const date = new Date(year, month, d, 12);
+    const weekday = (startWeekday + d - 1) % 7;
     const inRange =
       date >=
         new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate()) &&
@@ -71,6 +85,7 @@ export function FlowCalendar({
       key,
       amount: inRange ? (map.get(key) ?? 0) : 0,
       inRange,
+      weekend: weekday === 0 || weekday === 6,
     });
   }
 
@@ -105,62 +120,72 @@ export function FlowCalendar({
             {formatMoney(selectedAmount, { sign: "never" })}
           </Text>
         </View>
-      ) : (
-        <Text style={styles.hint}>Tap a day to inspect</Text>
-      )}
+      ) : null}
 
-      <View style={styles.weekRow}>
-        {WEEKDAYS.map((w, i) => (
-          <Text key={`${w}-${i}`} style={styles.weekday}>
-            {w}
-          </Text>
-        ))}
-      </View>
-      <View style={styles.grid}>
-        {cells.map((cell, i) => {
-          if (cell == null) {
-            return <View key={`e-${i}`} style={styles.cell} />;
-          }
-          const active = selectedDay === cell.key;
-          const alpha = heatAlpha(cell.amount, max);
-          const bg =
-            cell.amount > 0
-              ? tone === "expense"
-                ? `rgba(232, 154, 132, ${alpha})`
-                : `rgba(143, 207, 146, ${alpha})`
-              : colors.surface;
-
-          return (
-            <Pressable
-              key={cell.key}
-              disabled={!cell.inRange}
-              onPress={() =>
-                onSelectDay?.(active ? null : cell.key)
-              }
+      <View style={styles.frame}>
+        <View style={styles.weekRow}>
+          {WEEKDAYS.map((w, i) => (
+            <View
+              key={`${w}-${i}`}
               style={[
-                styles.cell,
-                styles.cellInner,
-                webClickable,
-                { backgroundColor: bg },
-                active && {
-                  borderColor: amountColor,
-                  borderWidth: 2,
-                },
-                !cell.inRange && styles.cellMuted,
+                styles.weekdayCell,
+                (i === 0 || i === 6) && styles.weekendHeader,
               ]}
             >
-              <Text style={[styles.dayNum, active && { color: colors.text }]}>
-                {cell.day}
-              </Text>
-              <Text
-                style={[styles.amount, { color: amountColor }]}
-                numberOfLines={1}
+              <Text style={styles.weekday}>{w}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.grid}>
+          {cells.map((cell, i) => {
+            if (cell == null) {
+              return <View key={`e-${i}`} style={[styles.cell, styles.cellEmpty]} />;
+            }
+            const active = selectedDay === cell.key;
+            const heat = heatStyle(cell.amount, max, tone);
+
+            return (
+              <Pressable
+                key={cell.key}
+                disabled={!cell.inRange}
+                onPress={() => onSelectDay?.(active ? null : cell.key)}
+                style={[
+                  styles.cell,
+                  webClickable,
+                  heat,
+                  cell.weekend && !active && styles.weekendCell,
+                  active && {
+                    borderColor: amountColor,
+                    borderWidth: 2,
+                    backgroundColor:
+                      tone === "expense"
+                        ? "rgba(232, 154, 132, 0.35)"
+                        : "rgba(143, 207, 146, 0.35)",
+                  },
+                  !cell.inRange && styles.cellMuted,
+                ]}
               >
-                {formatCellAmount(cell.amount)}
-              </Text>
-            </Pressable>
-          );
-        })}
+                <Text
+                  style={[
+                    styles.dayNum,
+                    cell.weekend && styles.dayNumWeekend,
+                    active && styles.dayNumActive,
+                    cell.amount > 0 && { color: colors.text },
+                  ]}
+                >
+                  {cell.day}
+                </Text>
+                <Text
+                  style={[styles.amount, { color: amountColor }]}
+                  numberOfLines={1}
+                >
+                  {formatCellAmount(cell.amount, tone)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -169,22 +194,14 @@ export function FlowCalendar({
 const styles = StyleSheet.create({
   wrap: {
     marginTop: 20,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.borderSubtle,
-    paddingTop: 14,
+    paddingTop: 8,
   },
   monthTitle: {
     color: colors.accent,
     fontWeight: "700",
-    fontSize: 15,
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  hint: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    textAlign: "center",
+    fontSize: 16,
     marginBottom: 10,
+    textAlign: "center",
   },
   selectedBanner: {
     flexDirection: "row",
@@ -206,16 +223,34 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     fontSize: 15,
   },
+  frame: {
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: colors.background,
+  },
   weekRow: {
     flexDirection: "row",
-    marginBottom: 6,
+    borderBottomWidth: 1.5,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surfaceElevated,
+  },
+  weekdayCell: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderRightColor: colors.border,
+  },
+  weekendHeader: {
+    backgroundColor: "rgba(232, 212, 138, 0.08)",
   },
   weekday: {
-    flex: 1,
-    textAlign: "center",
-    color: colors.accentMuted,
-    fontSize: 11,
-    fontWeight: "700",
+    color: colors.accent,
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.3,
   },
   grid: {
     flexDirection: "row",
@@ -223,30 +258,41 @@ const styles = StyleSheet.create({
   },
   cell: {
     width: `${100 / 7}%` as `${number}%`,
-    aspectRatio: 1,
-    padding: 2,
-    minHeight: 54,
+    minHeight: 72,
+    paddingTop: 6,
+    paddingHorizontal: 4,
+    paddingBottom: 6,
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderRightColor: colors.border,
+    borderBottomColor: colors.border,
+    justifyContent: "space-between",
   },
-  cellInner: {
-    flex: 1,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 4,
+  cellEmpty: {
+    backgroundColor: colors.inputBg,
+  },
+  weekendCell: {
+    backgroundColor: "rgba(232, 212, 138, 0.04)",
   },
   cellMuted: {
-    opacity: 0.35,
+    opacity: 0.4,
   },
   dayNum: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: "600",
+    color: colors.accentMuted,
+    fontSize: 15,
+    fontWeight: "700",
+    alignSelf: "flex-start",
+  },
+  dayNumWeekend: {
+    color: colors.accent,
+  },
+  dayNumActive: {
+    color: colors.text,
   },
   amount: {
-    fontSize: 10,
-    fontWeight: "700",
-    marginTop: 2,
+    fontSize: 12,
+    fontWeight: "800",
+    alignSelf: "center",
+    marginTop: 4,
   },
 });

@@ -150,113 +150,115 @@ export function FlowLineChart({
     onSelectDay?.(selectedDay === best.day ? null : best.day);
   }
 
+  const yTicks = [max, (max * 2) / 3, max / 3, 0];
+
   return (
-    <View style={styles.wrap} onLayout={onLayout}>
-      <View style={styles.yRow}>
-        <Text style={[styles.yMax, { color: stroke }]}>
-          {tone === "expense" ? "−" : "+"}
-          {formatMoney(max, { sign: "never" })}
-        </Text>
-        {selected ? (
-          <View style={[styles.tooltip, { borderColor: stroke }]}>
-            <Text style={styles.tooltipDate}>{longLabel(selected.day)}</Text>
-            <Text style={[styles.tooltipAmt, { color: stroke }]}>
+    <View style={styles.wrap}>
+      {selected ? (
+        <View style={[styles.tooltip, { borderColor: stroke }]}>
+          <Text style={styles.tooltipDate}>{longLabel(selected.day)}</Text>
+          <Text style={[styles.tooltipAmt, { color: stroke }]}>
+            {tone === "expense" ? "−" : "+"}
+            {formatMoney(selected.amount, { sign: "never" })}
+          </Text>
+        </View>
+      ) : (
+        <Text style={styles.hint}>Tap the chart or a calendar day</Text>
+      )}
+
+      <View style={styles.chartRow}>
+        <View style={[styles.yAxis, { height: height - 36 }]}>
+          {yTicks.map((v, i) => (
+            <Text key={i} style={[styles.yTick, { color: stroke }]} numberOfLines={1}>
               {tone === "expense" ? "−" : "+"}
-              {formatMoney(selected.amount, { sign: "never" })}
+              {formatMoney(v, { sign: "never" })}
             </Text>
-          </View>
-        ) : (
-          <Text style={styles.hint}>Tap a point for details</Text>
-        )}
+          ))}
+        </View>
+
+        <Pressable
+          onLayout={onLayout}
+          onPress={(e) => hitTest(e.nativeEvent.locationX)}
+          style={[{ height: height - 36, flex: 1 }, webClickable]}
+        >
+          <Svg width={width} height={height - 36} pointerEvents="none">
+            <Defs>
+              <LinearGradient id="flowFill" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={stroke} stopOpacity="0.35" />
+                <Stop offset="1" stopColor={stroke} stopOpacity="0.02" />
+              </LinearGradient>
+            </Defs>
+
+            {yTicks.map((_, i) => {
+              const y = padT + (plotH * i) / (yTicks.length - 1);
+              return (
+                <Line
+                  key={i}
+                  x1={padL}
+                  y1={y}
+                  x2={padL + plotW}
+                  y2={y}
+                  stroke={colors.borderSubtle}
+                  strokeWidth={i === yTicks.length - 1 ? 1.5 : 1}
+                  strokeDasharray={i === yTicks.length - 1 ? undefined : "4 6"}
+                />
+              );
+            })}
+
+            {coords.some((s) => s.amount > 0) ? (
+              <>
+                <Path d={areaPath} fill="url(#flowFill)" />
+                <Path
+                  d={linePath}
+                  fill="none"
+                  stroke={stroke}
+                  strokeWidth={2.5}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+                {coords.map((s) => {
+                  const active = selectedDay === s.day;
+                  const hasValue = s.amount > 0;
+                  return (
+                    <Circle
+                      key={s.day}
+                      cx={s.x}
+                      cy={s.y}
+                      r={active ? 7 : hasValue ? 4.5 : 3}
+                      fill={active || hasValue ? stroke : colors.surfaceElevated}
+                      stroke={active ? colors.text : colors.background}
+                      strokeWidth={active ? 2.5 : 1.5}
+                      opacity={hasValue || active ? 1 : 0.45}
+                    />
+                  );
+                })}
+                {selected ? (
+                  <Line
+                    x1={selected.x}
+                    y1={padT}
+                    x2={selected.x}
+                    y2={padT + plotH}
+                    stroke={stroke}
+                    strokeWidth={1.5}
+                    strokeDasharray="3 4"
+                    opacity={0.7}
+                  />
+                ) : null}
+              </>
+            ) : null}
+          </Svg>
+        </Pressable>
       </View>
 
-      <Pressable
-        onPress={(e) => hitTest(e.nativeEvent.locationX)}
-        style={[{ height: height - 36 }, webClickable]}
-      >
-        <Svg width={width} height={height - 36} pointerEvents="none">
-          <Defs>
-            <LinearGradient id="flowFill" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={stroke} stopOpacity="0.35" />
-              <Stop offset="1" stopColor={stroke} stopOpacity="0.02" />
-            </LinearGradient>
-          </Defs>
-
-          {[0.25, 0.5, 0.75, 1].map((t) => {
-            const y = padT + plotH * t;
-            return (
-              <Line
-                key={t}
-                x1={padL}
-                y1={y}
-                x2={padL + plotW}
-                y2={y}
-                stroke={colors.borderSubtle}
-                strokeWidth={1}
-                strokeDasharray="4 6"
-              />
-            );
-          })}
-
-          <Line
-            x1={padL}
-            y1={padT + plotH}
-            x2={padL + plotW}
-            y2={padT + plotH}
-            stroke={colors.border}
-            strokeWidth={1.5}
-          />
-
-          {coords.some((s) => s.amount > 0) ? (
-            <>
-              <Path d={areaPath} fill="url(#flowFill)" />
-              <Path
-                d={linePath}
-                fill="none"
-                stroke={stroke}
-                strokeWidth={2.5}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-              {coords.map((s) => {
-                const active = selectedDay === s.day;
-                const hasValue = s.amount > 0;
-                return (
-                  <Circle
-                    key={s.day}
-                    cx={s.x}
-                    cy={s.y}
-                    r={active ? 7 : hasValue ? 4.5 : 3}
-                    fill={active || hasValue ? stroke : colors.surfaceElevated}
-                    stroke={active ? colors.text : colors.background}
-                    strokeWidth={active ? 2.5 : 1.5}
-                    opacity={hasValue || active ? 1 : 0.45}
-                  />
-                );
-              })}
-              {selected ? (
-                <Line
-                  x1={selected.x}
-                  y1={padT}
-                  x2={selected.x}
-                  y2={padT + plotH}
-                  stroke={stroke}
-                  strokeWidth={1.5}
-                  strokeDasharray="3 4"
-                  opacity={0.7}
-                />
-              ) : null}
-            </>
-          ) : null}
-        </Svg>
-      </Pressable>
-
       <View style={styles.xLabels}>
-        {labelIdx.map((i) => (
-          <Text key={series[i].day} style={styles.xLabel}>
-            {shortLabel(series[i].day)}
-          </Text>
-        ))}
+        <View style={styles.yAxisSpacer} />
+        <View style={styles.xLabelRow}>
+          {labelIdx.map((i) => (
+            <Text key={series[i].day} style={styles.xLabel}>
+              {shortLabel(series[i].day)}
+            </Text>
+          ))}
+        </View>
       </View>
     </View>
   );
@@ -264,44 +266,54 @@ export function FlowLineChart({
 
 const styles = StyleSheet.create({
   wrap: { width: "100%", marginTop: 8 },
-  yRow: {
-    flexDirection: "row",
-    alignItems: "center",
+  chartRow: { flexDirection: "row", alignItems: "stretch" },
+  yAxis: {
+    width: 64,
     justifyContent: "space-between",
-    marginBottom: 6,
-    minHeight: 36,
-    gap: 8,
+    paddingRight: 4,
   },
-  yMax: {
-    fontSize: 12,
+  yTick: {
+    fontSize: 10,
     fontWeight: "700",
+    textAlign: "right",
   },
   hint: {
     color: colors.textSecondary,
     fontSize: 12,
+    marginBottom: 8,
+    textAlign: "center",
   },
   tooltip: {
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
     backgroundColor: colors.surfaceElevated,
-    alignItems: "flex-end",
+    marginBottom: 8,
+    alignSelf: "stretch",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   tooltipDate: {
     color: colors.textSecondary,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
   },
   tooltipAmt: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "800",
   },
   xLabels: {
     flexDirection: "row",
+    marginTop: 2,
+  },
+  yAxisSpacer: { width: 64 },
+  xLabelRow: {
+    flex: 1,
+    flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: 8,
-    marginTop: 2,
   },
   xLabel: { color: colors.textSecondary, fontSize: 11 },
 });

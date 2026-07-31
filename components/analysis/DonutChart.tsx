@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import {
   Platform,
   Pressable,
@@ -6,6 +6,7 @@ import {
   Text,
   useWindowDimensions,
   View,
+  type View as ViewType,
 } from "react-native";
 import Svg, { G, Path } from "react-native-svg";
 
@@ -105,17 +106,23 @@ export function DonutChart({
   }, [cx, cy, rInner, rOuter, segments, total]);
 
   const selected = selectedIndex != null ? segments[selectedIndex] : null;
+  const hitRef = useRef<ViewType>(null);
 
   function hitTest(x: number, y: number) {
     const dx = x - cx;
     const dy = y - cy;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist < rInner || dist > rOuter) {
+    if (dist < rInner - 2 || dist > rOuter + 2) {
       onSelect?.(null);
       return;
     }
     const deg = angleFromPoint(cx, cy, x, y);
-    const hit = slices.find((s) => deg >= s.start && deg < s.end);
+    const hit =
+      slices.find((s, i) => {
+        const isLast = i === slices.length - 1;
+        if (isLast) return deg >= s.start || deg < 0.0001;
+        return deg >= s.start && deg < s.end;
+      }) ?? null;
     if (!hit) {
       onSelect?.(null);
       return;
@@ -126,7 +133,17 @@ export function DonutChart({
   return (
     <View style={styles.wrap}>
       <Pressable
-        onPress={(e) => hitTest(e.nativeEvent.locationX, e.nativeEvent.locationY)}
+        ref={hitRef}
+        onPress={(e) => {
+          const { pageX, pageY, locationX, locationY } = e.nativeEvent;
+          if (Platform.OS === "web" && hitRef.current) {
+            hitRef.current.measureInWindow((wx, wy) => {
+              hitTest(pageX - wx, pageY - wy);
+            });
+            return;
+          }
+          hitTest(locationX, locationY);
+        }}
         style={[styles.chartHit, { width: size, height: size }, webClickable]}
       >
         <Svg width={size} height={size} pointerEvents="none">
