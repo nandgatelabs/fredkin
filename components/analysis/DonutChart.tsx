@@ -7,7 +7,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import Svg, { Circle, G, Path } from "react-native-svg";
+import Svg, { G, Path } from "react-native-svg";
 
 import { analysisColor } from "@/lib/analysisPalette";
 import { formatMoney } from "@/lib/money";
@@ -60,6 +60,15 @@ function donutSlicePath(
   ].join(" ");
 }
 
+/** Angle from top, clockwise, matching SVG slice layout (0° at 12 o'clock). */
+function angleFromPoint(cx: number, cy: number, x: number, y: number) {
+  const dx = x - cx;
+  const dy = y - cy;
+  let deg = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
+  if (deg < 0) deg += 360;
+  return deg;
+}
+
 export function DonutChart({
   segments,
   label,
@@ -82,54 +91,53 @@ export function DonutChart({
     let angle = 0;
     return segments.map((seg, i) => {
       const sweep = (seg.amount / total) * 360;
-      // Avoid zero-length paths for tiny slices
       const start = angle;
       const end = angle + Math.max(sweep, 0.4);
       angle += sweep;
       return {
         index: i,
-        path: donutSlicePath(cx, cy, rInner, rOuter, start, Math.min(end, 359.99)),
+        start,
+        end: Math.min(end, 360),
+        path: donutSlicePath(cx, cy, rInner, rOuter, start, Math.min(end, 359.999)),
         color: seg.color,
-        fullCircle: sweep >= 359.9,
       };
     });
   }, [cx, cy, rInner, rOuter, segments, total]);
 
   const selected = selectedIndex != null ? segments[selectedIndex] : null;
 
+  function hitTest(x: number, y: number) {
+    const dx = x - cx;
+    const dy = y - cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < rInner || dist > rOuter) {
+      onSelect?.(null);
+      return;
+    }
+    const deg = angleFromPoint(cx, cy, x, y);
+    const hit = slices.find((s) => deg >= s.start && deg < s.end);
+    if (!hit) {
+      onSelect?.(null);
+      return;
+    }
+    onSelect?.(selectedIndex === hit.index ? null : hit.index);
+  }
+
   return (
     <View style={styles.wrap}>
-      <View style={[styles.chartHit, { width: size, height: size }]}>
-        <Svg width={size} height={size}>
-          <Circle
-            cx={cx}
-            cy={cy}
-            r={(rInner + rOuter) / 2}
-            stroke={colors.borderSubtle}
-            strokeWidth={stroke}
-            fill="none"
-            onPress={() => onSelect?.(null)}
+      <Pressable
+        onPress={(e) => hitTest(e.nativeEvent.locationX, e.nativeEvent.locationY)}
+        style={[styles.chartHit, { width: size, height: size }, webClickable]}
+      >
+        <Svg width={size} height={size} pointerEvents="none">
+          <Path
+            d={donutSlicePath(cx, cy, rInner, rOuter, 0, 359.999)}
+            fill={colors.borderSubtle}
+            opacity={0.35}
           />
           <G>
             {slices.map((slice) => {
               const active = selectedIndex === slice.index;
-              if (slice.fullCircle) {
-                return (
-                  <Circle
-                    key={slice.index}
-                    cx={cx}
-                    cy={cy}
-                    r={(rInner + rOuter) / 2}
-                    stroke={slice.color}
-                    strokeWidth={active ? stroke + 6 : stroke}
-                    fill="none"
-                    opacity={selectedIndex == null || active ? 1 : 0.35}
-                    onPress={() =>
-                      onSelect?.(selectedIndex === slice.index ? null : slice.index)
-                    }
-                  />
-                );
-              }
               return (
                 <Path
                   key={slice.index}
@@ -138,9 +146,6 @@ export function DonutChart({
                   opacity={selectedIndex == null || active ? 1 : 0.35}
                   stroke={active ? colors.text : "transparent"}
                   strokeWidth={active ? 2 : 0}
-                  onPress={() =>
-                    onSelect?.(selectedIndex === slice.index ? null : slice.index)
-                  }
                 />
               );
             })}
@@ -165,7 +170,7 @@ export function DonutChart({
             <Text style={styles.centerLabel}>{label}</Text>
           )}
         </View>
-      </View>
+      </Pressable>
     </View>
   );
 }

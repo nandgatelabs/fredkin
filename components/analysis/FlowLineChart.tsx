@@ -174,7 +174,7 @@ export function FlowLineChart({
         onPress={(e) => hitTest(e.nativeEvent.locationX)}
         style={[{ height: height - 36 }, webClickable]}
       >
-        <Svg width={width} height={height - 36}>
+        <Svg width={width} height={height - 36} pointerEvents="none">
           <Defs>
             <LinearGradient id="flowFill" x1="0" y1="0" x2="0" y2="1">
               <Stop offset="0" stopColor={stroke} stopOpacity="0.35" />
@@ -231,9 +231,6 @@ export function FlowLineChart({
                     stroke={active ? colors.text : colors.background}
                     strokeWidth={active ? 2.5 : 1.5}
                     opacity={hasValue || active ? 1 : 0.45}
-                    onPress={() =>
-                      onSelectDay?.(selectedDay === s.day ? null : s.day)
-                    }
                   />
                 );
               })}
