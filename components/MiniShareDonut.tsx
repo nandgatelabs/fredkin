@@ -17,6 +17,8 @@ export function MiniShareDonut({
   color = colors.accent,
 }: Props) {
   const stroke = 14;
+  const cx = size / 2;
+  const cy = size / 2;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const clamped = Math.max(0, Math.min(100, percent));
@@ -25,23 +27,24 @@ export function MiniShareDonut({
   return (
     <View style={{ width: size, height: size }}>
       <Svg width={size} height={size}>
-        <G rotation={-90} origin={`${size / 2}, ${size / 2}`}>
+        {/* SVG transform attr — avoids RN `origin` → invalid web `transform-origin`. */}
+        <G transform={`rotate(-90 ${cx} ${cy})`}>
           <Circle
-            cx={size / 2}
-            cy={size / 2}
+            cx={cx}
+            cy={cy}
             r={r}
             stroke={colors.borderSubtle}
             strokeWidth={stroke}
             fill="none"
           />
           <Circle
-            cx={size / 2}
-            cy={size / 2}
+            cx={cx}
+            cy={cy}
             r={r}
             stroke={color}
             strokeWidth={stroke}
             fill="none"
-            strokeDasharray={`${dash} ${Math.max(0, c - dash)}`}
+            strokeDasharray={`${dash} ${Math.max(0.0001, c - dash)}`}
           />
         </G>
       </Svg>
