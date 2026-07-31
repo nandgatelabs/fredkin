@@ -12,7 +12,13 @@ npm run web
 
 Chrome or Edge should open (or go to `http://localhost:8081`). You should see the dark shell with bottom tabs.
 
-Web uses SQLite via WebAssembly. It is suitable for development; treat phone/emulator as the check before release.
+Web uses SQLite via WebAssembly (still alpha upstream). Prefer a normal Chrome/Edge window (not private/incognito). If the DB fails to start:
+
+1. Stop Metro (`Ctrl+C`) and run `npm run web` again  
+2. Hard-refresh the browser (or clear site data for `localhost:8081`)  
+3. Confirm you checked out the branch under test (`git branch`)
+
+On web, if persistent storage fails, the app falls back to an in-memory DB for that session (data resets on refresh, but UI is testable).
 
 ## Android (Expo Go)
 
