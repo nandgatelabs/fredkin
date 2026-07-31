@@ -14,6 +14,8 @@ type Props = {
   tone: "expense" | "income";
   selectedIndex?: number | null;
   onSelect?: (index: number | null) => void;
+  /** Open category details when a row has a real category id. */
+  onOpenCategory?: (categoryId: string) => void;
   /** Called with the Y offset of a row so the parent can scroll it into view. */
   onSelectedLayout?: (y: number) => void;
 };
@@ -23,6 +25,7 @@ export function CategoryBreakdownList({
   tone,
   selectedIndex = null,
   onSelect,
+  onOpenCategory,
   onSelectedLayout,
 }: Props) {
   const amountColor = tone === "expense" ? colors.expense : colors.income;
@@ -51,7 +54,17 @@ export function CategoryBreakdownList({
         return (
           <Pressable
             key={s.categoryId ?? s.name}
-            onPress={() => onSelect?.(active ? null : i)}
+            accessibilityRole="button"
+            accessibilityLabel={
+              s.categoryId ? `${s.name} details` : `${s.name} share`
+            }
+            onPress={() => {
+              if (s.categoryId && onOpenCategory) {
+                onOpenCategory(s.categoryId);
+                return;
+              }
+              onSelect?.(active ? null : i);
+            }}
             onLayout={(e) => {
               rowYs.current[i] = e.nativeEvent.layout.y;
             }}

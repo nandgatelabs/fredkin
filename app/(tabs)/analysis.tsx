@@ -9,7 +9,7 @@ import {
   type ScrollView as ScrollViewType,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 import { AccountBars, AccountPeriodList } from "@/components/analysis/AccountBars";
 import { CategoryBreakdownList } from "@/components/analysis/CategoryBreakdownList";
@@ -56,6 +56,7 @@ const MODE_LABELS: Record<AnalysisMode, string> = {
 };
 
 export default function AnalysisScreen() {
+  const router = useRouter();
   const anchorDate = usePeriodStore((s) => s.anchorDate);
   const viewMode = useSettingsStore((s) => s.viewMode);
   const carryOver = useSettingsStore((s) => s.carryOver);
@@ -140,6 +141,20 @@ export default function AnalysisScreen() {
     percent: s.percent,
   }));
 
+  function openCategoryOrSelect(index: number | null) {
+    if (index == null) {
+      setSelectedSlice(null);
+      return;
+    }
+    const slice = slices[index];
+    if (slice?.categoryId) {
+      router.push(`/category/${slice.categoryId}` as never);
+      return;
+    }
+    // Uncategorized (no id) — keep pie-share highlight only.
+    setSelectedSlice(selectedSlice === index ? null : index);
+  }
+
   return (
     <View style={styles.screen}>
       <AppHeader />
@@ -175,12 +190,12 @@ export default function AnalysisScreen() {
                 tone={tone}
                 segments={donutSegments}
                 selectedIndex={selectedSlice}
-                onSelect={setSelectedSlice}
+                onSelect={openCategoryOrSelect}
               />
               <DonutLegend
                 segments={donutSegments}
                 selectedIndex={selectedSlice}
-                onSelect={setSelectedSlice}
+                onSelect={openCategoryOrSelect}
               />
               <View
                 onLayout={(e) => {
@@ -191,7 +206,10 @@ export default function AnalysisScreen() {
                   slices={slices}
                   tone={tone}
                   selectedIndex={selectedSlice}
-                  onSelect={setSelectedSlice}
+                  onSelect={openCategoryOrSelect}
+                  onOpenCategory={(categoryId) =>
+                    router.push(`/category/${categoryId}` as never)
+                  }
                   onSelectedLayout={(y) => {
                     scrollRef.current?.scrollTo({
                       y: Math.max(0, listOffsetRef.current + y - 24),
