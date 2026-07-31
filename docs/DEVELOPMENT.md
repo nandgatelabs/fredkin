@@ -10,7 +10,7 @@ npm install
 npm run web
 ```
 
-Chrome or Edge should open (or go to `http://localhost:8081`). You should see the dark shell with bottom tabs.
+Chrome or Edge should open (or go to `http://localhost:8081`). On desktop, the UI is framed in a centered phone preview (not stretched full-width). You should see the dark shell with bottom tabs.
 
 Web uses SQLite via WebAssembly (still alpha upstream). Prefer a normal Chrome/Edge window (not private/incognito).
 

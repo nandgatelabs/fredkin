@@ -15,6 +15,7 @@ import {
   type AccountIconKey,
 } from "@/lib/icons";
 import { colors } from "@/theme";
+import { layout } from "@/theme/layout";
 
 export type AccountEditorValues = {
   name: string;
@@ -146,6 +147,9 @@ const styles = StyleSheet.create({
     borderColor: colors.accentMuted,
     padding: 18,
     gap: 8,
+    width: "100%",
+    maxWidth: layout.webPhoneWidth - 24,
+    alignSelf: "center",
   },
   title: {
     color: colors.accent,

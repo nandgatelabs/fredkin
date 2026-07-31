@@ -17,6 +17,7 @@ import {
   categoryIcon,
 } from "@/lib/icons";
 import { colors } from "@/theme";
+import { layout } from "@/theme/layout";
 
 export type CategoryEditorValues = {
   name: string;
@@ -169,6 +170,9 @@ const styles = StyleSheet.create({
     padding: 18,
     gap: 8,
     maxHeight: "90%",
+    width: "100%",
+    maxWidth: layout.webPhoneWidth - 24,
+    alignSelf: "center",
   },
   title: {
     color: colors.accent,

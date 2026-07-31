@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, type ViewStyle } from "react-native";
 
+import { webClickable } from "@/lib/web";
 import { colors } from "@/theme";
 
 type Props = {
@@ -10,7 +11,15 @@ type Props = {
 
 export function GhostButton({ label, onPress, style }: Props) {
   return (
-    <Pressable onPress={onPress} style={[styles.btn, style]}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.btn,
+        webClickable,
+        pressed && styles.btnPressed,
+        style,
+      ]}
+    >
       <Text style={styles.label}>{label}</Text>
     </Pressable>
   );
@@ -24,6 +33,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     alignItems: "center",
+    backgroundColor: "transparent",
+  },
+  btnPressed: {
+    opacity: 0.85,
+    backgroundColor: "rgba(229, 211, 138, 0.08)",
   },
   label: {
     color: colors.accent,
