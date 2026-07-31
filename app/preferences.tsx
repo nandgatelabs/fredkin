@@ -56,12 +56,15 @@ type Sheet =
   | "decimals"
   | null;
 
-function reloadAppSafely() {
+/** Full reload onto home so StyleSheets re-read the palette mirror. */
+function reloadHomeForTheme() {
   if (Platform.OS !== "web") return;
-  // Defer past React commit so expo-router doesn't throw onUnhandledAction.
+  // Prefer assign('/') over reload() on /preferences — keeps the initial
+  // route simple and avoids expo-router unhandled actions mid-stack.
   window.setTimeout(() => {
-    window.location.reload();
-  }, 0);
+    const base = `${window.location.origin}/`;
+    window.location.assign(base);
+  }, 50);
 }
 
 export default function PreferencesScreen() {
@@ -108,11 +111,11 @@ export default function PreferencesScreen() {
         uiMode,
       });
       if (themeChanged) {
-        setStatus("Saved — reloading theme…");
-        reloadAppSafely();
-      } else {
-        setStatus("Saved");
+        setStatus("Saved — applying theme…");
+        reloadHomeForTheme();
+        return;
       }
+      setStatus("Saved");
     } catch (e) {
       setStatus(e instanceof Error ? e.message : "Save failed");
     } finally {

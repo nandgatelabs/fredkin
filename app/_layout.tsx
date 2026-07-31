@@ -50,42 +50,16 @@ export default function RootLayout() {
     return () => clearInterval(id);
   }, [dbReady, hydrated, remindEveryday]);
 
-  if (!dbReady || !hydrated) {
-    return (
-      <View style={styles.boot}>
-        <StatusBar style={uiMode === "light" ? "dark" : "light"} />
-        <ActivityIndicator color={colors.accent} size="large" />
-      </View>
-    );
-  }
+  const ready = dbReady && hydrated;
+  const locked = ready && passcodeEnabled && !sessionUnlocked;
+  const statusStyle = uiMode === "light" ? "dark" : "light";
 
-  if (bootError) {
-    return (
-      <View style={styles.boot}>
-        <StatusBar style={uiMode === "light" ? "dark" : "light"} />
-        <Text style={styles.errorTitle}>Could not start local database</Text>
-        <Text style={styles.errorBody}>{bootError}</Text>
-        <Text style={styles.errorHint}>
-          On web: close every other tab on localhost:8081 (SQLite OPFS allows
-          only one tab), then hard-refresh. Prefer a normal Chrome/Edge window
-          (not private/incognito).
-        </Text>
-      </View>
-    );
-  }
-
-  if (passcodeEnabled && !sessionUnlocked) {
-    return (
-      <GestureHandlerRootView style={styles.root}>
-        <StatusBar style={uiMode === "light" ? "dark" : "light"} />
-        <PasscodeGate onUnlocked={() => setSessionUnlocked(true)} />
-      </GestureHandlerRootView>
-    );
-  }
-
+  // Always mount Stack so the URL (/preferences etc.) is handled.
+  // Overlays cover boot / passcode — never replace the navigator (that caused
+  // expo-router onUnhandledAction crashes after theme reload).
   return (
     <GestureHandlerRootView style={styles.root}>
-      <StatusBar style={uiMode === "light" ? "dark" : "light"} />
+      <StatusBar style={statusStyle} />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -105,19 +79,47 @@ export default function RootLayout() {
           options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />
       </Stack>
+
+      {!ready ? (
+        <View style={styles.overlay} pointerEvents="auto">
+          <ActivityIndicator color={colors.accent} size="large" />
+          {bootError ? (
+            <>
+              <Text style={styles.errorTitle}>Could not start local database</Text>
+              <Text style={styles.errorBody}>{bootError}</Text>
+              <Text style={styles.errorHint}>
+                On web: close every other tab on localhost:8081 (SQLite OPFS allows
+                only one tab), then hard-refresh. Prefer a normal Chrome/Edge window
+                (not private/incognito).
+              </Text>
+            </>
+          ) : null}
+        </View>
+      ) : null}
+
+      {locked ? (
+        <View style={styles.overlay} pointerEvents="auto">
+          <PasscodeGate onUnlocked={() => setSessionUnlocked(true)} />
+        </View>
+      ) : null}
     </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
-  boot: {
-    flex: 1,
+  overlay: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 24,
     gap: 12,
+    zIndex: 100,
   },
   errorTitle: {
     color: colors.expense,
