@@ -6,23 +6,37 @@ import { seedDefaultsIfEmpty } from "./seed";
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
+async function tableHasColumn(
+  db: SQLite.SQLiteDatabase,
+  table: string,
+  column: string,
+): Promise<boolean> {
+  const rows = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(${table})`);
+  return rows.some((r) => r.name === column);
+}
+
+/** Idempotent column add — safe even if a previous migration marked the version early. */
+async function ensureColumn(
+  db: SQLite.SQLiteDatabase,
+  table: string,
+  column: string,
+  definition: string,
+): Promise<void> {
+  if (await tableHasColumn(db, table, column)) return;
+  await db.execAsync(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+}
+
 async function migrate(db: SQLite.SQLiteDatabase) {
   await db.execAsync(CREATE_TABLES_SQL);
+
+  // Always repair missing columns (fixes DBs stuck after a failed v2 bump).
+  await ensureColumn(db, "categories", "archived", "INTEGER NOT NULL DEFAULT 0");
+  await ensureColumn(db, "accounts", "archived", "INTEGER NOT NULL DEFAULT 0");
 
   const row = await db.getFirstAsync<{ version: number }>(
     "SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1",
   );
   const current = row?.version ?? 0;
-
-  if (current < 2) {
-    try {
-      await db.execAsync(
-        "ALTER TABLE categories ADD COLUMN archived INTEGER NOT NULL DEFAULT 0",
-      );
-    } catch {
-      // column already exists
-    }
-  }
 
   if (current < SCHEMA_VERSION) {
     await db.runAsync(
@@ -64,6 +78,11 @@ export async function getDb(): Promise<SQLite.SQLiteDatabase> {
     })();
   }
   return dbPromise;
+}
+
+/** Test helper / recovery: drop cached connection so next getDb() remigrates. */
+export function resetDbConnection() {
+  dbPromise = null;
 }
 
 export async function getSetting(key: string): Promise<string | null> {
