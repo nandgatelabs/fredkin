@@ -4,9 +4,9 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/Button";
-import { exportCsvFileName, exportMoneyCsv } from "@/db/exportCsv";
+import { exportMoneyCsv } from "@/db/exportCsv";
 import { useKeydown } from "@/hooks/useKeydown";
-import { SaveCancelledError, saveProducedTextFile } from "@/lib/download";
+import { downloadTextFile } from "@/lib/download";
 import { webClickable, webFocusableProps } from "@/lib/web";
 import { colors } from "@/theme";
 
@@ -28,34 +28,16 @@ export default function ExportCsvScreen() {
   );
 
   async function onExport() {
-    // No setState before the picker — keeps the click as a user activation.
-    const suggestedName = exportCsvFileName();
-    let accountOpenings = 0;
-    let records = 0;
-
+    setBusy(true);
+    setError(null);
+    setSummary(null);
     try {
-      const saved = await saveProducedTextFile(
-        suggestedName,
-        "text/csv",
-        async () => {
-          setBusy(true);
-          const result = await exportMoneyCsv();
-          accountOpenings = result.accountOpenings;
-          records = result.records;
-          return result.text;
-        },
-      );
-
-      setError(null);
+      const result = await exportMoneyCsv();
+      await downloadTextFile(result.fileName, result.text, "text/csv");
       setSummary(
-        `Saved ${suggestedName}\n${accountOpenings} account opening balance${accountOpenings === 1 ? "" : "s"}, ${records} record${records === 1 ? "" : "s"}.${
-          saved.method === "download"
-            ? "\n(Browser saved via Downloads — use Chrome/Edge for a folder picker.)"
-            : ""
-        }`,
+        `Saved ${result.fileName}\n${result.accountOpenings} account opening balance${result.accountOpenings === 1 ? "" : "s"}, ${result.records} record${result.records === 1 ? "" : "s"}.`,
       );
     } catch (e) {
-      if (e instanceof SaveCancelledError) return;
       setError(e instanceof Error ? e.message : "Export failed");
     } finally {
       setBusy(false);
@@ -85,9 +67,8 @@ export default function ExportCsvScreen() {
       </View>
 
       <Text style={styles.body}>
-        Save your ledger as a worksheet CSV (TIME, TYPE, AMOUNT, CATEGORY,
-        ACCOUNT, NOTES). You’ll choose the folder and file name in the save
-        dialog.
+        Download your ledger as a worksheet CSV (TIME, TYPE, AMOUNT, CATEGORY,
+        ACCOUNT, NOTES).
       </Text>
       <Text style={styles.body}>
         Each account’s initial (opening) balance is written as a{" "}

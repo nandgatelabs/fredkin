@@ -233,14 +233,14 @@ Columns: `TIME`, `TYPE`, `AMOUNT`, `CATEGORY`, `ACCOUNT`, `NOTES`
 | `(*) Transfer` | Transfer; `ACCOUNT` is `From->To`; category blank |
 | `(#) Opening` | Sets the account’s opening/initial balance; not a ledger record |
 
-Not a full backup (budgets/settings still need `.mbak`). Opening rows make account initial balances round-trip via CSV. Export prompts for a save location (File System Access API on Chromium web; Share sheet on native).
+Not a full backup (budgets/settings still need `.mbak`). Opening rows make account initial balances round-trip via CSV. Web saves to the browser Downloads folder; native uses the Share sheet. (Optional choose-folder picker is parked — see GitHub issues.)
 
 ### Backup (`.mbak`)
 
 - Versioned JSON.
 - Includes: records, accounts, categories, budgets, settings.
 - Filename pattern: `money-money-backup_DD_MM_YY_XXX.mbak`.
-- Backup also prompts for a save location (same picker / Share path as CSV export).
+- Same download / Share path as CSV export.
 - Real user exports live under gitignored `private/` and must never be committed.
 
 ---
@@ -307,7 +307,8 @@ docs/              # HLD + BLUEPRINT (this folder)
 | P3 Records + periods | All view modes incl. 3/6/yearly, carry-over (done) |
 | P4 Search + CSV import/export | Search, CSV import/export incl. opening balances (done) |
 | P5 Analysis | Overview, flow, calendar, account bars (done) |
-| P6 Budgets + portability + prefs | Budgets, drawer, backup/wipe, prefs (in progress / PR) |
+| P6 Budgets + portability + prefs | Budgets, drawer, backup/wipe, prefs (done) |
+| P7 Preferences polish | Themes / UI mode, passcode lock, daily remind (next) |
 
 ---
 
