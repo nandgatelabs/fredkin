@@ -137,7 +137,9 @@ export function AccountPeriodList({
         return (
           <Pressable
             key={a.accountId}
-            onPress={() => onSelect?.(active ? null : a.accountId)}
+            accessibilityRole="button"
+            accessibilityLabel={`${a.name} details`}
+            onPress={() => onSelect?.(a.accountId)}
             style={[styles.row, webClickable, active && styles.rowActive]}
           >
             <Text style={styles.rowName} numberOfLines={1}>
