@@ -23,6 +23,19 @@ Do **not** invent paywalls, premium locks, or cloud sync unless a human explicit
 
 Follow phases in `docs/HLD.md` § Delivery plan (P0 → P6). Prefer small vertical slices over large unfinished surfaces.
 
+## GitHub workflow (required)
+
+Canonical repo: [nandgatelabs/money-money](https://github.com/nandgatelabs/money-money) (org: **nandgatelabs**).
+
+Full detail: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+1. **Never commit straight to `main`** for normal work.
+2. Create a branch: `feature/…`, `fix/…`, `docs/…`, or `chore/…`.
+3. Make focused commits with clear why-oriented messages.
+4. Open an **elaborate PR** with `gh pr create` (Summary + Test plan + Notes).
+5. Merge with `gh pr merge` (prefer `--squash`), then sync local `main`.
+6. If product/architecture behavior changes, update `docs/HLD.md` and/or `docs/BLUEPRINT.md` in the **same PR**.
+
 ## Open source hygiene
 
 - Keep secrets and real user ledgers out of git (`private/`, `.env*`).
