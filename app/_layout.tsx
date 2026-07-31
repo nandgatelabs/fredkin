@@ -4,13 +4,21 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import { PasscodeGate } from "@/components/PasscodeGate";
 import { getDb } from "@/db/client";
+import { maybeFireDailyRemind } from "@/lib/remind";
 import { useSettingsStore } from "@/store/settings";
 import { colors } from "@/theme";
 
 export default function RootLayout() {
   const hydrate = useSettingsStore((s) => s.hydrate);
   const hydrated = useSettingsStore((s) => s.hydrated);
+  const passcodeEnabled = useSettingsStore((s) => s.passcodeEnabled);
+  const sessionUnlocked = useSettingsStore((s) => s.sessionUnlocked);
+  const setSessionUnlocked = useSettingsStore((s) => s.setSessionUnlocked);
+  const remindEveryday = useSettingsStore((s) => s.remindEveryday);
+  const uiMode = useSettingsStore((s) => s.uiMode);
+
   const [dbReady, setDbReady] = useState(false);
   const [bootError, setBootError] = useState<string | null>(null);
 
@@ -35,10 +43,17 @@ export default function RootLayout() {
     };
   }, [hydrate]);
 
+  useEffect(() => {
+    if (!dbReady || !hydrated) return;
+    maybeFireDailyRemind(remindEveryday);
+    const id = setInterval(() => maybeFireDailyRemind(remindEveryday), 60_000);
+    return () => clearInterval(id);
+  }, [dbReady, hydrated, remindEveryday]);
+
   if (!dbReady || !hydrated) {
     return (
       <View style={styles.boot}>
-        <StatusBar style="light" />
+        <StatusBar style={uiMode === "light" ? "dark" : "light"} />
         <ActivityIndicator color={colors.accent} size="large" />
       </View>
     );
@@ -47,7 +62,7 @@ export default function RootLayout() {
   if (bootError) {
     return (
       <View style={styles.boot}>
-        <StatusBar style="light" />
+        <StatusBar style={uiMode === "light" ? "dark" : "light"} />
         <Text style={styles.errorTitle}>Could not start local database</Text>
         <Text style={styles.errorBody}>{bootError}</Text>
         <Text style={styles.errorHint}>
@@ -59,9 +74,18 @@ export default function RootLayout() {
     );
   }
 
+  if (passcodeEnabled && !sessionUnlocked) {
+    return (
+      <GestureHandlerRootView style={styles.root}>
+        <StatusBar style={uiMode === "light" ? "dark" : "light"} />
+        <PasscodeGate onUnlocked={() => setSessionUnlocked(true)} />
+      </GestureHandlerRootView>
+    );
+  }
+
   return (
     <GestureHandlerRootView style={styles.root}>
-      <StatusBar style="light" />
+      <StatusBar style={uiMode === "light" ? "dark" : "light"} />
       <Stack
         screenOptions={{
           headerShown: false,
