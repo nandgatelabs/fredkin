@@ -6,6 +6,7 @@ import * as DocumentPicker from "expo-document-picker";
 
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { InfoModal } from "@/components/InfoModal";
 import { SaveLocationPanel } from "@/components/SaveLocationPanel";
 import {
   backupFileName,
@@ -135,7 +136,7 @@ export default function BackupScreen() {
         budgets, and settings. Prefer this over CSV when you want a complete restore.
       </Text>
 
-      <SaveLocationPanel onStatus={setMessage} />
+      <SaveLocationPanel />
 
       <Button
         label={busy ? "WORKING…" : "BACKUP NOW"}
@@ -152,8 +153,15 @@ export default function BackupScreen() {
         style={{ marginTop: 12 }}
       />
 
-      {message ? <Text style={styles.message}>{message}</Text> : null}
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      <InfoModal
+        visible={error != null || message != null}
+        title={error ? "Backup" : "Backup & Restore"}
+        message={error ?? message ?? ""}
+        onClose={() => {
+          setError(null);
+          setMessage(null);
+        }}
+      />
 
       <ConfirmModal
         visible={pendingRestore != null}

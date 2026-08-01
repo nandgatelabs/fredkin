@@ -17,6 +17,7 @@ import { CalculatorKeypad } from "@/components/CalculatorKeypad";
 import { CategoryEditorModal } from "@/components/CategoryEditorModal";
 import { CategoryPickerModal } from "@/components/CategoryPickerModal";
 import { DatePickerModal, TimePickerModal } from "@/components/DateTimePickers";
+import { InfoModal } from "@/components/InfoModal";
 import { listAccounts } from "@/db/accounts";
 import { createCategory, listCategories } from "@/db/categories";
 import { createRecord, getRecord, updateRecord } from "@/db/records";
@@ -432,8 +433,6 @@ export default function NewRecordScreen() {
             multiline
           />
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-
           <View style={styles.keypadBlock}>
             <CalculatorKeypad
               expression={expression}
@@ -520,6 +519,13 @@ export default function NewRecordScreen() {
           setOccurredAt(d);
           setTimeOpen(false);
         }}
+      />
+
+      <InfoModal
+        visible={error != null}
+        title="Add record"
+        message={error ?? ""}
+        onClose={() => setError(null)}
       />
     </View>
   );

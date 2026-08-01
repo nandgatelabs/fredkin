@@ -118,21 +118,57 @@ async function pickAndroidDirectory(): Promise<SaveLocationInfo> {
   return getSaveLocation();
 }
 
+/** Thrown when the browser has no writable directory picker (Firefox, Brave default, etc.). */
+export const WEB_FOLDER_UNSUPPORTED =
+  "This browser cannot choose a save folder.\n\n" +
+  "• Chrome / Edge: Change folder works here.\n" +
+  "• Brave: enable brave://flags/#file-system-access-api then relaunch.\n" +
+  "• Firefox: not supported — files go to Downloads.\n\n" +
+  "Default remains: Browser Downloads.";
+
+export function canPickWebSaveFolder(): boolean {
+  if (Platform.OS !== "web") return false;
+  const w = globalThis as typeof globalThis & {
+    showDirectoryPicker?: (opts?: {
+      mode?: "read" | "readwrite";
+      id?: string;
+      startIn?: string;
+    }) => Promise<FileSystemDirectoryHandle>;
+  };
+  return typeof w.showDirectoryPicker === "function";
+}
+
 async function pickWebDirectory(): Promise<SaveLocationInfo> {
   const w = globalThis as typeof globalThis & {
-    showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>;
+    showDirectoryPicker?: (opts?: {
+      mode?: "read" | "readwrite";
+      id?: string;
+      startIn?: string;
+    }) => Promise<FileSystemDirectoryHandle>;
   };
+
   if (typeof w.showDirectoryPicker !== "function") {
-    throw new Error(
-      "This browser cannot pick a save folder. Files download to the browser Downloads location.",
-    );
+    throw new Error(WEB_FOLDER_UNSUPPORTED);
   }
-  const handle = await w.showDirectoryPicker();
-  webDirHandle = handle;
-  await setSetting(KEY_CUSTOM_URI, "web-directory");
-  await setSetting(KEY_CUSTOM_LABEL, handle.name || FOLDER);
-  log.info("Save location changed (web)", handle.name);
-  return getSaveLocation();
+
+  try {
+    // readwrite so we can create CSV / .mbak files in the chosen folder
+    const handle = await w.showDirectoryPicker({
+      mode: "readwrite",
+      id: "money-money-exports",
+      startIn: "downloads",
+    });
+    webDirHandle = handle;
+    await setSetting(KEY_CUSTOM_URI, "web-directory");
+    await setSetting(KEY_CUSTOM_LABEL, handle.name || FOLDER);
+    log.info("Save location changed (web)", handle.name);
+    return getSaveLocation();
+  } catch (e) {
+    const name = e instanceof DOMException ? e.name : "";
+    if (name === "AbortError") throw new Error("cancelled");
+    log.warn("showDirectoryPicker failed", e);
+    throw e instanceof Error ? e : new Error(WEB_FOLDER_UNSUPPORTED);
+  }
 }
 
 /** Write text into the configured folder; returns where it went. */

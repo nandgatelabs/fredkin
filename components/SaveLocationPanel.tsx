@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { InfoModal } from "@/components/InfoModal";
 import {
+  canPickWebSaveFolder,
   getSaveLocation,
   pickSaveLocation,
   restoreDefaultSaveLocation,
@@ -18,6 +20,7 @@ type Props = {
 export function SaveLocationPanel({ onStatus }: Props) {
   const [loc, setLoc] = useState<SaveLocationInfo | null>(null);
   const [busy, setBusy] = useState(false);
+  const [info, setInfo] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     try {
@@ -31,6 +34,11 @@ export function SaveLocationPanel({ onStatus }: Props) {
     void reload();
   }, [reload]);
 
+  const notify = (message: string) => {
+    setInfo(message);
+    onStatus?.(message);
+  };
+
   return (
     <View style={styles.wrap}>
       <Text style={styles.title}>Save location</Text>
@@ -41,6 +49,12 @@ export function SaveLocationPanel({ onStatus }: Props) {
       <Text style={styles.path} selectable>
         {loc?.label ?? "…"}
       </Text>
+      {Platform.OS === "web" && !canPickWebSaveFolder() ? (
+        <Text style={styles.note}>
+          Folder picker unavailable in this browser — exports use Downloads. Use
+          Chrome/Edge, or enable File System Access in Brave flags.
+        </Text>
+      ) : null}
       <View style={styles.row}>
         <Pressable
           disabled={busy}
@@ -51,10 +65,10 @@ export function SaveLocationPanel({ onStatus }: Props) {
               try {
                 const next = await pickSaveLocation();
                 setLoc(next);
-                onStatus?.(`Save folder set to ${next.label}`);
+                notify(`Save folder set to ${next.label}`);
               } catch (e) {
                 const msg = e instanceof Error ? e.message : "Could not change folder";
-                if (!/cancel/i.test(msg)) onStatus?.(msg);
+                if (!/cancel/i.test(msg)) notify(msg);
               } finally {
                 setBusy(false);
               }
@@ -77,9 +91,9 @@ export function SaveLocationPanel({ onStatus }: Props) {
               try {
                 const next = await restoreDefaultSaveLocation();
                 setLoc(next);
-                onStatus?.("Restored default save folder");
+                notify("Restored default save folder");
               } catch (e) {
-                onStatus?.(e instanceof Error ? e.message : "Restore failed");
+                notify(e instanceof Error ? e.message : "Restore failed");
               } finally {
                 setBusy(false);
               }
@@ -89,6 +103,13 @@ export function SaveLocationPanel({ onStatus }: Props) {
           <Text style={styles.btnGhostLabel}>Restore default</Text>
         </Pressable>
       </View>
+
+      <InfoModal
+        visible={info != null}
+        title="Save location"
+        message={info ?? ""}
+        onClose={() => setInfo(null)}
+      />
     </View>
   );
 }
@@ -119,6 +140,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     marginTop: 2,
+  },
+  note: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 17,
+    fontStyle: "italic",
   },
   row: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 },
   btn: {

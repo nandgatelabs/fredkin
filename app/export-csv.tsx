@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/Button";
+import { InfoModal } from "@/components/InfoModal";
 import { SaveLocationPanel } from "@/components/SaveLocationPanel";
 import { exportMoneyCsv } from "@/db/exportCsv";
 import { useKeydown } from "@/hooks/useKeydown";
@@ -80,7 +81,7 @@ export default function ExportCsvScreen() {
         it.
       </Text>
 
-      <SaveLocationPanel onStatus={setSummary} />
+      <SaveLocationPanel />
 
       <Button
         label={busy ? "EXPORTING…" : "EXPORT NOW"}
@@ -90,8 +91,15 @@ export default function ExportCsvScreen() {
         style={{ marginTop: 12 }}
       />
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      {summary ? <Text style={styles.summary}>{summary}</Text> : null}
+      <InfoModal
+        visible={error != null || summary != null}
+        title={error ? "Export failed" : "Export CSV"}
+        message={error ?? summary ?? ""}
+        onClose={() => {
+          setError(null);
+          setSummary(null);
+        }}
+      />
     </View>
   );
 }

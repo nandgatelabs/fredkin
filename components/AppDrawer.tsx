@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { InfoModal } from "@/components/InfoModal";
 import { useKeydown } from "@/hooks/useKeydown";
 import { downloadTextFile } from "@/lib/download";
 import { getLogText, log } from "@/lib/logger";
@@ -102,7 +103,12 @@ export function AppDrawer({ visible, onClose }: Props) {
               <Text style={styles.itemLabel}>Export app logs</Text>
             </Pressable>
           </View>
-          {status ? <Text style={styles.status}>{status}</Text> : null}
+          <InfoModal
+            visible={status != null}
+            title="Export logs"
+            message={status ?? ""}
+            onClose={() => setStatus(null)}
+          />
         </View>
       </View>
     </Modal>
@@ -156,11 +162,5 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 16,
     fontWeight: "600",
-  },
-  status: {
-    marginTop: 16,
-    color: colors.textSecondary,
-    fontSize: 12,
-    lineHeight: 17,
   },
 });

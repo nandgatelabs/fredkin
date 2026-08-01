@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ChoiceSheet } from "@/components/ChoiceSheet";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { InfoModal } from "@/components/InfoModal";
 import { PasscodeSetupModal } from "@/components/PasscodeSetupModal";
 import { PreferenceRow } from "@/components/PreferenceRow";
 import { SaveLocationPanel } from "@/components/SaveLocationPanel";
@@ -253,7 +254,7 @@ export default function PreferencesScreen() {
         />
 
         <Text style={[styles.section, styles.sectionSpaced]}>Files</Text>
-        <SaveLocationPanel onStatus={setStatus} />
+        <SaveLocationPanel />
 
         <Text style={[styles.section, styles.sectionSpaced]}>Notification</Text>
         <PreferenceRow
@@ -317,12 +318,18 @@ export default function PreferencesScreen() {
           description="Offline personal finance · nandgatelabs"
         />
 
-        {status ? <Text style={styles.status}>{status}</Text> : null}
         <Text style={styles.hint}>
           Change Appearance options, then press SAVE. Theme / UI mode reloads the app
           once after save so every screen picks up the new colors.
         </Text>
       </ScrollView>
+
+      <InfoModal
+        visible={status != null}
+        title="Preferences"
+        message={status ?? ""}
+        onClose={() => setStatus(null)}
+      />
 
       <ChoiceSheet
         visible={sheet === "theme"}
