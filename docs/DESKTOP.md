@@ -1,8 +1,10 @@
-# Desktop offline (Ubuntu / Electron)
+# Desktop offline (Electron)
 
-Parked for later: public web hosting. For a **local offline desktop app**, we wrap the Expo **web** static export in Electron (Chromium) and serve it on a **fixed** loopback origin with COOP/COEP so `expo-sqlite` / OPFS works and **data persists**.
+Parked for later: public web hosting (see [`DEVELOPMENT.md`](./DEVELOPMENT.md) § Web hosting). For a **local offline desktop app**, we wrap the Expo **web** static export in Electron (Chromium) and serve it on a **fixed** loopback origin with COOP/COEP so `expo-sqlite` / OPFS works and **data persists**.
 
 Source lives in [`desktop/`](../desktop/) (tracked in git). Build artifacts (`dist/`, `desktop/release/`, `desktop/node_modules/`) are gitignored.
+
+`desktop/main.cjs` is shared across Linux, Windows, and macOS — same loopback server and profile rules.
 
 ## Persistence
 
@@ -11,7 +13,9 @@ SQLite on web lives in Chromium OPFS, keyed by **origin** (`http://host:port`) a
 | Setting | Value |
 |---------|--------|
 | Origin | `http://127.0.0.1:47821` (override with `DESKTOP_PORT`) |
-| Profile | `~/.config/money-money` |
+| Profile (Linux) | `~/.config/money-money` |
+| Profile (Windows) | `%APPDATA%\money-money` |
+| Profile (macOS) | `~/Library/Application Support/money-money` |
 
 `desktop:dev` and the installed app share that profile — close and reopen keeps your ledger.
 
@@ -61,23 +65,56 @@ rm -f ~/.local/bin/money-money
 # rm -rf ~/.config/money-money
 ```
 
-## Other install options
+## Other Linux install options
 
 ### System `.deb` (sudo)
 
 ```bash
-npm run desktop:pack
+npm run desktop:pack:linux
 sudo apt install ./desktop/release/money-money-desktop_*_amd64.deb
 ```
 
 ### AppImage (needs FUSE)
 
 ```bash
-npm run desktop:pack
+npm run desktop:pack:linux
 sudo apt install libfuse2t64   # Ubuntu 24.04+; older: libfuse2
 chmod +x desktop/release/money-money-*.AppImage
 ./desktop/release/money-money-*.AppImage
 ```
+
+## Windows
+
+Build on a Windows host (or CI with Windows runners). Cross-compiling NSIS from Linux often needs Wine; prefer a native Windows machine for signed installs.
+
+```bash
+npm install
+npm run desktop:install
+npm run desktop:pack:win
+```
+
+Artifacts under `desktop/release/`:
+
+- **NSIS installer** — guided install + Start Menu / desktop shortcut
+- **Portable** — single `.exe`, no install step
+
+Profile: `%APPDATA%\money-money` (survives reinstall). Code signing is optional for local use; Windows SmartScreen may warn on unsigned downloads.
+
+## macOS
+
+Build on a Mac (Apple Silicon or Intel).
+
+```bash
+npm install
+npm run desktop:install
+npm run desktop:pack:mac
+```
+
+Artifacts: `.dmg` and `.zip` for `x64` and `arm64`.
+
+Profile: `~/Library/Application Support/money-money`.
+
+**Signing / notarization:** local personal use can run unsigned builds (you may need right-click → Open the first time). Distributing outside your machine typically needs an Apple Developer ID + notarization — not configured in this repo by default (`hardenedRuntime` / Gatekeeper assess left off for local packs).
 
 ## Dev window (no install)
 
@@ -96,7 +133,10 @@ Broken GPU: `DESKTOP_NO_GPU=1 npm run desktop:dev`
 | `npm run web:export` | Expo static export → `dist/` |
 | `npm run desktop:install` | Install Electron deps in `desktop/` |
 | `npm run desktop:dev` | Export + open Electron window |
-| `npm run desktop:pack` | Export + AppImage + `.deb` in `desktop/release/` |
-| `npm run desktop:install-user` | Pack + install launcher for current user |
+| `npm run desktop:pack` | Export + Linux AppImage + `.deb` |
+| `npm run desktop:pack:linux` | Same as `desktop:pack` |
+| `npm run desktop:pack:win` | Export + Windows NSIS + portable |
+| `npm run desktop:pack:mac` | Export + macOS `.dmg` + `.zip` |
+| `npm run desktop:install-user` | Pack Linux + install launcher for current user |
 
 More detail: [`desktop/README.md`](../desktop/README.md).

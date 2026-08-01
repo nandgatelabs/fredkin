@@ -10,6 +10,9 @@
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder --linux AppImage deb",
+    "pack:linux": "electron-builder --linux AppImage deb",
+    "pack:win": "electron-builder --win nsis portable",
+    "pack:mac": "electron-builder --mac dmg zip",
     "pack:dir": "electron-builder --linux AppImage --dir",
     "install-user": "bash scripts/install-user.sh"
   },
@@ -56,6 +59,57 @@
           "Categories": "Office;Finance;"
         }
       }
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "../assets/images/icon.png",
+      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "money-money"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "../assets/images/icon.png",
+      "category": "public.app-category.finance",
+      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "title": "money-money"
     }
   }
 }
