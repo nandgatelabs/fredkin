@@ -222,6 +222,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   persistRemind: async (remindEveryday) => {
     await writeJson("remindEveryday", remindEveryday);
     set({ remindEveryday });
+    const { syncNativeDailyRemind } = await import("@/lib/remind");
+    await syncNativeDailyRemind(remindEveryday);
   },
 
   persistRecordLogs: async (recordLogs) => {

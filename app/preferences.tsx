@@ -271,10 +271,17 @@ export default function PreferencesScreen() {
                       ? "Notification permission blocked — enable it in site settings."
                       : "Notification permission not granted. Enable it in system settings.",
                   );
+                  return;
                 }
               }
               await persistRemind(v);
-              setStatus(v ? "Daily remind on" : "Daily remind off");
+              setStatus(
+                v
+                  ? Platform.OS === "web"
+                    ? "Daily remind on (while this tab is open)"
+                    : "Daily remind on (around 7:00 PM local time)"
+                  : "Daily remind off",
+              );
             })();
           }}
         />
