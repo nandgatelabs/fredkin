@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { MoneyText } from "@/components/MoneyText";
 import type { Totals } from "@/db/types";
+import { formatMoney } from "@/lib/money";
 import { colors } from "@/theme";
 
 type Props = {
@@ -9,15 +10,14 @@ type Props = {
 };
 
 export function TotalsHeader({ totals }: Props) {
+  const balanceTone =
+    totals.allAccountsBalance >= 0 ? colors.income : colors.expense;
   return (
     <View style={styles.wrap}>
       <Text style={styles.all}>
         [ All Accounts{" "}
-        <Text style={{ color: totals.allAccountsBalance >= 0 ? colors.income : colors.expense }}>
-          {totals.allAccountsBalance < 0 ? "-" : ""}₹
-          {Math.abs(totals.allAccountsBalance)
-            .toFixed(2)
-            .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+        <Text style={{ color: balanceTone }}>
+          {formatMoney(totals.allAccountsBalance, { sign: "auto" })}
         </Text>{" "}
         ]
       </Text>

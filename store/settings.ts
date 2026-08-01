@@ -112,7 +112,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       readJson<boolean>("carryOver", DEFAULTS.carryOver),
       readJson<string>("currencySign", DEFAULTS.currencySign),
       readJson<"start" | "end">("currencyPosition", DEFAULTS.currencyPosition),
-      readJson<number>("decimalPlaces", DEFAULTS.decimalPlaces),
+      readJson<number>("decimalPlaces", DEFAULTS.decimalPlaces).then((n) =>
+        Math.max(0, Math.min(4, Math.trunc(Number.isFinite(n) ? n : DEFAULTS.decimalPlaces))),
+      ),
       readJson<boolean>("notesInList", DEFAULTS.notesInList),
       readJson<ThemeId>("themeId", DEFAULTS.themeId),
       readJson<UiMode>("uiMode", DEFAULTS.uiMode),
@@ -179,14 +181,21 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     await Promise.all([
       writeJson("currencySign", next.currencySign),
       writeJson("currencyPosition", next.currencyPosition),
-      writeJson("decimalPlaces", next.decimalPlaces),
+      writeJson(
+        "decimalPlaces",
+        Math.max(0, Math.min(4, Math.trunc(next.decimalPlaces))),
+      ),
       writeJson("notesInList", next.notesInList),
       writeJson("themeId", next.themeId),
       writeJson("uiMode", next.uiMode),
     ]);
 
+    const decimalPlaces = Math.max(
+      0,
+      Math.min(4, Math.trunc(next.decimalPlaces)),
+    );
     applyPalette(next.themeId, next.uiMode);
-    set({ ...next });
+    set({ ...next, decimalPlaces });
     if (themeChanged) {
       log.info("Appearance theme changed", {
         themeId: next.themeId,

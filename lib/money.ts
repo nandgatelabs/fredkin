@@ -1,5 +1,11 @@
 import { useSettingsStore } from "@/store/settings";
 
+/** Allowed money display precision (0–4). */
+export function clampDecimalPlaces(n: number): number {
+  if (!Number.isFinite(n)) return 2;
+  return Math.max(0, Math.min(4, Math.trunc(n)));
+}
+
 export function formatMoney(
   amount: number,
   options?: {
@@ -12,7 +18,9 @@ export function formatMoney(
   const settings = useSettingsStore.getState();
   const currencySign = options?.currencySign ?? settings.currencySign;
   const currencyPosition = options?.currencyPosition ?? settings.currencyPosition;
-  const decimalPlaces = options?.decimalPlaces ?? settings.decimalPlaces;
+  const decimalPlaces = clampDecimalPlaces(
+    options?.decimalPlaces ?? settings.decimalPlaces,
+  );
   const signMode = options?.sign ?? "auto";
 
   const abs = Math.abs(amount).toFixed(decimalPlaces);
