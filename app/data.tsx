@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   rowPressed: {
-    backgroundColor: "rgba(232, 212, 138, 0.1)",
+    backgroundColor: colors.accentSoft,
   },
   rowText: { flex: 1, gap: 2 },
   rowLabel: {

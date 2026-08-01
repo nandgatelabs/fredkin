@@ -247,7 +247,7 @@ Not a full backup (budgets/settings still need `.mbak`). Opening rows make accou
 
 ## 9. UI / UX architecture
 
-- **Tokens:** bg charcoal, accent cream-gold, expense coral, income green, transfer blue.
+- **Tokens:** theme families Slate (default ink + signal blue), Teal (fintech), Copper (warm graphite); expense / income / transfer semantic colors.
 - **Logo:** distinctive wordmark for “Fredkin” (expressive font; not a default system stack).
 - **Shared components:** `PeriodHeader`, `SummaryTriple`, `RecordRow`, `AmountText`, `CalculatorKeypad`, `CategoryIcon`, `AccountIcon`, `EmptyState`, `GhostButton`, `DisplayOptionsModal`.
 - **Lists:** virtualized (`FlashList` / `FlatList`) with date section headers.

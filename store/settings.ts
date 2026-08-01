@@ -2,7 +2,12 @@ import { create } from "zustand";
 
 import { getSetting, setSetting } from "@/db/client";
 import { log, setLogRecording } from "@/lib/logger";
-import { applyPalette, type ThemeId, type UiMode } from "@/theme/colors";
+import {
+  applyPalette,
+  normalizeThemeId,
+  type ThemeId,
+  type UiMode,
+} from "@/theme/colors";
 
 export type ViewMode =
   | "daily"
@@ -66,7 +71,7 @@ const DEFAULTS = {
   currencyPosition: "start" as const,
   decimalPlaces: 2,
   notesInList: true,
-  themeId: "original" as ThemeId,
+  themeId: "slate" as ThemeId,
   uiMode: "dark" as UiMode,
   passcodeEnabled: false,
   passcodeSalt: "",
@@ -125,7 +130,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         Math.max(0, Math.min(4, Math.trunc(Number.isFinite(n) ? n : DEFAULTS.decimalPlaces))),
       ),
       readJson<boolean>("notesInList", DEFAULTS.notesInList),
-      readJson<ThemeId>("themeId", DEFAULTS.themeId),
+      readJson<ThemeId>("themeId", DEFAULTS.themeId).then(normalizeThemeId),
       readJson<UiMode>("uiMode", DEFAULTS.uiMode),
       readJson<boolean>("passcodeEnabled", DEFAULTS.passcodeEnabled),
       readJson<string>("passcodeSalt", DEFAULTS.passcodeSalt),
@@ -192,8 +197,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   persistAppearance: async (next) => {
     const prev = get();
+    const themeId = normalizeThemeId(next.themeId);
     const themeChanged =
-      prev.themeId !== next.themeId || prev.uiMode !== next.uiMode;
+      prev.themeId !== themeId || prev.uiMode !== next.uiMode;
 
     await Promise.all([
       writeJson("currencySign", next.currencySign),
@@ -203,7 +209,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         Math.max(0, Math.min(4, Math.trunc(next.decimalPlaces))),
       ),
       writeJson("notesInList", next.notesInList),
-      writeJson("themeId", next.themeId),
+      writeJson("themeId", themeId),
       writeJson("uiMode", next.uiMode),
     ]);
 
@@ -211,11 +217,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       0,
       Math.min(4, Math.trunc(next.decimalPlaces)),
     );
-    applyPalette(next.themeId, next.uiMode);
-    set({ ...next, decimalPlaces });
+    applyPalette(themeId, next.uiMode);
+    set({ ...next, themeId, decimalPlaces });
     if (themeChanged) {
       log.info("Appearance theme changed", {
-        themeId: next.themeId,
+        themeId,
         uiMode: next.uiMode,
       });
     }

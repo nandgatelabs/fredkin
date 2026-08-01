@@ -12,7 +12,7 @@ export default function Root({ children }: PropsWithChildren) {
           name="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
-        <meta name="theme-color" content="#24231F" />
+        <meta name="theme-color" content="#0A0E14" />
         <title>Fredkin</title>
         <ScrollViewStyleReset />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -35,7 +35,7 @@ html, body, #root {
   max-height: 100dvh;
   margin: 0;
   overflow: hidden;
-  background: #24231F;
+  background: #0A0E14;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -50,7 +50,7 @@ input, textarea, button {
   font-family: inherit;
 }
 input:focus, textarea:focus, select:focus {
-  outline: 2px solid rgba(232, 212, 138, 0.45);
+  outline: 2px solid rgba(91, 157, 255, 0.45);
   outline-offset: 1px;
 }
 [role="button"], button, a, [tabindex]:not([tabindex="-1"]) {
@@ -61,14 +61,14 @@ input:focus, textarea:focus, select:focus {
   outline: none;
 }
 :focus-visible {
-  outline: 2px solid rgba(232, 212, 138, 0.75);
+  outline: 2px solid rgba(91, 157, 255, 0.75);
   outline-offset: 2px;
 }
 [role="button"]:focus-visible,
 button:focus-visible,
 a:focus-visible,
 [tabindex]:not([tabindex="-1"]):focus-visible {
-  outline: 2px solid rgba(232, 212, 138, 0.85);
+  outline: 2px solid rgba(91, 157, 255, 0.85);
   outline-offset: 2px;
   border-radius: 8px;
 }
@@ -80,7 +80,7 @@ a:focus-visible,
   height: 10px;
 }
 *::-webkit-scrollbar-thumb {
-  background: #5C5748;
+  background: #2A3545;
   border-radius: 8px;
 }
 *::-webkit-scrollbar-track {

@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   groupActive: {
-    backgroundColor: "rgba(232, 212, 138, 0.12)",
+    backgroundColor: colors.accentSoft,
   },
   bars: {
     flexDirection: "row",
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   rowActive: {
     borderColor: colors.accent,
     borderWidth: 2,
-    backgroundColor: "rgba(232, 212, 138, 0.1)",
+    backgroundColor: colors.accentSoft,
   },
   rowName: {
     color: colors.accent,

@@ -9,7 +9,7 @@
 
 ## Summary
 
-Offline personal finance ledger: dark charcoal UI, cream-gold accents, ₹ formatting by default.
+Offline personal finance ledger: Slate / Teal / Copper / WhatsApp / Glass Mist / Glass Rose themes (dark or light), ₹ formatting by default.
 
 | Surface | Role |
 |---------|------|

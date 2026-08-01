@@ -10,8 +10,9 @@ import {
 
 import { Button } from "@/components/ui/Button";
 import { useKeydown } from "@/hooks/useKeydown";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { setDatePart, setTimePart } from "@/lib/datetime";
-import { colors } from "@/theme";
+import type { ColorTokens } from "@/theme/palettes";
 import { layout } from "@/theme/layout";
 
 type DateProps = {
@@ -22,6 +23,7 @@ type DateProps = {
 };
 
 export function DatePickerModal({ visible, value, onCancel, onConfirm }: DateProps) {
+  const c = useThemeColors();
   const [year, setYear] = useState(value.getFullYear());
   const [month, setMonth] = useState(value.getMonth());
   const [day, setDay] = useState(value.getDate());
@@ -66,27 +68,39 @@ export function DatePickerModal({ visible, value, onCancel, onConfirm }: DatePro
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <Pressable style={styles.backdrop} onPress={onCancel}>
-        <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
-          <Text style={styles.title}>Pick a date</Text>
+      <Pressable
+        style={[styles.backdrop, { backgroundColor: c.overlay }]}
+        onPress={onCancel}
+      >
+        <Pressable
+          style={[
+            styles.card,
+            { backgroundColor: c.dialog, borderColor: c.border },
+          ]}
+          onPress={(e) => e.stopPropagation()}
+        >
+          <Text style={[styles.title, { color: c.accent }]}>Pick a date</Text>
           <View style={styles.columns}>
             <Wheel
               label="Month"
               values={MONTH_LABELS}
               selectedIndex={month}
               onChange={setMonth}
+              colors={c}
             />
             <Wheel
               label="Day"
               values={Array.from({ length: daysInMonth }, (_, i) => String(i + 1))}
               selectedIndex={day - 1}
               onChange={(i) => setDay(i + 1)}
+              colors={c}
             />
             <Wheel
               label="Year"
               values={years.map(String)}
               selectedIndex={Math.max(0, years.indexOf(year))}
               onChange={(i) => setYear(years[i])}
+              colors={c}
             />
           </View>
           <View style={styles.actions}>
@@ -112,6 +126,7 @@ type TimeProps = {
 };
 
 export function TimePickerModal({ visible, value, onCancel, onConfirm }: TimeProps) {
+  const c = useThemeColors();
   const initial = useMemo(() => splitTime(value), [value]);
   const [hour12, setHour12] = useState(initial.hour12);
   const [minute, setMinute] = useState(initial.minute);
@@ -150,27 +165,39 @@ export function TimePickerModal({ visible, value, onCancel, onConfirm }: TimePro
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <Pressable style={styles.backdrop} onPress={onCancel}>
-        <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
-          <Text style={styles.title}>Pick a time</Text>
+      <Pressable
+        style={[styles.backdrop, { backgroundColor: c.overlay }]}
+        onPress={onCancel}
+      >
+        <Pressable
+          style={[
+            styles.card,
+            { backgroundColor: c.dialog, borderColor: c.border },
+          ]}
+          onPress={(e) => e.stopPropagation()}
+        >
+          <Text style={[styles.title, { color: c.accent }]}>Pick a time</Text>
           <View style={styles.columns}>
             <Wheel
               label="Hour"
               values={Array.from({ length: 12 }, (_, i) => String(i + 1))}
               selectedIndex={hour12 - 1}
               onChange={(i) => setHour12(i + 1)}
+              colors={c}
             />
             <Wheel
               label="Min"
               values={Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0"))}
               selectedIndex={minute}
               onChange={setMinute}
+              colors={c}
             />
             <Wheel
               label="AM/PM"
               values={["AM", "PM"]}
               selectedIndex={ampm === "AM" ? 0 : 1}
               onChange={(i) => setAmpm(i === 0 ? "AM" : "PM")}
+              colors={c}
             />
           </View>
           <View style={styles.actions}>
@@ -211,19 +238,30 @@ function Wheel({
   values,
   selectedIndex,
   onChange,
+  colors: c,
 }: {
   label: string;
   values: string[];
   selectedIndex: number;
   onChange: (index: number) => void;
+  colors: ColorTokens;
 }) {
   return (
     <View style={styles.wheel}>
-      <Text style={styles.wheelLabel}>{label}</Text>
-      <ScrollView style={styles.wheelScroll} showsVerticalScrollIndicator={false}>
+      <Text style={[styles.wheelLabel, { color: c.textSecondary }]}>{label}</Text>
+      <ScrollView
+        style={[styles.wheelScroll, { backgroundColor: c.inputBg }]}
+        showsVerticalScrollIndicator={false}
+      >
         {values.map((v, i) => (
           <Pressable key={`${label}-${v}`} onPress={() => onChange(i)}>
-            <Text style={[styles.wheelItem, i === selectedIndex && styles.wheelItemOn]}>
+            <Text
+              style={[
+                styles.wheelItem,
+                { color: i === selectedIndex ? c.accent : c.textSecondary },
+                i === selectedIndex && styles.wheelItemOn,
+              ]}
+            >
               {v}
             </Text>
           </Pressable>
@@ -236,22 +274,18 @@ function Wheel({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: colors.overlay,
     justifyContent: "center",
     padding: 24,
   },
   card: {
-    backgroundColor: colors.surfaceElevated,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: colors.border,
     width: "100%",
     maxWidth: layout.dialogMaxWidth,
     alignSelf: "center",
   },
   title: {
-    color: colors.accent,
     fontSize: 16,
     fontWeight: "600",
     textAlign: "center",
@@ -266,24 +300,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   wheelLabel: {
-    color: colors.textSecondary,
     fontSize: 11,
     textAlign: "center",
     marginBottom: 4,
   },
   wheelScroll: {
     flex: 1,
-    backgroundColor: colors.inputBg,
     borderRadius: 8,
   },
   wheelItem: {
-    color: colors.textSecondary,
     textAlign: "center",
     paddingVertical: 8,
     fontSize: 15,
   },
   wheelItemOn: {
-    color: colors.accent,
     fontWeight: "700",
   },
   actions: {

@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.borderSubtle,
   },
   pressed: {
-    backgroundColor: "rgba(232, 212, 138, 0.06)",
+    backgroundColor: colors.accentSoft,
   },
   icon: {
     width: 40,

@@ -12,9 +12,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { GhostButton } from "@/components/GhostButton";
 import type { Category } from "@/db/types";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { categoryColor, categoryIcon } from "@/lib/icons";
 import { webClickable } from "@/lib/web";
-import { colors } from "@/theme";
 
 type Props = {
   visible: boolean;
@@ -34,6 +34,7 @@ export function CategoryPickerModal({
   onAddNew,
 }: Props) {
   const insets = useSafeAreaInsets();
+  const c = useThemeColors();
   const isWeb = Platform.OS === "web";
 
   return (
@@ -45,11 +46,15 @@ export function CategoryPickerModal({
         <Pressable
           style={[
             isWeb ? styles.webCard : styles.sheet,
+            {
+              backgroundColor: c.dialog,
+              borderColor: c.border,
+            },
             !isWeb && { paddingBottom: Math.max(insets.bottom, 16) },
           ]}
           onPress={(e) => e.stopPropagation()}
         >
-          <Text style={styles.title}>Select an event type</Text>
+          <Text style={[styles.title, { color: c.accent }]}>Select an event type</Text>
           <ScrollView
             contentContainerStyle={styles.grid}
             style={isWeb ? styles.webScroll : undefined}
@@ -68,12 +73,12 @@ export function CategoryPickerModal({
                     style={[
                       styles.circle,
                       { backgroundColor: bg },
-                      selected && styles.circleSelected,
+                      selected && { borderWidth: 2, borderColor: c.accent },
                     ]}
                   >
                     <Ionicons name={categoryIcon(cat.icon_key)} size={22} color="#fff" />
                   </View>
-                  <Text style={styles.label} numberOfLines={2}>
+                  <Text style={[styles.label, { color: c.accent }]} numberOfLines={2}>
                     {cat.name}
                   </Text>
                 </Pressable>
@@ -99,7 +104,6 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   sheet: {
-    backgroundColor: colors.surface,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     maxHeight: "72%",
@@ -110,10 +114,8 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 420,
     maxHeight: "80%",
-    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
     paddingTop: 16,
     paddingHorizontal: 16,
     paddingBottom: 16,
@@ -122,7 +124,6 @@ const styles = StyleSheet.create({
     maxHeight: 360,
   },
   title: {
-    color: colors.accent,
     fontSize: 16,
     fontWeight: "600",
     textAlign: "center",
@@ -147,12 +148,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 6,
   },
-  circleSelected: {
-    borderWidth: 2,
-    borderColor: colors.accent,
-  },
   label: {
-    color: colors.accent,
     fontSize: 12,
     textAlign: "center",
   },

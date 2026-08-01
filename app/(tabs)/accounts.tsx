@@ -16,6 +16,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { Fab } from "@/components/Fab";
 import { GhostButton } from "@/components/GhostButton";
+import { GlassAtmosphere } from "@/components/GlassAtmosphere";
 import { IgnoredAccountsModal } from "@/components/IgnoredAccountsModal";
 import { MoneyText } from "@/components/MoneyText";
 import { TotalsHeader } from "@/components/TotalsHeader";
@@ -72,6 +73,7 @@ export default function AccountsScreen() {
 
   return (
     <View style={styles.screen}>
+      <GlassAtmosphere />
       <AppHeader />
       {totals ? <TotalsHeader totals={totals} /> : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}

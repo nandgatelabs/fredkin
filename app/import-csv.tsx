@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
   },
   optionOn: {
     borderColor: colors.accent,
-    backgroundColor: "rgba(232, 212, 138, 0.1)",
+    backgroundColor: colors.accentSoft,
   },
   radio: {
     width: 20,

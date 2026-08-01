@@ -177,7 +177,7 @@ export default function PreferencesScreen() {
     "1.0.0";
 
   const themeLabel =
-    THEME_OPTIONS.find((t) => t.id === themeId)?.label ?? "Original";
+    THEME_OPTIONS.find((t) => t.id === themeId)?.label ?? "Slate";
   const uiLabel =
     UI_MODE_OPTIONS.find((t) => t.id === uiMode)?.label ?? "Dark";
   const currencyLabel =

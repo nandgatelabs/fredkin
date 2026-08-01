@@ -24,6 +24,7 @@ import { createRecord, getRecord, updateRecord } from "@/db/records";
 import type { AccountWithBalance, Category, RecordType } from "@/db/types";
 import { parseOccurredAt } from "@/lib/recordsUi";
 import { useKeydown } from "@/hooks/useKeydown";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import {
   appendDecimal,
   appendDigit,
@@ -41,7 +42,6 @@ import {
 import { accountIcon, categoryColor, categoryIcon } from "@/lib/icons";
 import { log } from "@/lib/logger";
 import { webClickable } from "@/lib/web";
-import { colors } from "@/theme";
 
 const TYPES: RecordType[] = ["income", "expense", "transfer"];
 
@@ -54,6 +54,7 @@ const TYPE_LABELS: Record<RecordType, string> = {
 export default function NewRecordScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const c = useThemeColors();
   const params = useLocalSearchParams<{ id?: string }>();
   const editId = typeof params.id === "string" ? params.id : undefined;
 
@@ -303,7 +304,17 @@ export default function NewRecordScreen() {
   };
 
   const composer = (
-    <View style={[styles.screen, isWeb && styles.webCard, composerPad]}>
+    <View
+      style={[
+        styles.screen,
+        { backgroundColor: c.background },
+        isWeb && [
+          styles.webCard,
+          { borderColor: c.border, backgroundColor: c.background },
+        ],
+        composerPad,
+      ]}
+    >
       <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
@@ -311,10 +322,12 @@ export default function NewRecordScreen() {
           disabled={busy}
           style={[styles.headerBtn, webClickable]}
         >
-          <Text style={styles.action}>✕ DISCARD</Text>
+          <Text style={[styles.action, { color: c.accent }]}>✕ DISCARD</Text>
         </Pressable>
         {isWeb ? (
-          <Text style={styles.keyboardHint}>keys · Esc · Enter/=</Text>
+          <Text style={[styles.keyboardHint, { color: c.textSecondary }]}>
+            keys · Esc · Enter/=
+          </Text>
         ) : (
           <View style={styles.headerSpacer} />
         )}
@@ -322,9 +335,17 @@ export default function NewRecordScreen() {
           onPress={() => void handleSave()}
           hitSlop={10}
           disabled={busy}
-          style={[styles.headerBtn, styles.saveBtn, webClickable, busy && styles.actionDisabled]}
+          style={[
+            styles.headerBtn,
+            styles.saveBtn,
+            { backgroundColor: c.accent },
+            webClickable,
+            busy && styles.actionDisabled,
+          ]}
         >
-          <Text style={styles.saveLabel}>{busy ? "…" : "✓ SAVE"}</Text>
+          <Text style={[styles.saveLabel, { color: c.onAccent }]}>
+            {busy ? "…" : "✓ SAVE"}
+          </Text>
         </Pressable>
       </View>
 
@@ -333,14 +354,21 @@ export default function NewRecordScreen() {
           const selected = type === t;
           return (
             <View key={t} style={styles.typeCell}>
-              {i > 0 ? <Text style={styles.typeDivider}>|</Text> : null}
+              {i > 0 ? (
+                <Text style={[styles.typeDivider, { color: c.border }]}>|</Text>
+              ) : null}
               <Pressable style={styles.typeBtn} onPress={() => handleTypeChange(t)}>
                 {selected ? (
-                  <Ionicons name="checkmark-circle" size={16} color={colors.accent} />
+                  <Ionicons name="checkmark-circle" size={16} color={c.accent} />
                 ) : (
                   <View style={styles.typeSpacer} />
                 )}
-                <Text style={[styles.typeLabel, selected && styles.typeLabelOn]}>
+                <Text
+                  style={[
+                    styles.typeLabel,
+                    { color: selected ? c.accent : c.textSecondary },
+                  ]}
+                >
                   {TYPE_LABELS[t]}
                 </Text>
               </Pressable>
@@ -350,55 +378,60 @@ export default function NewRecordScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={c.accent} style={{ marginTop: 40 }} />
       ) : (
         <>
           <View style={styles.pickRow}>
             <PickerField
               label={type === "transfer" ? "From" : undefined}
               onPress={() => setAccountPicker("from")}
+              colors={c}
             >
               {account ? (
                 <>
                   <Ionicons
                     name={accountIcon(account.icon_key)}
                     size={18}
-                    color={colors.accent}
+                    color={c.accent}
                   />
-                  <Text style={styles.pickValue} numberOfLines={1}>
+                  <Text style={[styles.pickValue, { color: c.accent }]} numberOfLines={1}>
                     {account.name}
                   </Text>
                 </>
               ) : (
                 <>
-                  <Ionicons name="wallet-outline" size={18} color={colors.accentMuted} />
-                  <Text style={styles.pickPlaceholder}>Wallet</Text>
+                  <Ionicons name="wallet-outline" size={18} color={c.accentMuted} />
+                  <Text style={[styles.pickPlaceholder, { color: c.textSecondary }]}>
+                    Wallet
+                  </Text>
                 </>
               )}
             </PickerField>
 
             {type === "transfer" ? (
-              <PickerField label="To" onPress={() => setAccountPicker("to")}>
+              <PickerField label="To" onPress={() => setAccountPicker("to")} colors={c}>
                 {toAccount ? (
                   <>
                     <Ionicons
                       name={accountIcon(toAccount.icon_key)}
                       size={18}
-                      color={colors.accent}
+                      color={c.accent}
                     />
-                    <Text style={styles.pickValue} numberOfLines={1}>
+                    <Text style={[styles.pickValue, { color: c.accent }]} numberOfLines={1}>
                       {toAccount.name}
                     </Text>
                   </>
                 ) : (
                   <>
-                    <Ionicons name="wallet-outline" size={18} color={colors.accentMuted} />
-                    <Text style={styles.pickPlaceholder}>Wallet</Text>
+                    <Ionicons name="wallet-outline" size={18} color={c.accentMuted} />
+                    <Text style={[styles.pickPlaceholder, { color: c.textSecondary }]}>
+                      Wallet
+                    </Text>
                   </>
                 )}
               </PickerField>
             ) : (
-              <PickerField onPress={() => setCategoryPickerOpen(true)}>
+              <PickerField onPress={() => setCategoryPickerOpen(true)} colors={c}>
                 {category ? (
                   <>
                     <View
@@ -416,14 +449,16 @@ export default function NewRecordScreen() {
                         color="#fff"
                       />
                     </View>
-                    <Text style={styles.pickValue} numberOfLines={1}>
+                    <Text style={[styles.pickValue, { color: c.accent }]} numberOfLines={1}>
                       {category.name}
                     </Text>
                   </>
                 ) : (
                   <>
-                    <Ionicons name="pricetag-outline" size={18} color={colors.accentMuted} />
-                    <Text style={styles.pickPlaceholder}>Event type</Text>
+                    <Ionicons name="pricetag-outline" size={18} color={c.accentMuted} />
+                    <Text style={[styles.pickPlaceholder, { color: c.textSecondary }]}>
+                      Event type
+                    </Text>
                   </>
                 )}
               </PickerField>
@@ -431,9 +466,16 @@ export default function NewRecordScreen() {
           </View>
 
           <TextInput
-            style={styles.notes}
+            style={[
+              styles.notes,
+              {
+                borderColor: c.border,
+                color: c.text,
+                backgroundColor: c.inputBg,
+              },
+            ]}
             placeholder="Add notes"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={c.textSecondary}
             value={note}
             onChangeText={setNote}
             multiline
@@ -455,13 +497,17 @@ export default function NewRecordScreen() {
             />
           </View>
 
-          <View style={styles.footer}>
+          <View style={[styles.footer, { borderColor: c.border }]}>
             <Pressable onPress={() => setDateOpen(true)} style={styles.footerBtn}>
-              <Text style={styles.footerText}>{formatComposerDate(occurredAt)}</Text>
+              <Text style={[styles.footerText, { color: c.accent }]}>
+                {formatComposerDate(occurredAt)}
+              </Text>
             </Pressable>
-            <View style={styles.footerDivider} />
+            <View style={[styles.footerDivider, { backgroundColor: c.border }]} />
             <Pressable onPress={() => setTimeOpen(true)} style={styles.footerBtn}>
-              <Text style={styles.footerText}>{formatComposerTime(occurredAt)}</Text>
+              <Text style={[styles.footerText, { color: c.accent }]}>
+                {formatComposerTime(occurredAt)}
+              </Text>
             </Pressable>
           </View>
         </>
@@ -556,15 +602,26 @@ function PickerField({
   label,
   onPress,
   children,
+  colors: c,
 }: {
   label?: string;
   onPress: () => void;
   children: ReactNode;
+  colors: ReturnType<typeof useThemeColors>;
 }) {
   return (
     <View style={styles.pickField}>
-      {label ? <Text style={styles.pickLabel}>{label}</Text> : null}
-      <Pressable style={[styles.pickBox, webClickable]} onPress={onPress}>
+      {label ? (
+        <Text style={[styles.pickLabel, { color: c.textSecondary }]}>{label}</Text>
+      ) : null}
+      <Pressable
+        style={[
+          styles.pickBox,
+          { borderColor: c.border, backgroundColor: c.inputBg },
+          webClickable,
+        ]}
+        onPress={onPress}
+      >
         {children}
       </Pressable>
     </View>
@@ -591,13 +648,11 @@ const styles = StyleSheet.create({
     maxHeight: "85%",
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
     overflow: "hidden",
     zIndex: 1,
   },
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
     paddingHorizontal: 12,
   },
   header: {
@@ -613,23 +668,18 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
   },
-  saveBtn: {
-    backgroundColor: colors.accent,
-  },
+  saveBtn: {},
   saveLabel: {
-    color: colors.onAccent,
     fontSize: 14,
     fontWeight: "700",
   },
   keyboardHint: {
-    color: colors.textSecondary,
     fontSize: 11,
   },
   headerSpacer: {
     flex: 1,
   },
   action: {
-    color: colors.accent,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -647,7 +697,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   typeDivider: {
-    color: colors.border,
     marginHorizontal: 6,
   },
   typeBtn: {
@@ -661,13 +710,9 @@ const styles = StyleSheet.create({
     width: 16,
   },
   typeLabel: {
-    color: colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
     letterSpacing: 0.3,
-  },
-  typeLabelOn: {
-    color: colors.accent,
   },
   pickRow: {
     flexDirection: "row",
@@ -678,7 +723,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pickLabel: {
-    color: colors.textSecondary,
     fontSize: 12,
     marginBottom: 4,
     marginLeft: 2,
@@ -688,22 +732,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 12,
     minHeight: 48,
-    backgroundColor: colors.inputBg,
   },
   pickValue: {
     flex: 1,
-    color: colors.accent,
     fontSize: 14,
     fontWeight: "500",
   },
   pickPlaceholder: {
     flex: 1,
-    color: colors.textSecondary,
     fontSize: 14,
   },
   catDot: {
@@ -716,22 +756,13 @@ const styles = StyleSheet.create({
   notes: {
     flex: 1,
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    color: colors.text,
     fontSize: 15,
     minHeight: 72,
     textAlignVertical: "top",
     marginBottom: 8,
-    backgroundColor: colors.inputBg,
-  },
-  error: {
-    color: colors.danger,
-    fontSize: 13,
-    textAlign: "center",
-    marginBottom: 4,
   },
   keypadBlock: {
     flexShrink: 0,
@@ -739,7 +770,6 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: "row",
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
     paddingVertical: 14,
   },
   footerBtn: {
@@ -748,10 +778,8 @@ const styles = StyleSheet.create({
   },
   footerDivider: {
     width: StyleSheet.hairlineWidth,
-    backgroundColor: colors.border,
   },
   footerText: {
-    color: colors.accent,
     fontSize: 15,
     fontWeight: "500",
   },

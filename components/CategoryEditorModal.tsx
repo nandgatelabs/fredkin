@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   },
   typeOptOn: {
     borderColor: colors.accent,
-    backgroundColor: "rgba(232, 212, 138, 0.1)",
+    backgroundColor: colors.accentSoft,
   },
   typeLabel: { color: colors.accent, fontWeight: "600", fontSize: 13 },
   iconScroll: { maxHeight: 160 },
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   },
   iconCellSelected: {
     borderColor: colors.accent,
-    backgroundColor: "rgba(232, 212, 138, 0.12)",
+    backgroundColor: colors.accentSoft,
   },
   iconCircle: {
     width: 36,

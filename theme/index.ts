@@ -4,5 +4,7 @@ export { layout } from "./layout";
 export {
   THEME_OPTIONS,
   UI_MODE_OPTIONS,
+  isGlassTheme,
+  normalizeThemeId,
   resolvePalette,
 } from "./palettes";
