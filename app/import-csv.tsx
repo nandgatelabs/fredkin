@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import {
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -10,14 +11,17 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as DocumentPicker from "expo-document-picker";
 
+import { DatePickerModal } from "@/components/DateTimePickers";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { importMoneyCsv, type ImportMode, type ImportResult } from "@/db/importCsv";
 import { useKeydown } from "@/hooks/useKeydown";
-import { webClickable } from "@/lib/web";
+import { formatComposerDate } from "@/lib/datetime";
+import { webClickable, webFocusableProps } from "@/lib/web";
 import { colors } from "@/theme";
 
 type PendingFile = { text: string; name: string };
+type Bound = "from" | "to" | null;
 
 export default function ImportCsvScreen() {
   const router = useRouter();
@@ -28,6 +32,9 @@ export default function ImportCsvScreen() {
   const [result, setResult] = useState<ImportResult | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingFile | null>(null);
+  const [from, setFrom] = useState<Date | null>(null);
+  const [to, setTo] = useState<Date | null>(null);
+  const [picking, setPicking] = useState<Bound>(null);
 
   useKeydown(
     true,
@@ -40,12 +47,16 @@ export default function ImportCsvScreen() {
   );
 
   async function runImport(text: string, name: string) {
+    if (from && to && startKey(from) > startKey(to)) {
+      setError("From date must be on or before To date");
+      return;
+    }
     setBusy(true);
     setError(null);
     setResult(null);
     setFileName(name);
     try {
-      const res = await importMoneyCsv(text, mode);
+      const res = await importMoneyCsv(text, mode, { from, to });
       setResult(res);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Import failed");
@@ -54,7 +65,6 @@ export default function ImportCsvScreen() {
     }
   }
 
-  /** Open the file picker immediately (must stay in the user-gesture chain on web). */
   async function pickFile() {
     setError(null);
     setResult(null);
@@ -84,15 +94,28 @@ export default function ImportCsvScreen() {
     setPending({ text, name });
   }
 
+  const rangeLabel =
+    from || to
+      ? `${from ? formatComposerDate(from) : "…"} → ${to ? formatComposerDate(to) : "…"}`
+      : "All dates in the file";
+
   const confirmTitle =
     mode === "replace" ? "Override with CSV?" : "Append to existing data?";
   const confirmMessage =
     mode === "replace"
-      ? `Override everything with “${pending?.name ?? "this file"}”? Existing records, accounts, and categories will be deleted. Only the imported file will remain.`
-      : `Add every row from “${pending?.name ?? "this file"}” on top of your current records? Duplicate rows are possible if you import the same file twice.`;
+      ? `Override with rows from “${pending?.name ?? "this file"}” (${rangeLabel})? Existing records, accounts, and categories will be deleted first. Opening-balance rows still apply.`
+      : `Add in-range rows from “${pending?.name ?? "this file"}” (${rangeLabel}) on top of your current records? Duplicate rows are possible if you import the same file twice.`;
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 }]}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={{
+        paddingTop: insets.top + 12,
+        paddingBottom: insets.bottom + 24,
+        paddingHorizontal: 20,
+      }}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} hitSlop={10} style={webClickable}>
           <Text style={styles.back}>✕ CLOSE</Text>
@@ -111,23 +134,62 @@ export default function ImportCsvScreen() {
       <Text style={styles.label}>What should happen to existing data?</Text>
       <ModeOption
         title="Override — keep only this CSV"
-        description="Deletes current records, accounts, and categories, then loads the file. Use for a full migration."
+        description="Deletes current records, accounts, and categories, then loads in-range rows. Use for a full migration."
         selected={mode === "replace"}
         onPress={() => setMode("replace")}
       />
       <ModeOption
         title="Append — add to existing data"
-        description="Keeps everything you already have and adds imported rows. Can create duplicates."
+        description="Keeps everything you already have and adds in-range imported rows. Can create duplicates."
         selected={mode === "append"}
         onPress={() => setMode("append")}
       />
+
+      <View style={styles.rangeCard}>
+        <Text style={styles.rangeTitle}>Import date range</Text>
+        <Text style={styles.rangeHint}>
+          Only record rows whose TIME falls in this range are imported. Leave both
+          as All time to import every row. Opening-balance rows always apply.
+        </Text>
+        <View style={styles.rangeRow}>
+          <Pressable
+            style={[styles.rangeBtn, webClickable]}
+            onPress={() => setPicking("from")}
+            {...webFocusableProps}
+          >
+            <Text style={styles.rangeLabel}>From</Text>
+            <Text style={styles.rangeValue}>
+              {from ? formatComposerDate(from) : "All time"}
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.rangeBtn, webClickable]}
+            onPress={() => setPicking("to")}
+            {...webFocusableProps}
+          >
+            <Text style={styles.rangeLabel}>To</Text>
+            <Text style={styles.rangeValue}>
+              {to ? formatComposerDate(to) : "All time"}
+            </Text>
+          </Pressable>
+        </View>
+        <Pressable
+          style={[styles.chip, webClickable]}
+          onPress={() => {
+            setFrom(null);
+            setTo(null);
+          }}
+        >
+          <Text style={styles.chipLabel}>All time</Text>
+        </Pressable>
+      </View>
 
       <Button
         label={busy ? "IMPORTING…" : "CHOOSE CSV FILE"}
         variant="primary"
         onPress={() => void pickFile()}
         busy={busy}
-        style={{ marginTop: 20 }}
+        style={{ marginTop: 8 }}
       />
 
       {fileName && !result ? <Text style={styles.file}>File: {fileName}</Text> : null}
@@ -139,11 +201,15 @@ export default function ImportCsvScreen() {
           <Text style={styles.resultLine}>
             Mode: {mode === "replace" ? "Override (CSV only)" : "Append"}
           </Text>
+          <Text style={styles.resultLine}>Range: {rangeLabel}</Text>
           <Text style={styles.resultLine}>Imported: {result.imported}</Text>
           <Text style={styles.resultLine}>
             Opening balances applied: {result.openingsApplied}
           </Text>
-          <Text style={styles.resultLine}>Skipped: {result.skipped}</Text>
+          <Text style={styles.resultLine}>
+            Skipped (out of range): {result.skippedOutOfRange}
+          </Text>
+          <Text style={styles.resultLine}>Skipped (errors): {result.skipped}</Text>
           <Text style={styles.resultLine}>
             Accounts created: {result.accountsCreated}
           </Text>
@@ -162,6 +228,21 @@ export default function ImportCsvScreen() {
         </View>
       ) : null}
 
+      <DatePickerModal
+        visible={picking != null}
+        value={
+          picking === "from"
+            ? (from ?? new Date())
+            : (to ?? new Date())
+        }
+        onCancel={() => setPicking(null)}
+        onConfirm={(next) => {
+          if (picking === "from") setFrom(next);
+          if (picking === "to") setTo(next);
+          setPicking(null);
+        }}
+      />
+
       <ConfirmModal
         visible={pending != null}
         title={confirmTitle}
@@ -179,8 +260,12 @@ export default function ImportCsvScreen() {
           void runImport(file.text, file.name);
         }}
       />
-    </View>
+    </ScrollView>
   );
+}
+
+function startKey(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 }
 
 function ModeOption({
@@ -243,7 +328,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingHorizontal: 20,
   },
   header: {
     flexDirection: "row",
@@ -272,6 +356,60 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontWeight: "600",
     marginBottom: 10,
+  },
+  rangeCard: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 8,
+    marginBottom: 12,
+    backgroundColor: colors.surface,
+    gap: 10,
+  },
+  rangeTitle: {
+    color: colors.accent,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  rangeHint: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  rangeRow: { flexDirection: "row", gap: 10 },
+  rangeBtn: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: colors.surfaceElevated,
+  },
+  rangeLabel: {
+    color: colors.textSecondary,
+    fontSize: 11,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  rangeValue: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  chip: {
+    alignSelf: "flex-start",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  chipLabel: {
+    color: colors.accent,
+    fontWeight: "600",
+    fontSize: 13,
   },
   option: {
     flexDirection: "row",
