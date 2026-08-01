@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -282,8 +283,14 @@ export default function NewRecordScreen() {
     ),
   );
 
-  return (
-    <View style={[styles.screen, { paddingTop: insets.top + 8, paddingBottom: insets.bottom }]}>
+  const isWeb = Platform.OS === "web";
+  const composerPad = {
+    paddingTop: isWeb ? 12 : insets.top + 8,
+    paddingBottom: isWeb ? 12 : insets.bottom,
+  };
+
+  const composer = (
+    <View style={[styles.screen, isWeb && styles.webCard, composerPad]}>
       <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
@@ -293,7 +300,11 @@ export default function NewRecordScreen() {
         >
           <Text style={styles.action}>✕ CANCEL</Text>
         </Pressable>
-        <Text style={styles.keyboardHint}>keys · Esc · Enter/=</Text>
+        {isWeb ? (
+          <Text style={styles.keyboardHint}>keys · Esc · Enter/=</Text>
+        ) : (
+          <View style={styles.headerSpacer} />
+        )}
         <Pressable
           onPress={() => void handleSave()}
           hitSlop={10}
@@ -417,7 +428,7 @@ export default function NewRecordScreen() {
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
-          <View style={styles.keypadGrow}>
+          <View style={styles.keypadBlock}>
             <CalculatorKeypad
               expression={expression}
               onDigit={(d) => setExpression((e) => appendDigit(e, d))}
@@ -506,6 +517,21 @@ export default function NewRecordScreen() {
       />
     </View>
   );
+
+  if (!isWeb) return composer;
+
+  return (
+    <View style={styles.webRoot}>
+      <Pressable
+        style={styles.webBackdrop}
+        onPress={() => {
+          if (!busy && !overlayOpen) router.back();
+        }}
+        accessibilityLabel="Dismiss"
+      />
+      {composer}
+    </View>
+  );
 }
 
 function PickerField({
@@ -528,6 +554,29 @@ function PickerField({
 }
 
 const styles = StyleSheet.create({
+  webRoot: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  webBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.55)",
+  },
+  /** Wider rectangle for laptop/web — not a tall phone sheet. */
+  webCard: {
+    alignSelf: "center",
+    width: "100%",
+    maxWidth: 560,
+    height: 600,
+    maxHeight: "85%",
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    overflow: "hidden",
+    zIndex: 1,
+  },
   screen: {
     flex: 1,
     backgroundColor: colors.background,
@@ -557,6 +606,9 @@ const styles = StyleSheet.create({
   keyboardHint: {
     color: colors.textSecondary,
     fontSize: 11,
+  },
+  headerSpacer: {
+    flex: 1,
   },
   action: {
     color: colors.accent,
@@ -644,6 +696,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   notes: {
+    flex: 1,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 10,
@@ -662,9 +715,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 4,
   },
-  keypadGrow: {
-    flex: 1,
-    justifyContent: "flex-end",
+  keypadBlock: {
+    flexShrink: 0,
   },
   footer: {
     flexDirection: "row",

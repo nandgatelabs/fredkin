@@ -1,5 +1,6 @@
 import {
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GhostButton } from "@/components/GhostButton";
 import type { Category } from "@/db/types";
 import { categoryColor, categoryIcon } from "@/lib/icons";
+import { webClickable } from "@/lib/web";
 import { colors } from "@/theme";
 
 type Props = {
@@ -32,23 +34,34 @@ export function CategoryPickerModal({
   onAddNew,
 }: Props) {
   const insets = useSafeAreaInsets();
+  const isWeb = Platform.OS === "web";
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable
+        style={[styles.backdrop, isWeb && styles.backdropCentered]}
+        onPress={onClose}
+      >
         <Pressable
-          style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) }]}
+          style={[
+            isWeb ? styles.webCard : styles.sheet,
+            !isWeb && { paddingBottom: Math.max(insets.bottom, 16) },
+          ]}
           onPress={(e) => e.stopPropagation()}
         >
           <Text style={styles.title}>Select a category</Text>
-          <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            contentContainerStyle={styles.grid}
+            style={isWeb ? styles.webScroll : undefined}
+            showsVerticalScrollIndicator={false}
+          >
             {categories.map((cat) => {
               const bg = cat.color ?? categoryColor(cat.icon_key);
               const selected = cat.id === selectedId;
               return (
                 <Pressable
                   key={cat.id}
-                  style={styles.cell}
+                  style={[styles.cell, webClickable]}
                   onPress={() => onSelect(cat)}
                 >
                   <View
@@ -80,6 +93,11 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "flex-end",
   },
+  backdropCentered: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
   sheet: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: 16,
@@ -87,6 +105,21 @@ const styles = StyleSheet.create({
     maxHeight: "72%",
     paddingTop: 16,
     paddingHorizontal: 16,
+  },
+  webCard: {
+    width: "100%",
+    maxWidth: 420,
+    maxHeight: "80%",
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    paddingTop: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  webScroll: {
+    maxHeight: 360,
   },
   title: {
     color: colors.accent,

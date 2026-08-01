@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -105,7 +106,9 @@ export function AccountEditorModal({
           <Text style={styles.title}>
             {mode === "edit" ? "Edit account" : "Add new account"}
           </Text>
-          <Text style={styles.hint}>Esc cancel · Enter save</Text>
+          {Platform.OS === "web" ? (
+            <Text style={styles.hint}>Esc cancel · Enter save</Text>
+          ) : null}
 
           <View style={styles.fieldRow}>
             <Text style={styles.label}>Initial amount</Text>

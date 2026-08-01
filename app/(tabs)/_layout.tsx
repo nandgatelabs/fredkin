@@ -13,13 +13,16 @@ export default function TabsLayout() {
       <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarSafeAreaInsets: { bottom: 0 },
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
-          height: Platform.OS === "web" ? 60 : 64,
-          paddingTop: 6,
-          paddingBottom: Platform.OS === "web" ? 8 : 8,
+          // Web device-mode viewports were clipping labels at height 60.
+          height: Platform.OS === "web" ? 72 : 64,
+          paddingTop: 8,
+          paddingBottom: Platform.OS === "web" ? 12 : 8,
+          overflow: "visible",
         },
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.tabInactive,
@@ -27,6 +30,7 @@ export default function TabsLayout() {
           fontSize: 11,
           fontWeight: "500",
           fontFamily: webFontBody,
+          marginBottom: Platform.OS === "web" ? 2 : 0,
         },
         tabBarItemStyle: Platform.OS === "web" ? { cursor: "pointer" } : undefined,
       }}
