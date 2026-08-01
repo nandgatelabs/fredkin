@@ -1,10 +1,12 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   LayoutChangeEvent,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
+  type View as ViewType,
 } from "react-native";
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from "react-native-svg";
 
@@ -77,6 +79,7 @@ export function FlowLineChart({
 }: Props) {
   const stroke = tone === "expense" ? colors.expense : colors.income;
   const [width, setWidth] = useState(340);
+  const hitRef = useRef<ViewType | null>(null);
 
   const series = useMemo(() => {
     const map = new Map(days.map((d) => [d.day, d.amount]));
@@ -89,7 +92,6 @@ export function FlowLineChart({
       all.push(dayKey(cur));
       cur.setDate(cur.getDate() + 1);
     }
-    // Keep every day for monthly; sample only for very long ranges
     const step = all.length > 93 ? Math.ceil(all.length / 60) : 1;
     const out: { day: string; amount: number }[] = [];
     for (let i = 0; i < all.length; i += step) {
@@ -100,8 +102,13 @@ export function FlowLineChart({
       const day = all[all.length - 1];
       out.push({ day, amount: map.get(day) ?? 0 });
     }
+    // Keep calendar selection visible when that day was skipped by sampling
+    if (selectedDay && !out.some((s) => s.day === selectedDay) && map.has(selectedDay)) {
+      out.push({ day: selectedDay, amount: map.get(selectedDay) ?? 0 });
+      out.sort((a, b) => a.day.localeCompare(b.day));
+    }
     return out;
-  }, [days, rangeEnd, rangeStart]);
+  }, [days, rangeEnd, rangeStart, selectedDay]);
 
   const max = Math.max(...series.map((s) => s.amount), 1);
   const padL = 12;
@@ -177,8 +184,18 @@ export function FlowLineChart({
         </View>
 
         <Pressable
+          ref={hitRef}
           onLayout={onLayout}
-          onPress={(e) => hitTest(e.nativeEvent.locationX)}
+          onPress={(e) => {
+            const { pageX, locationX } = e.nativeEvent;
+            if (Platform.OS === "web" && hitRef.current) {
+              hitRef.current.measureInWindow((wx) => {
+                hitTest(pageX - wx);
+              });
+              return;
+            }
+            hitTest(locationX);
+          }}
           style={[{ height: height - 36, flex: 1 }, webClickable]}
         >
           <Svg width={width} height={height - 36} pointerEvents="none">

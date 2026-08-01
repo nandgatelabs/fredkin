@@ -16,6 +16,20 @@ type Props = {
 };
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 function dayKey(y: number, m: number, d: number) {
   const pad = (n: number) => n.toString().padStart(2, "0");
@@ -25,7 +39,6 @@ function dayKey(y: number, m: number, d: number) {
 function formatCellAmount(amount: number, tone: "expense" | "income") {
   if (amount <= 0) return "";
   const sign = tone === "expense" ? "−" : "+";
-  if (amount >= 10000) return `${sign}${(amount / 1000).toFixed(1)}k`;
   if (amount >= 1000) return `${sign}${(amount / 1000).toFixed(1)}k`;
   return `${sign}${amount % 1 === 0 ? amount.toFixed(0) : amount.toFixed(1)}`;
 }
@@ -36,7 +49,6 @@ function heatStyle(amount: number, max: number, tone: "expense" | "income") {
   }
   const t = Math.min(1, amount / max);
   if (tone === "expense") {
-    // soft coral → stronger coral
     const a = 0.1 + t * 0.45;
     return { backgroundColor: `rgba(232, 154, 132, ${a})` };
   }
@@ -44,24 +56,61 @@ function heatStyle(amount: number, max: number, tone: "expense" | "income") {
   return { backgroundColor: `rgba(143, 207, 146, ${a})` };
 }
 
-/** Big outlined month grid with richer color. */
-export function FlowCalendar({
+function monthsInRange(rangeStart: Date, rangeEnd: Date) {
+  const months: { y: number; m: number }[] = [];
+  let y = rangeStart.getFullYear();
+  let m = rangeStart.getMonth();
+  const endY = rangeEnd.getFullYear();
+  const endM = rangeEnd.getMonth();
+  while (y < endY || (y === endY && m <= endM)) {
+    months.push({ y, m });
+    m += 1;
+    if (m > 11) {
+      m = 0;
+      y += 1;
+    }
+  }
+  return months;
+}
+
+type MonthGridProps = {
+  year: number;
+  month: number;
+  rangeStart: Date;
+  rangeEnd: Date;
+  map: Map<string, number>;
+  max: number;
+  tone: "expense" | "income";
+  amountColor: string;
+  selectedDay: string | null;
+  onSelectDay?: (day: string | null) => void;
+};
+
+function MonthGrid({
+  year,
+  month,
   rangeStart,
   rangeEnd,
-  days,
+  map,
+  max,
   tone,
-  selectedDay = null,
+  amountColor,
+  selectedDay,
   onSelectDay,
-}: Props) {
-  const amountColor = tone === "expense" ? colors.expense : colors.income;
-  const map = useMemo(() => new Map(days.map((d) => [d.day, d.amount])), [days]);
-  const max = useMemo(() => Math.max(...days.map((d) => d.amount), 1), [days]);
-
-  const year = rangeEnd.getFullYear();
-  const month = rangeEnd.getMonth();
+}: MonthGridProps) {
   const first = new Date(year, month, 1);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const startWeekday = first.getDay();
+  const rangeStartDay = new Date(
+    rangeStart.getFullYear(),
+    rangeStart.getMonth(),
+    rangeStart.getDate(),
+  );
+  const rangeEndDay = new Date(
+    rangeEnd.getFullYear(),
+    rangeEnd.getMonth(),
+    rangeEnd.getDate(),
+  );
 
   const cells: ({
     day: number;
@@ -75,11 +124,7 @@ export function FlowCalendar({
     const key = dayKey(year, month, d);
     const date = new Date(year, month, d, 12);
     const weekday = (startWeekday + d - 1) % 7;
-    const inRange =
-      date >=
-        new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate()) &&
-      date <=
-        new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), rangeEnd.getDate());
+    const inRange = date >= rangeStartDay && date <= rangeEndDay;
     cells.push({
       day: d,
       key,
@@ -89,62 +134,29 @@ export function FlowCalendar({
     });
   }
 
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  const selectedAmount = selectedDay ? (map.get(selectedDay) ?? 0) : null;
-
   return (
-    <View style={styles.wrap}>
+    <View style={styles.monthBlock}>
       <Text style={styles.monthTitle}>
-        {months[month]} {year}
+        {MONTH_NAMES[month]} {year}
       </Text>
-
-      {selectedDay && selectedAmount != null ? (
-        <View style={[styles.selectedBanner, { borderColor: amountColor }]}>
-          <Text style={styles.selectedDate}>{selectedDay}</Text>
-          <Text style={[styles.selectedAmt, { color: amountColor }]}>
-            {tone === "expense" ? "−" : "+"}
-            {formatMoney(selectedAmount, { sign: "never" })}
-          </Text>
-        </View>
-      ) : null}
-
       <View style={styles.frame}>
         <View style={styles.weekRow}>
           {WEEKDAYS.map((w, i) => (
             <View
-              key={`${w}-${i}`}
-              style={[
-                styles.weekdayCell,
-                (i === 0 || i === 6) && styles.weekendHeader,
-              ]}
+              key={`${year}-${month}-${w}`}
+              style={[styles.weekdayCell, (i === 0 || i === 6) && styles.weekendHeader]}
             >
               <Text style={styles.weekday}>{w}</Text>
             </View>
           ))}
         </View>
-
         <View style={styles.grid}>
           {cells.map((cell, i) => {
             if (cell == null) {
-              return <View key={`e-${i}`} style={[styles.cell, styles.cellEmpty]} />;
+              return <View key={`e-${year}-${month}-${i}`} style={[styles.cell, styles.cellEmpty]} />;
             }
             const active = selectedDay === cell.key;
             const heat = heatStyle(cell.amount, max, tone);
-
             return (
               <Pressable
                 key={cell.key}
@@ -176,10 +188,7 @@ export function FlowCalendar({
                 >
                   {cell.day}
                 </Text>
-                <Text
-                  style={[styles.amount, { color: amountColor }]}
-                  numberOfLines={1}
-                >
+                <Text style={[styles.amount, { color: amountColor }]} numberOfLines={1}>
                   {formatCellAmount(cell.amount, tone)}
                 </Text>
               </Pressable>
@@ -191,16 +200,68 @@ export function FlowCalendar({
   );
 }
 
+/** Month grid(s) covering the full analysis range (3/6/yearly included). */
+export function FlowCalendar({
+  rangeStart,
+  rangeEnd,
+  days,
+  tone,
+  selectedDay = null,
+  onSelectDay,
+}: Props) {
+  const amountColor = tone === "expense" ? colors.expense : colors.income;
+  const map = useMemo(() => new Map(days.map((d) => [d.day, d.amount])), [days]);
+  const max = useMemo(() => Math.max(...days.map((d) => d.amount), 1), [days]);
+  const months = useMemo(
+    () => monthsInRange(rangeStart, rangeEnd),
+    [rangeStart, rangeEnd],
+  );
+  const selectedAmount = selectedDay ? (map.get(selectedDay) ?? 0) : null;
+
+  return (
+    <View style={styles.wrap}>
+      {selectedDay && selectedAmount != null ? (
+        <View style={[styles.selectedBanner, { borderColor: amountColor }]}>
+          <Text style={styles.selectedDate}>{selectedDay}</Text>
+          <Text style={[styles.selectedAmt, { color: amountColor }]}>
+            {tone === "expense" ? "−" : "+"}
+            {formatMoney(selectedAmount, { sign: "never" })}
+          </Text>
+        </View>
+      ) : null}
+
+      {months.map(({ y, m }) => (
+        <MonthGrid
+          key={`${y}-${m}`}
+          year={y}
+          month={m}
+          rangeStart={rangeStart}
+          rangeEnd={rangeEnd}
+          map={map}
+          max={max}
+          tone={tone}
+          amountColor={amountColor}
+          selectedDay={selectedDay}
+          onSelectDay={onSelectDay}
+        />
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   wrap: {
     marginTop: 20,
     paddingTop: 8,
+    gap: 16,
+  },
+  monthBlock: {
+    gap: 10,
   },
   monthTitle: {
     color: colors.accent,
     fontWeight: "700",
     fontSize: 16,
-    marginBottom: 10,
     textAlign: "center",
   },
   selectedBanner: {
@@ -212,7 +273,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     backgroundColor: colors.surfaceElevated,
-    marginBottom: 12,
   },
   selectedDate: {
     color: colors.textSecondary,
