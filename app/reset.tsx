@@ -19,14 +19,14 @@ const OPTIONS: {
 }[] = [
   {
     mode: "records",
-    title: "Delete all records",
-    body: "Removes every expense, income, and transfer. Accounts, categories, and budgets stay.",
-    confirm: "Delete records",
+    title: "Delete all events",
+    body: "Removes every spend, income, and transfer. Wallets, event types, and budgets stay.",
+    confirm: "Delete events",
   },
   {
     mode: "all_data",
     title: "Delete all",
-    body: "Removes records, accounts, categories, and budgets. Settings stay.",
+    body: "Removes events, wallets, event types, and budgets. Settings stay.",
     confirm: "Delete all",
   },
   {
@@ -67,7 +67,7 @@ export default function ResetScreen() {
         <Pressable onPress={() => router.back()} hitSlop={10} style={webClickable}>
           <Text style={styles.back}>✕ CLOSE</Text>
         </Pressable>
-        <Text style={styles.title}>Delete & Reset</Text>
+        <Text style={styles.title}>Reset</Text>
         <View style={{ width: 64 }} />
       </View>
 

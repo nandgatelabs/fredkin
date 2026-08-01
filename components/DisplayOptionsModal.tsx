@@ -70,7 +70,7 @@ export function DisplayOptionsModal({ visible, onClose }: Props) {
             );
           })}
 
-          <Text style={[styles.section, { marginTop: 12 }]}>Show total:</Text>
+          <Text style={[styles.section, { marginTop: 12 }]}>Show net:</Text>
           <View style={styles.inline}>
             <Choice
               label="YES"

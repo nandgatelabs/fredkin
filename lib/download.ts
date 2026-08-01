@@ -34,7 +34,7 @@ async function webSaveAsPicker(
   try {
     const handle = await w.showSaveFilePicker({
       suggestedName: fileName,
-      types: [{ description: "money-money export", accept }],
+      types: [{ description: "Fredkin export", accept }],
     });
     const writable = await handle.createWritable();
     await writable.write(text);

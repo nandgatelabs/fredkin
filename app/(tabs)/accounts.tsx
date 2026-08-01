@@ -83,15 +83,15 @@ export default function AccountsScreen() {
           data={accounts}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
-          ListHeaderComponent={<Text style={styles.section}>Accounts</Text>}
+          ListHeaderComponent={<Text style={styles.section}>Wallets</Text>}
           ListFooterComponent={
             <View style={styles.footer}>
               <GhostButton
-                label="+ ADD NEW ACCOUNT"
+                label="+ ADD NEW WALLET"
                 onPress={() => setEditor({ mode: "create" })}
               />
               <GhostButton
-                label="RETRIEVE IGNORED ACCOUNTS"
+                label="RETRIEVE IGNORED WALLETS"
                 onPress={() => setIgnoredOpen(true)}
               />
             </View>
@@ -169,11 +169,11 @@ export default function AccountsScreen() {
 
       <ConfirmModal
         visible={deleteTarget != null}
-        title="Delete account?"
+        title="Delete wallet?"
         message={
           deleteTarget
             ? deleteTarget.related > 0
-              ? `Delete “${deleteTarget.account.name}”? All ${deleteTarget.related} related record${deleteTarget.related === 1 ? "" : "s"} (including transfers) will be deleted as well. This cannot be undone.`
+              ? `Delete “${deleteTarget.account.name}”? All ${deleteTarget.related} related event${deleteTarget.related === 1 ? "" : "s"} (including transfers) will be deleted as well. This cannot be undone.`
               : `Delete “${deleteTarget.account.name}”? This cannot be undone.`
             : ""
         }

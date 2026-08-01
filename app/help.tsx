@@ -80,13 +80,13 @@ export default function HelpScreen() {
         >
           <Text style={styles.back}>✕ CLOSE</Text>
         </Pressable>
-        <Text style={styles.title}>Help & Feedback</Text>
+        <Text style={styles.title}>Support</Text>
         <View style={{ width: 64 }} />
       </View>
 
       <Text style={styles.body}>
-        money-money is offline, local-first, and free of paywalls or analytics.
-        Use these links for help — nothing here phones home.
+        Fredkin by NandGateLabs is offline, local-first, and free of paywalls or
+        analytics. Use these links for help — nothing here phones home.
       </Text>
 
       {LINKS.map((item) => (

@@ -126,7 +126,7 @@ export default function ImportCsvScreen() {
 
       <Text style={styles.body}>
         Load a worksheet export with columns TIME, TYPE, AMOUNT, CATEGORY,
-        ACCOUNT, NOTES. Missing accounts and categories are created automatically.
+        ACCOUNT, NOTES. Missing wallets and event types are created automatically.
         Rows typed `(#) Opening` restore each account’s initial balance (money-money
         extension).
       </Text>
@@ -211,10 +211,10 @@ export default function ImportCsvScreen() {
           </Text>
           <Text style={styles.resultLine}>Skipped (errors): {result.skipped}</Text>
           <Text style={styles.resultLine}>
-            Accounts created: {result.accountsCreated}
+            Wallets created: {result.accountsCreated}
           </Text>
           <Text style={styles.resultLine}>
-            Categories created: {result.categoriesCreated}
+            Event types created: {result.categoriesCreated}
           </Text>
           {result.errors.length > 0 ? (
             <Text style={styles.errorList}>{result.errors.join("\n")}</Text>

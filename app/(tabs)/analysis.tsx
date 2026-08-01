@@ -48,11 +48,11 @@ export type AnalysisMode =
   | "account";
 
 const MODE_LABELS: Record<AnalysisMode, string> = {
-  expense_overview: "EXPENSE OVERVIEW",
-  income_overview: "INCOME OVERVIEW",
-  expense_flow: "EXPENSE FLOW",
-  income_flow: "INCOME FLOW",
-  account: "ACCOUNT ANALYSIS",
+  expense_overview: "Expense by type",
+  income_overview: "Income by type",
+  expense_flow: "Expense timeline",
+  income_flow: "Income timeline",
+  account: "Wallet breakdown",
 };
 
 export default function AnalysisScreen() {
@@ -187,7 +187,7 @@ export default function AnalysisScreen() {
           {(mode === "expense_overview" || mode === "income_overview") && (
             <>
               <DonutChart
-                label={tone === "expense" ? "Expenses" : "Income"}
+                label={tone === "expense" ? "Spend" : "Income"}
                 tone={tone}
                 segments={donutSegments}
                 selectedIndex={selectedSlice}
@@ -282,7 +282,7 @@ export default function AnalysisScreen() {
 
       <ActionMenu
         visible={modeOpen}
-        title="Analysis mode"
+        title="Insights mode"
         onClose={() => setModeOpen(false)}
         items={(Object.keys(MODE_LABELS) as AnalysisMode[]).map((key) => ({
           label: MODE_LABELS[key],

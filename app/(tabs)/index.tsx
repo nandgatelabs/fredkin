@@ -94,8 +94,8 @@ export default function RecordsScreen() {
         <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
       ) : records.length === 0 ? (
         <EmptyTab
-          title="No records yet"
-          subtitle="Tap + to add your first expense, income, or transfer for this period."
+          title="No events yet"
+          subtitle="Tap + to add your first spend, income, or transfer for this period."
         />
       ) : (
         <SectionList

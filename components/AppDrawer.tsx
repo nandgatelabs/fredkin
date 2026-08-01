@@ -21,12 +21,10 @@ const ITEMS: {
   icon: keyof typeof Ionicons.glyphMap;
   href: string;
 }[] = [
-  { label: "Preferences", icon: "settings-outline", href: "/preferences" },
-  { label: "Export CSV", icon: "download-outline", href: "/export-csv" },
-  { label: "Import CSV", icon: "cloud-upload-outline", href: "/import-csv" },
-  { label: "Backup & Restore", icon: "archive-outline", href: "/backup" },
-  { label: "Help / Feedback", icon: "help-circle-outline", href: "/help" },
-  { label: "Delete & Reset", icon: "trash-outline", href: "/reset" },
+  { label: "Settings", icon: "settings-outline", href: "/preferences" },
+  { label: "Data", icon: "folder-outline", href: "/data" },
+  { label: "Support", icon: "help-circle-outline", href: "/help" },
+  { label: "Reset", icon: "trash-outline", href: "/reset" },
 ];
 
 export function AppDrawer({ visible, onClose }: Props) {
@@ -52,8 +50,9 @@ export function AppDrawer({ visible, onClose }: Props) {
       <View style={styles.root}>
         <Pressable style={styles.scrim} onPress={onClose} />
         <View style={[styles.panel, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }]}>
-          <Text style={styles.brand}>money-money</Text>
-          <Text style={styles.sub}>Local · offline · no paywall</Text>
+          <Text style={styles.brand}>Fredkin</Text>
+          <Text style={styles.sub}>Fredkin by NandGateLabs</Text>
+          <Text style={styles.tag}>Offline ledger. Your device only.</Text>
           <View style={styles.list}>
             {ITEMS.map((item, index) => (
               <Pressable
@@ -78,12 +77,12 @@ export function AppDrawer({ visible, onClose }: Props) {
             ))}
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Export app logs"
+              accessibilityLabel="Export Logs"
               onPress={() => {
                 void (async () => {
                   try {
                     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-                    const name = `money-money-logs_${stamp}.txt`;
+                    const name = `fredkin-logs_${stamp}.txt`;
                     const saved = await downloadTextFile(name, getLogText(), "text/plain");
                     log.info("Logs exported", saved.locationLabel);
                     setStatus(`Logs saved:\n${saved.locationLabel}`);
@@ -101,12 +100,12 @@ export function AppDrawer({ visible, onClose }: Props) {
               ]}
             >
               <Ionicons name="bug-outline" size={20} color={colors.accent} />
-              <Text style={styles.itemLabel}>Export app logs</Text>
+              <Text style={styles.itemLabel}>Export Logs</Text>
             </Pressable>
           </View>
           <InfoModal
             visible={status != null}
-            title="Export logs"
+            title="Export Logs"
             message={status ?? ""}
             onClose={() => setStatus(null)}
           />
@@ -145,6 +144,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 12,
     marginTop: 4,
+  },
+  tag: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    marginTop: 2,
     marginBottom: 24,
   },
   list: { gap: 4 },

@@ -104,7 +104,7 @@ export function AccountEditorModal({
       <Pressable style={styles.backdrop} onPress={onCancel}>
         <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
           <Text style={styles.title}>
-            {mode === "edit" ? "Edit account" : "Add new account"}
+            {mode === "edit" ? "Edit wallet" : "Add new wallet"}
           </Text>
           {Platform.OS === "web" ? (
             <Text style={styles.hint}>Esc cancel · Enter save</Text>
@@ -121,7 +121,7 @@ export function AccountEditorModal({
               autoFocus
             />
           </View>
-          <Text style={styles.note}>*Initial amount will not be reflected in analysis</Text>
+          <Text style={styles.note}>*Initial amount will not be reflected in Insights</Text>
 
           <Text style={styles.label}>Name</Text>
           <TextInput

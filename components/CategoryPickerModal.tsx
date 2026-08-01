@@ -49,7 +49,7 @@ export function CategoryPickerModal({
           ]}
           onPress={(e) => e.stopPropagation()}
         >
-          <Text style={styles.title}>Select a category</Text>
+          <Text style={styles.title}>Select an event type</Text>
           <ScrollView
             contentContainerStyle={styles.grid}
             style={isWeb ? styles.webScroll : undefined}
@@ -80,7 +80,7 @@ export function CategoryPickerModal({
               );
             })}
           </ScrollView>
-          <GhostButton label="+ ADD NEW CATEGORY" onPress={onAddNew} style={styles.addBtn} />
+          <GhostButton label="+ ADD EVENT TYPE" onPress={onAddNew} style={styles.addBtn} />
         </Pressable>
       </Pressable>
     </Modal>

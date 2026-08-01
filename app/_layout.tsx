@@ -80,6 +80,7 @@ export default function RootLayout() {
         <Stack.Screen name="import-csv" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="export-csv" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="preferences" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="data" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="backup" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="help" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="about-doc" options={{ animation: "slide_from_right" }} />

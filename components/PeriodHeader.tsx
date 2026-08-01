@@ -13,7 +13,7 @@ type Props = {
   showSummary?: boolean;
   expense?: number;
   income?: number;
-  /** Extra amount added to TOTAL (carry-over). */
+  /** Extra amount added to Net (carry-over). */
   carryAmount?: number;
 };
 
@@ -77,10 +77,10 @@ export function PeriodHeader({
 
       {showSummary && showTotal ? (
         <View style={styles.summaryRow}>
-          <SummaryCol label="EXPENSE" value={expense} tone="expense" signed={false} />
+          <SummaryCol label="SPEND" value={expense} tone="expense" signed={false} />
           <SummaryCol label="INCOME" value={income} tone="income" signed={false} />
           <SummaryCol
-            label="TOTAL"
+            label="NET"
             value={total}
             tone={total >= 0 ? "income" : "expense"}
             signed

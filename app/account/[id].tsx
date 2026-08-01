@@ -130,9 +130,9 @@ export default function AccountDetailsScreen() {
           <Text style={styles.close}>✕</Text>
         </Pressable>
         <View style={styles.headerText}>
-          <Text style={styles.title}>Account details</Text>
+          <Text style={styles.title}>Wallet details</Text>
           <Text style={styles.subtitle}>
-            {scope === "period" ? `Time selected: ${periodLabel}` : "Records: All time"}
+            {scope === "period" ? `Time selected: ${periodLabel}` : "Events: All time"}
           </Text>
         </View>
         <View style={{ width: 28 }} />
@@ -200,7 +200,7 @@ export default function AccountDetailsScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.accountName}>{account.name}</Text>
                   <Text style={styles.balanceLine}>
-                    Account balance:{" "}
+                    Wallet balance:{" "}
                     <Text
                       style={{
                         color: balance >= 0 ? colors.income : colors.expense,
@@ -229,10 +229,10 @@ export default function AccountDetailsScreen() {
                   <View style={styles.split}>
                     <View style={styles.splitCol}>
                       <Text style={[styles.splitLabel, { color: colors.expense }]}>
-                        Expense {formatMoney(-stats.expense, { sign: "auto" })}
+                        Spend {formatMoney(-stats.expense, { sign: "auto" })}
                       </Text>
                       <Text style={styles.bigPct}>{stats.expensePercent.toFixed(2)}%</Text>
-                      <Text style={styles.pctHint}>of total expense in this period</Text>
+                      <Text style={styles.pctHint}>of total spend in this period</Text>
                     </View>
                     <View style={styles.splitCol}>
                       <Text style={[styles.splitLabel, { color: colors.income }]}>
@@ -243,13 +243,13 @@ export default function AccountDetailsScreen() {
                     </View>
                   </View>
                   <StatRow
-                    label="Transfer into this account"
+                    label="Transfer into this wallet"
                     value={stats.transferIn}
                     tone="transfer"
                     signed={false}
                   />
                   <StatRow
-                    label="Transfer out to other accounts"
+                    label="Transfer out to other wallets"
                     value={-stats.transferOut}
                     tone="transfer"
                   />
@@ -263,8 +263,8 @@ export default function AccountDetailsScreen() {
                 <View style={styles.infoBox}>
                   <Ionicons name="information-circle-outline" size={18} color={colors.accent} />
                   <Text style={styles.infoText}>
-                    You can see monthly, weekly, or daily statistics of this account in
-                    the Analysis section — or switch to Period above.
+                    You can see monthly, weekly, or daily statistics of this wallet in
+                    Insights — or switch to Period above.
                   </Text>
                 </View>
               )}
@@ -272,8 +272,8 @@ export default function AccountDetailsScreen() {
               <View style={styles.listMeta}>
                 <Text style={styles.listMetaText}>
                   {scope === "period"
-                    ? `${periodLabel} : ${records.length} record${records.length === 1 ? "" : "s"}`
-                    : `Total ${records.length} records in this account`}
+                    ? `${periodLabel} : ${records.length} event${records.length === 1 ? "" : "s"}`
+                    : `Total ${records.length} events in this wallet`}
                 </Text>
                 <Text style={styles.sortLabel}>NEW TO OLD</Text>
               </View>

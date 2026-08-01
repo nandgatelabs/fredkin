@@ -44,7 +44,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Records",
+          title: "Events",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="receipt-outline" size={size} color={color} />
           ),
@@ -53,7 +53,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="analysis"
         options={{
-          title: "Analysis",
+          title: "Insights",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="pie-chart-outline" size={size} color={color} />
           ),
@@ -62,16 +62,13 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="budgets"
         options={{
-          title: "Budgets",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calculator-outline" size={size} color={color} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen
         name="accounts"
         options={{
-          title: "Accounts",
+          title: "Wallets",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="wallet-outline" size={size} color={color} />
           ),
@@ -80,7 +77,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="categories"
         options={{
-          title: "Categories",
+          title: "Event Type",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="pricetag-outline" size={size} color={color} />
           ),

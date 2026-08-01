@@ -50,7 +50,7 @@ export function AccountPickerModal({
         <Pressable onPress={onClose} hitSlop={10} style={webClickable}>
           <Ionicons name="close" size={24} color={colors.accent} />
         </Pressable>
-        <Text style={styles.title}>Select an account</Text>
+        <Text style={styles.title}>Select a wallet</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -82,7 +82,7 @@ export function AccountPickerModal({
         }}
         ListEmptyComponent={
           <Text style={styles.empty}>
-            No accounts available. Add one on the Accounts tab.
+            No wallets available. Add one on the Wallets tab.
           </Text>
         }
       />

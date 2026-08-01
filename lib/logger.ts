@@ -69,7 +69,7 @@ export const log = {
 
 export function getLogText(): string {
   const header = [
-    `money-money logs`,
+    `Fredkin logs`,
     `platform=${Platform.OS}`,
     `recording=${recording}`,
     `entries=${entries.length}`,

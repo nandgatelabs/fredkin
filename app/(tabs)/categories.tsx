@@ -50,12 +50,12 @@ export default function CategoriesScreen() {
       const [all, lifetime] = await Promise.all([listCategories(), getLifetimeTotals()]);
       setSections([
         {
-          title: "Income categories",
+          title: "Income event types",
           type: "income",
           data: all.filter((c) => c.type === "income"),
         },
         {
-          title: "Expense categories",
+          title: "Spend event types",
           type: "expense",
           data: all.filter((c) => c.type === "expense"),
         },
@@ -121,7 +121,7 @@ export default function CategoriesScreen() {
           )}
           ListFooterComponent={
             <GhostButton
-              label="+ ADD NEW CATEGORY"
+              label="+ ADD EVENT TYPE"
               onPress={() => setEditor({ mode: "create" })}
               style={{ marginTop: 16 }}
             />

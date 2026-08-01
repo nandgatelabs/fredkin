@@ -206,9 +206,9 @@ Public hosting is optional — desktop Electron and EAS Android remain the offli
 
 ## What “working” looks like (P0+)
 
-- Dark charcoal UI, **money-money** header  
-- Tabs: Records, Analysis, Budgets, Accounts, Categories  
-- Records empty state until data exists; **+** opens the add-record composer
+- Dark charcoal UI, **Fredkin** header (Fredkin by NandGateLabs)  
+- Tabs: Events, Insights, Wallets, Event Type (Budgets hidden from nav)  
+- Events empty state until data exists; **+** opens the add-event composer
 
 ## Agents / PR merges
 

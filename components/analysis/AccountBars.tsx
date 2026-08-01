@@ -43,7 +43,7 @@ export function AccountBars({
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
           <View style={[styles.swatch, { backgroundColor: colors.expense }]} />
-          <Text style={styles.legendText}>Expense</Text>
+          <Text style={styles.legendText}>Spend</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.swatch, { backgroundColor: colors.income }]} />
@@ -56,7 +56,7 @@ export function AccountBars({
           <Text style={styles.tooltipName}>{selected.name}</Text>
           <View style={styles.tooltipRow}>
             <Text style={styles.expense}>
-              Expense {formatMoney(-selected.expense, { sign: "auto" })}
+              Spend {formatMoney(-selected.expense, { sign: "auto" })}
             </Text>
             <Text style={styles.income}>
               Income {formatMoney(selected.income, { sign: "auto" })}

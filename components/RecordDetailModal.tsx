@@ -106,12 +106,12 @@ export function RecordDetailModal({ record, onClose, onEdit, onDelete }: Props) 
             ) : (
               <>
                 <DetailRow
-                  label="Account"
+                  label="Wallet"
                   icon={accountIcon(record.account_icon_key)}
                   value={record.account_name}
                 />
                 <DetailRow
-                  label="Category"
+                  label="Event type"
                   icon={categoryIcon(record.category_icon_key ?? "pricetag")}
                   iconBg={
                     record.category_color ??
