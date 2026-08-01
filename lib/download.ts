@@ -12,6 +12,43 @@ export type DownloadResult = {
   locationLabel: string;
 };
 
+async function webSaveAsPicker(
+  fileName: string,
+  text: string,
+  mime: string,
+): Promise<DownloadResult | null> {
+  const w = globalThis as typeof globalThis & {
+    showSaveFilePicker?: (opts?: {
+      suggestedName?: string;
+      types?: { description?: string; accept: Record<string, string[]> }[];
+    }) => Promise<FileSystemFileHandle>;
+  };
+  if (typeof w.showSaveFilePicker !== "function") return null;
+
+  const accept: Record<string, string[]> = mime.includes("csv")
+    ? { "text/csv": [".csv"] }
+    : mime.includes("json")
+      ? { "application/json": [".mbak", ".json"] }
+      : { "text/plain": [".txt"] };
+
+  try {
+    const handle = await w.showSaveFilePicker({
+      suggestedName: fileName,
+      types: [{ description: "money-money export", accept }],
+    });
+    const writable = await handle.createWritable();
+    await writable.write(text);
+    await writable.close();
+    log.info("Saved via showSaveFilePicker", handle.name);
+    return { locationLabel: handle.name || fileName };
+  } catch (e) {
+    const name = e instanceof DOMException ? e.name : "";
+    if (name === "AbortError") throw new Error("cancelled");
+    log.warn("showSaveFilePicker failed; falling back", e);
+    return null;
+  }
+}
+
 /**
  * Save a text file into the configured money-money folder when possible,
  * then offer the system share sheet on native so the user can copy elsewhere.
@@ -28,6 +65,10 @@ export async function downloadTextFile(
       const written = await writeTextToSaveLocation(fileName, text, mime);
       return { locationLabel: written.label };
     }
+    // Prefer a real Save As dialog (Chrome/Edge) before the silent Downloads path.
+    const picked = await webSaveAsPicker(fileName, text, mime);
+    if (picked) return picked;
+
     const blob = new Blob([text], { type: `${mime};charset=utf-8` });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

@@ -11,29 +11,38 @@ Living plan after **v1.0.0**. Priorities change when a maintainer schedules work
 - Docs + open-source baseline (MIT)
 - Versioning / changelog / release process
 
-## Near term (candidates)
+## Shipped in polish (post-1.0.0 commits; close issues after merge)
 
 | Theme | Issue |
 |-------|--------|
-| Publish GitHub Release v1.0.0 | [#33](https://github.com/nandgatelabs/money-money/issues/33) |
-| Attach AppImage / `.deb` to Releases | [#27](https://github.com/nandgatelabs/money-money/issues/27) |
+| Flow chart hit-test + multi-month calendar | [#12](https://github.com/nandgatelabs/money-money/issues/12), [#13](https://github.com/nandgatelabs/money-money/issues/13) |
+| Decimal places clamp / formatting | [#15](https://github.com/nandgatelabs/money-money/issues/15) |
+| Web Save As + folder picker | [#16](https://github.com/nandgatelabs/money-money/issues/16) |
 | CSV export date range | [#19](https://github.com/nandgatelabs/money-money/issues/19) |
 | Backup directory + restore list | [#20](https://github.com/nandgatelabs/money-money/issues/20) |
 | Help / Feedback drawer | [#21](https://github.com/nandgatelabs/money-money/issues/21) |
-| About privacy + license links | [#22](https://github.com/nandgatelabs/money-money/issues/22) |
+| About privacy + license | [#22](https://github.com/nandgatelabs/money-money/issues/22) |
 | Native daily remind | [#23](https://github.com/nandgatelabs/money-money/issues/23) |
+| Windows / macOS Electron pack targets | [#28](https://github.com/nandgatelabs/money-money/issues/28), [#29](https://github.com/nandgatelabs/money-money/issues/29) |
+| Android preview APK + production AAB docs | [#30](https://github.com/nandgatelabs/money-money/issues/30) |
+| iOS EAS recipe (optional) | [#31](https://github.com/nandgatelabs/money-money/issues/31) |
+| Web hosting COOP/COEP recipe | [#32](https://github.com/nandgatelabs/money-money/issues/32) |
+| Release process + artifact upload docs | [#27](https://github.com/nandgatelabs/money-money/issues/27), [#33](https://github.com/nandgatelabs/money-money/issues/33) — tag/release runs on `main` after merge |
 
-## Later
+## Near term (maintainer actions on `main`)
 
-| Theme | Issue |
+| Theme | Notes |
 |-------|--------|
-| Windows desktop shell | [#28](https://github.com/nandgatelabs/money-money/issues/28) |
-| macOS desktop shell | [#29](https://github.com/nandgatelabs/money-money/issues/29) |
-| Android Play Store / production AAB | [#30](https://github.com/nandgatelabs/money-money/issues/30) — preview APK via EAS already documented in [`DEVELOPMENT.md`](./DEVELOPMENT.md) |
-| iOS EAS / store packaging (optional) | [#31](https://github.com/nandgatelabs/money-money/issues/31) |
-| Public web hosting (COOP/COEP) | [#32](https://github.com/nandgatelabs/money-money/issues/32) |
-| Web save-location picker | [#16](https://github.com/nandgatelabs/money-money/issues/16) |
-| Older deferred bugs | [#12](https://github.com/nandgatelabs/money-money/issues/12), [#13](https://github.com/nandgatelabs/money-money/issues/13), [#15](https://github.com/nandgatelabs/money-money/issues/15) — only if explicitly revived |
+| Publish GitHub Release v1.0.0 | Follow [`RELEASE.md`](./RELEASE.md); attach Linux artifacts |
+| Play Store AAB submit | Optional; needs Play Console |
+
+## Later / out of band
+
+| Theme | Notes |
+|-------|--------|
+| Signed / notarized desktop binaries | Apple Developer ID, Windows codesign |
+| Public hosted web URL | Ops: deploy `dist/` with COOP/COEP |
+| iOS App Store listing | Optional; Apple team required |
 
 ## Non-goals (still)
 

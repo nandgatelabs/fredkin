@@ -81,8 +81,24 @@ After pulling new native-related or JS fixes, **rebuild** the preview APK — an
 | Profile | Output | Use |
 |---------|--------|-----|
 | `preview` | **APK** | Sideload / device testing (this section) |
-| `production` | AAB | Play Store later ([#30](https://github.com/nandgatelabs/money-money/issues/30)) |
+| `production` | **AAB** | Play Store / internal testing track |
 | `development` | Dev client | Advanced; not needed for normal QA |
+
+### Production AAB (Play Store path)
+
+Preview APK packaging is done. For a store-shaped Android App Bundle:
+
+```bash
+npx eas-cli@latest build -p android --profile production
+```
+
+Then create a Play Console app with package `labs.nandgatelabs.moneymoney` and either upload the AAB manually or:
+
+```bash
+npx eas-cli@latest submit -p android --profile production
+```
+
+Verify on a device: offline SQLite, backup/export/share, daily remind permission. Store listing, screenshots, and privacy questionnaire are outside the repo.
 
 ### Troubleshooting
 
@@ -125,6 +141,68 @@ npx expo start --localhost
 ```
 
 Open `exp://127.0.0.1:8081` in Expo Go, or press `a` in the Metro terminal.
+
+## iOS packaging (optional, EAS)
+
+Requires an **Apple Developer** account. Config stubs live in `app.json` (`ios.icon`); add a bundle identifier when you are ready to ship:
+
+```json
+"ios": {
+  "bundleIdentifier": "labs.nandgatelabs.moneymoney",
+  "icon": "./assets/expo.icon"
+}
+```
+
+```bash
+npx eas-cli@latest build -p ios --profile preview
+# or production → TestFlight / App Store via eas submit
+```
+
+Prerequisites: Apple team membership, provisioning via EAS credentials prompts, macOS not required for cloud builds. On device, confirm offline SQLite, Share-based export/backup, and notification permission for daily remind. Custom save folders are limited on iOS (app Documents / `money-money`).
+
+## Web hosting (COOP/COEP static deploy)
+
+The web app needs isolation headers so `expo-sqlite` / OPFS works:
+
+- `Cross-Origin-Opener-Policy: same-origin`
+- `Cross-Origin-Embedder-Policy: credentialless`
+
+These are already set for Expo web / static export in `app.json` (expo-router headers) and for Electron in `desktop/main.cjs`. A public host must send the same headers on HTML and assets.
+
+### Recipe
+
+```bash
+npm run web:export
+# serve the contents of dist/ behind a reverse proxy that adds COOP/COEP
+```
+
+Example **nginx** snippet:
+
+```nginx
+add_header Cross-Origin-Opener-Policy same-origin always;
+add_header Cross-Origin-Embedder-Policy credentialless always;
+
+location / {
+  try_files $uri $uri.html $uri/ /index.html;
+}
+```
+
+Example **Netlify** `_headers` in `dist/` (or publish directory):
+
+```
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: credentialless
+```
+
+### Limitations
+
+- **One tab** holds the OPFS lock — a second tab usually fails to open the DB
+- Prefer a normal browser window (not private/incognito)
+- Deep links need SPA fallbacks (`try_files` / platform redirects) for routes like `/account/[id]`
+- Save location: Chrome/Edge can use folder / Save As pickers; Firefox falls back to Downloads (see Export/Backup screens)
+
+Public hosting is optional — desktop Electron and EAS Android remain the offline install paths.
 
 ## What “working” looks like (P0+)
 

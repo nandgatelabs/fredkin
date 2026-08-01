@@ -17,11 +17,20 @@ import { parseOccurredAt } from "@/lib/recordsUi";
 import { getDb } from "./client";
 import type { Account, MoneyRecord } from "./types";
 
+export type ExportCsvOptions = {
+  /** Inclusive start of day (local). Null/undefined = no lower bound. */
+  from?: Date | null;
+  /** Inclusive end of day (local). Null/undefined = no upper bound. */
+  to?: Date | null;
+};
+
 export type ExportCsvResult = {
   text: string;
   fileName: string;
   accountOpenings: number;
   records: number;
+  fromLabel: string;
+  toLabel: string;
 };
 
 /** Suggested download name — sync so the save picker can open on click. */
@@ -41,9 +50,25 @@ function typeLabel(type: MoneyRecord["type"]): string {
   return CSV_TYPE_EXPENSE;
 }
 
+function startOfDay(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+function endOfDay(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(23, 59, 59, 999);
+  return x;
+}
+
 /** Build a worksheet CSV including account opening balances (money-money extension). */
-export async function exportMoneyCsv(): Promise<ExportCsvResult> {
+export async function exportMoneyCsv(
+  options: ExportCsvOptions = {},
+): Promise<ExportCsvResult> {
   const db = await getDb();
+  const from = options.from ? startOfDay(options.from) : null;
+  const to = options.to ? endOfDay(options.to) : null;
 
   const accounts = await db.getAllAsync<Account>(
     `SELECT * FROM accounts ORDER BY sort_order ASC, name ASC`,
@@ -68,6 +93,13 @@ export async function exportMoneyCsv(): Promise<ExportCsvResult> {
      ORDER BY r.occurred_at ASC, r.id ASC`,
   );
 
+  const filtered = records.filter((record) => {
+    const when = parseOccurredAt(record.occurred_at);
+    if (from && when < from) return false;
+    if (to && when > to) return false;
+    return true;
+  });
+
   const rows: CsvRow[] = [];
 
   for (const account of accounts) {
@@ -81,7 +113,7 @@ export async function exportMoneyCsv(): Promise<ExportCsvResult> {
     });
   }
 
-  for (const record of records) {
+  for (const record of filtered) {
     const accountField =
       record.type === "transfer"
         ? `${record.account_name}->${record.to_account_name ?? "?"}`
@@ -105,6 +137,8 @@ export async function exportMoneyCsv(): Promise<ExportCsvResult> {
     text: serializeMoneyCsv(rows),
     fileName: exportCsvFileName(),
     accountOpenings: accounts.length,
-    records: records.length,
+    records: filtered.length,
+    fromLabel: from ? formatComposerDate(from) : "All time",
+    toLabel: to ? formatComposerDate(to) : "All time",
   };
 }

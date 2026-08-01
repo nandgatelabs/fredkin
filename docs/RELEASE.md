@@ -20,35 +20,65 @@ How to cut a **money-money** release (maintainer).
    git tag -a "vX.Y.Z" -m "vX.Y.Z"
    git push origin "vX.Y.Z"
 
+   node scripts/extract-changelog.mjs X.Y.Z > /tmp/mm-notes.md
    gh release create "vX.Y.Z" \
      --title "vX.Y.Z" \
-     --notes-file <(awk '/^## \[X.Y.Z\]/{flag=1; next} /^## \[/{flag=0} flag' CHANGELOG.md)
+     --notes-file /tmp/mm-notes.md
    ```
 
-   Or paste the matching CHANGELOG section into `gh release create` interactively.
-
-6. **Desktop artifacts (optional for the GitHub Release)** — attach Ubuntu builds if you want downloadable binaries:
+6. **Desktop artifacts (recommended for public downloads)** — attach platform builds when available:
 
    ```bash
-   npm run desktop:pack
+   # Linux (this machine / Ubuntu CI)
+   npm run desktop:pack:linux
    gh release upload "vX.Y.Z" \
      desktop/release/money-money-*.AppImage \
      desktop/release/money-money-desktop_*_amd64.deb
+
+   # Windows (build on Windows host)
+   npm run desktop:pack:win
+   gh release upload "vX.Y.Z" desktop/release/money-money-*-win-*.*
+
+   # macOS (build on a Mac)
+   npm run desktop:pack:mac
+   gh release upload "vX.Y.Z" desktop/release/money-money-*-mac-*.*
    ```
 
-   Note: AppImage needs `libfuse2`/`libfuse2t64` on many Ubuntu hosts; prefer documenting `desktop:install-user` from source in release notes as well.
+   Release notes should mention:
+
+   - **Ubuntu preferred path:** `npm run desktop:install-user` from source (no FUSE)
+   - AppImage needs `libfuse2` / `libfuse2t64` on many Ubuntu hosts
+   - Windows/macOS signing is optional for local use; SmartScreen / Gatekeeper may warn on unsigned builds
 
 ## First release (1.0.0)
 
-After the versioning/changelog PR is on `main`, tag and publish:
+Version files are already at **1.0.0**. After polish PRs are on `main`:
 
 ```bash
+git checkout main && git pull origin main
 git tag -a v1.0.0 -m "v1.0.0 — first public baseline"
 git push origin v1.0.0
-gh release create v1.0.0 --title "v1.0.0" --notes-file CHANGELOG.md
+
+node scripts/extract-changelog.mjs 1.0.0 > /tmp/mm-notes.md
+gh release create v1.0.0 --title "v1.0.0" --notes-file /tmp/mm-notes.md
+
+npm run desktop:pack:linux
+gh release upload v1.0.0 \
+  desktop/release/money-money-*.AppImage \
+  desktop/release/money-money-desktop_*_amd64.deb
 ```
 
-(Prefer trimming notes to the `1.0.0` section only.)
+Do **not** create the tag/release from a feature branch — only from merged `main`.
+
+## Android store build (optional companion)
+
+Preview APKs are documented in [`DEVELOPMENT.md`](./DEVELOPMENT.md). For a Play-bound AAB after a tagged release:
+
+```bash
+npx eas-cli@latest build -p android --profile production
+```
+
+Submit is separate (`eas submit`) and needs a Play Console listing.
 
 ## What not to do
 

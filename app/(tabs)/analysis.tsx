@@ -79,6 +79,7 @@ export default function AnalysisScreen() {
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
   const scrollRef = useRef<ScrollViewType>(null);
   const listOffsetRef = useRef(0);
+  const flowCalendarOffsetRef = useRef(0);
 
   const range = useMemo(
     () => rangeForViewMode(anchorDate, viewMode),
@@ -231,14 +232,26 @@ export default function AnalysisScreen() {
                 selectedDay={selectedDay}
                 onSelectDay={setSelectedDay}
               />
-              <FlowCalendar
-                rangeStart={range.start}
-                rangeEnd={range.end}
-                days={days}
-                tone={tone}
-                selectedDay={selectedDay}
-                onSelectDay={setSelectedDay}
-              />
+              <View
+                onLayout={(e) => {
+                  flowCalendarOffsetRef.current = e.nativeEvent.layout.y;
+                }}
+              >
+                <FlowCalendar
+                  rangeStart={range.start}
+                  rangeEnd={range.end}
+                  days={days}
+                  tone={tone}
+                  selectedDay={selectedDay}
+                  onSelectDay={setSelectedDay}
+                  onSelectedMonthLayout={(y) => {
+                    scrollRef.current?.scrollTo({
+                      y: Math.max(0, flowCalendarOffsetRef.current + y - 16),
+                      animated: true,
+                    });
+                  }}
+                />
+              </View>
             </>
           )}
 

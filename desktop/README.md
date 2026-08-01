@@ -1,9 +1,9 @@
 # money-money desktop (Electron)
 
-Offline Ubuntu/desktop shell around the Expo **web** export.
+Offline desktop shell around the Expo **web** export (Linux, Windows, macOS).
 
 - Serves `../dist` at **`http://127.0.0.1:47821`** with COOP/COEP
-- Profile / DB: **`~/.config/money-money`**
+- Profile / DB under Electron `userData` → app folder **`money-money`**
 - Packaged builds share that same profile with `npm run desktop:dev`
 
 ## One-time setup
@@ -31,12 +31,14 @@ Update after pulling new code: run the same command again.
 npm run desktop:dev
 ```
 
-## Pack only
+## Pack
 
 ```bash
-npm run desktop:pack
+npm run desktop:pack:linux   # AppImage + .deb
+npm run desktop:pack:win     # NSIS + portable (build on Windows)
+npm run desktop:pack:mac     # dmg + zip (build on macOS)
 ```
 
-Outputs under `release/`: unpacked dir, `.AppImage`, and `.deb`.
+Outputs under `release/`.
 
 Full docs: [`docs/DESKTOP.md`](../docs/DESKTOP.md).

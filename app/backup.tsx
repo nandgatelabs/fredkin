@@ -1,5 +1,12 @@
-import { useCallback, useState } from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as DocumentPicker from "expo-document-picker";
@@ -15,8 +22,13 @@ import {
   type MoneyBackup,
 } from "@/db/backup";
 import { useKeydown } from "@/hooks/useKeydown";
+import { formatComposerDate, formatComposerTime } from "@/lib/datetime";
 import { downloadTextFile } from "@/lib/download";
 import { log } from "@/lib/logger";
+import {
+  listBackupFiles,
+  type BackupFileInfo,
+} from "@/lib/saveLocation";
 import { webClickable, webFocusableProps } from "@/lib/web";
 import { useSettingsStore } from "@/store/settings";
 import { colors } from "@/theme";
@@ -29,6 +41,32 @@ export default function BackupScreen() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingRestore, setPendingRestore] = useState<MoneyBackup | null>(null);
+  const [backups, setBackups] = useState<BackupFileInfo[]>([]);
+  const [listHint, setListHint] = useState<string | null>(null);
+
+  const reloadList = useCallback(async () => {
+    try {
+      const files = await listBackupFiles();
+      setBackups(files);
+      if (files.length === 0) {
+        setListHint(
+          Platform.OS === "web"
+            ? "No .mbak files in the chosen save folder yet. Change folder above, or pick a file."
+            : "No .mbak files in the save folder yet. Back up now, or restore from file.",
+        );
+      } else {
+        setListHint(null);
+      }
+    } catch (e) {
+      log.warn("listBackupFiles failed", e);
+      setBackups([]);
+      setListHint("Could not list backups in the save folder. Use Restore from file.");
+    }
+  }, []);
+
+  useEffect(() => {
+    void reloadList();
+  }, [reloadList]);
 
   useKeydown(
     true,
@@ -56,12 +94,21 @@ export default function BackupScreen() {
       setMessage(
         `Backup saved as ${name}\nLocation: ${saved.locationLabel}\n(${payload.records.length} records, ${payload.accounts.length} accounts).`,
       );
+      await reloadList();
     } catch (e) {
+      if (e instanceof Error && e.message === "cancelled") return;
       log.error("Backup failed", e);
       setError(e instanceof Error ? e.message : "Backup failed");
     } finally {
       setBusy(false);
     }
+  }
+
+  async function prepareRestore(text: string, name: string) {
+    const parsed = JSON.parse(text) as MoneyBackup;
+    if (parsed.version !== 1) throw new Error("Not a money-money v1 backup");
+    setPendingRestore(parsed);
+    setMessage(`Ready to restore ${name}`);
   }
 
   async function pickRestore() {
@@ -99,10 +146,7 @@ export default function BackupScreen() {
         name = picked.assets[0].name ?? name;
         text = await (await fetch(picked.assets[0].uri)).text();
       }
-      const parsed = JSON.parse(text) as MoneyBackup;
-      if (parsed.version !== 1) throw new Error("Not a money-money v1 backup");
-      setPendingRestore(parsed);
-      setMessage(`Ready to restore ${name}`);
+      await prepareRestore(text, name);
     } catch (e) {
       if (e instanceof Error && e.message === "cancelled") return;
       setError(e instanceof Error ? e.message : "Could not read backup");
@@ -110,11 +154,14 @@ export default function BackupScreen() {
   }
 
   return (
-    <View
-      style={[
-        styles.screen,
-        { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 },
-      ]}
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={{
+        paddingTop: insets.top + 12,
+        paddingBottom: insets.bottom + 24,
+        paddingHorizontal: 20,
+      }}
+      keyboardShouldPersistTaps="handled"
     >
       <View style={styles.header}>
         <Pressable
@@ -136,7 +183,11 @@ export default function BackupScreen() {
         budgets, and settings. Prefer this over CSV when you want a complete restore.
       </Text>
 
-      <SaveLocationPanel />
+      <SaveLocationPanel
+        onStatus={() => {
+          void reloadList();
+        }}
+      />
 
       <Button
         label={busy ? "WORKING…" : "BACKUP NOW"}
@@ -152,6 +203,45 @@ export default function BackupScreen() {
         busy={busy}
         style={{ marginTop: 12 }}
       />
+
+      <View style={styles.listCard}>
+        <View style={styles.listHeader}>
+          <Text style={styles.listTitle}>Backups in save folder</Text>
+          <Pressable onPress={() => void reloadList()} style={webClickable}>
+            <Text style={styles.refresh}>Refresh</Text>
+          </Pressable>
+        </View>
+        {listHint ? <Text style={styles.listHint}>{listHint}</Text> : null}
+        {backups.map((file) => (
+          <Pressable
+            key={`${file.name}-${file.modifiedAt?.getTime() ?? 0}`}
+            disabled={busy}
+            style={[styles.fileRow, webClickable, busy && styles.disabled]}
+            onPress={() => {
+              void (async () => {
+                setBusy(true);
+                setError(null);
+                try {
+                  const text = await file.readText();
+                  await prepareRestore(text, file.name);
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : "Could not read backup");
+                } finally {
+                  setBusy(false);
+                }
+              })();
+            }}
+            {...webFocusableProps}
+          >
+            <Text style={styles.fileName}>{file.name}</Text>
+            <Text style={styles.fileMeta}>
+              {file.modifiedAt
+                ? `${formatComposerDate(file.modifiedAt)} ${formatComposerTime(file.modifiedAt)}`
+                : "Unknown date"}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
 
       <InfoModal
         visible={error != null || message != null}
@@ -184,7 +274,7 @@ export default function BackupScreen() {
             .finally(() => setBusy(false));
         }}
       />
-    </View>
+    </ScrollView>
   );
 }
 
@@ -192,7 +282,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingHorizontal: 20,
   },
   header: {
     flexDirection: "row",
@@ -200,14 +289,69 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 16,
   },
-  back: { color: colors.accent, fontWeight: "600", fontSize: 13, width: 64 },
-  title: { color: colors.accent, fontSize: 17, fontWeight: "700" },
+  back: {
+    color: colors.accent,
+    fontWeight: "600",
+    fontSize: 13,
+    width: 64,
+  },
+  title: {
+    color: colors.accent,
+    fontSize: 17,
+    fontWeight: "700",
+  },
   body: {
     color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 12,
   },
-  message: { color: colors.text, marginTop: 16, fontSize: 14, lineHeight: 20 },
-  error: { color: colors.danger, marginTop: 12, fontSize: 13 },
+  listCard: {
+    marginTop: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    borderRadius: 12,
+    padding: 14,
+    backgroundColor: colors.surface,
+    gap: 8,
+  },
+  listHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  listTitle: {
+    color: colors.accent,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  refresh: {
+    color: colors.accent,
+    fontWeight: "600",
+    fontSize: 13,
+  },
+  listHint: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  fileRow: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: colors.surfaceElevated,
+  },
+  fileName: {
+    color: colors.text,
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  fileMeta: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  disabled: { opacity: 0.5 },
 });

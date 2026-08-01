@@ -18,6 +18,8 @@ export default function RootLayout() {
   const sessionUnlocked = useSettingsStore((s) => s.sessionUnlocked);
   const setSessionUnlocked = useSettingsStore((s) => s.setSessionUnlocked);
   const remindEveryday = useSettingsStore((s) => s.remindEveryday);
+  const remindHour = useSettingsStore((s) => s.remindHour);
+  const remindMinute = useSettingsStore((s) => s.remindMinute);
   const uiMode = useSettingsStore((s) => s.uiMode);
 
   const [dbReady, setDbReady] = useState(false);
@@ -48,10 +50,13 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!dbReady || !hydrated) return;
-    maybeFireDailyRemind(remindEveryday);
-    const id = setInterval(() => maybeFireDailyRemind(remindEveryday), 60_000);
+    maybeFireDailyRemind(remindEveryday, remindHour, remindMinute);
+    const id = setInterval(
+      () => maybeFireDailyRemind(remindEveryday, remindHour, remindMinute),
+      60_000,
+    );
     return () => clearInterval(id);
-  }, [dbReady, hydrated, remindEveryday]);
+  }, [dbReady, hydrated, remindEveryday, remindHour, remindMinute]);
 
   const ready = dbReady && hydrated;
   const locked = ready && passcodeEnabled && !sessionUnlocked;
@@ -76,6 +81,8 @@ export default function RootLayout() {
         <Stack.Screen name="export-csv" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="preferences" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="backup" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="help" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="about-doc" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="reset" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="account/[id]" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="category/[id]" options={{ animation: "slide_from_right" }} />

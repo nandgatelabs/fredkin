@@ -14,14 +14,40 @@ import type { RecordType } from "./types";
 
 export type ImportMode = "append" | "replace";
 
+export type ImportCsvOptions = {
+  /** Inclusive start of day (local). Null/undefined = no lower bound. */
+  from?: Date | null;
+  /** Inclusive end of day (local). Null/undefined = no upper bound. */
+  to?: Date | null;
+};
+
 export type ImportResult = {
   imported: number;
   openingsApplied: number;
   skipped: number;
+  skippedOutOfRange: number;
   accountsCreated: number;
   categoriesCreated: number;
   errors: string[];
 };
+
+function startOfDay(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+function endOfDay(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(23, 59, 59, 999);
+  return x;
+}
+
+function inImportRange(when: Date, from: Date | null, to: Date | null): boolean {
+  if (from && when < from) return false;
+  if (to && when > to) return false;
+  return true;
+}
 
 function mapType(raw: string): RecordType | null {
   const t = raw.toLowerCase();
@@ -40,17 +66,22 @@ function isBlankCategory(name: string) {
 export async function importMoneyCsv(
   text: string,
   mode: ImportMode = "replace",
+  options: ImportCsvOptions = {},
 ): Promise<ImportResult> {
   const rows = parseMoneyCsv(text);
   if (rows.length === 0) {
     throw new Error("CSV has no data rows");
   }
 
+  const from = options.from ? startOfDay(options.from) : null;
+  const to = options.to ? endOfDay(options.to) : null;
+
   const db = await getDb();
   const result: ImportResult = {
     imported: 0,
     openingsApplied: 0,
     skipped: 0,
+    skippedOutOfRange: 0,
     accountsCreated: 0,
     categoriesCreated: 0,
     errors: [],
@@ -142,9 +173,15 @@ export async function importMoneyCsv(
       const row = rows[i];
       try {
         if (isOpeningType(row.type)) {
+          // Opening balances are not dated ledger rows — always apply when present.
           await importOpeningRow(row, ensureAccount);
           result.openingsApplied += 1;
         } else {
+          const when = parseCsvTime(row.time);
+          if (!inImportRange(when, from, to)) {
+            result.skippedOutOfRange += 1;
+            continue;
+          }
           await importOneRow(row, ensureAccount, ensureCategory);
           result.imported += 1;
         }
