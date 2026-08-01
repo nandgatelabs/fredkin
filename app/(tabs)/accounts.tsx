@@ -14,7 +14,6 @@ import { AccountEditorModal } from "@/components/AccountEditorModal";
 import { ActionMenu } from "@/components/ActionMenu";
 import { AppHeader } from "@/components/AppHeader";
 import { ConfirmModal } from "@/components/ConfirmModal";
-import { Fab } from "@/components/Fab";
 import { GhostButton } from "@/components/GhostButton";
 import { GlassAtmosphere } from "@/components/GlassAtmosphere";
 import { IgnoredAccountsModal } from "@/components/IgnoredAccountsModal";
@@ -130,9 +129,6 @@ export default function AccountsScreen() {
           )}
         />
       )}
-
-      <Fab />
-
       <ActionMenu
         visible={menuAccount != null}
         title={menuAccount?.name}

@@ -71,7 +71,7 @@ const DEFAULTS = {
   currencyPosition: "start" as const,
   decimalPlaces: 2,
   notesInList: true,
-  themeId: "slate" as ThemeId,
+  themeId: "glassMist" as ThemeId,
   uiMode: "dark" as UiMode,
   passcodeEnabled: false,
   passcodeSalt: "",

@@ -1,10 +1,9 @@
-import { useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { GlassSurface } from "@/components/GlassSurface";
-import { MorePane } from "@/components/MorePane";
 import { webClickable, webFocusableProps, webFontBody } from "@/lib/web";
 import { colors } from "@/theme";
 
@@ -18,158 +17,144 @@ type ShellTabBarProps = {
   };
 };
 
-const MAIN_TABS = [
-  {
-    name: "index",
-    label: "Events",
-    icon: "receipt-outline" as const,
-  },
-  {
-    name: "analysis",
-    label: "Insights",
-    icon: "pie-chart-outline" as const,
-  },
-] as const;
-
-const MORE_ROUTES = new Set(["accounts", "categories", "budgets"]);
+/** Fixed center column so + sits on the true horizontal midpoint. */
+const CENTER_W = 52;
 
 export function ShellTabBar({ state, navigation }: ShellTabBarProps) {
   const insets = useSafeAreaInsets();
-  const [moreOpen, setMoreOpen] = useState(false);
+  const router = useRouter();
 
   const activeName = state.routes[state.index]?.name ?? "index";
-  const moreActive = MORE_ROUTES.has(activeName);
 
   const padBottom = Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
   const barHeight = Platform.OS === "web" ? 72 : 56 + Math.max(insets.bottom, 8);
 
   return (
-    <>
-      <GlassSurface
-        style={[styles.bar, { height: barHeight, paddingBottom: padBottom }]}
-      >
-        <View style={styles.side} />
+    <GlassSurface
+      style={[styles.bar, { height: barHeight, paddingBottom: padBottom }]}
+    >
+      <View style={styles.side}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Events"
+          accessibilityState={{ selected: activeName === "index" }}
+          onPress={() => navigation.navigate("index")}
+          {...webFocusableProps}
+          style={({ pressed }) => [
+            styles.tabItem,
+            webClickable,
+            pressed && styles.itemPressed,
+          ]}
+        >
+          <Ionicons
+            name="receipt-outline"
+            size={22}
+            color={activeName === "index" ? colors.accent : colors.tabInactive}
+          />
+          <Text
+            style={[styles.tabLabel, activeName === "index" && styles.labelActive]}
+          >
+            Events
+          </Text>
+        </Pressable>
+      </View>
 
-        <View style={styles.center}>
-          {MAIN_TABS.map((tab) => {
-            const active = activeName === tab.name;
-            return (
-              <Pressable
-                key={tab.name}
-                accessibilityRole="button"
-                accessibilityLabel={tab.label}
-                accessibilityState={{ selected: active }}
-                onPress={() => navigation.navigate(tab.name)}
-                {...webFocusableProps}
-                style={({ pressed }) => [
-                  styles.mainItem,
-                  webClickable,
-                  pressed && styles.itemPressed,
-                ]}
-              >
-                <Ionicons
-                  name={tab.icon}
-                  size={22}
-                  color={active ? colors.accent : colors.tabInactive}
-                />
-                <Text style={[styles.mainLabel, active && styles.labelActive]}>
-                  {tab.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+      <View style={styles.center}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Add event"
+          onPress={() => router.push("/record/new")}
+          {...webFocusableProps}
+          style={({ pressed }) => [
+            styles.addBtn,
+            webClickable,
+            pressed && styles.addPressed,
+          ]}
+        >
+          <Ionicons name="add" size={22} color={colors.onAccent} />
+        </Pressable>
+      </View>
 
-        <View style={styles.sideRight}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="More"
-            accessibilityState={{ selected: moreActive }}
-            onPress={() => setMoreOpen(true)}
-            {...webFocusableProps}
-            style={({ pressed }) => [
-              styles.moreItem,
-              webClickable,
-              pressed && styles.itemPressed,
+      <View style={styles.side}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Insights"
+          accessibilityState={{ selected: activeName === "analysis" }}
+          onPress={() => navigation.navigate("analysis")}
+          {...webFocusableProps}
+          style={({ pressed }) => [
+            styles.tabItem,
+            webClickable,
+            pressed && styles.itemPressed,
+          ]}
+        >
+          <Ionicons
+            name="pie-chart-outline"
+            size={22}
+            color={activeName === "analysis" ? colors.accent : colors.tabInactive}
+          />
+          <Text
+            style={[
+              styles.tabLabel,
+              activeName === "analysis" && styles.labelActive,
             ]}
           >
-            <Ionicons
-              name="ellipsis-horizontal"
-              size={18}
-              color={moreActive || moreOpen ? colors.accent : colors.tabInactive}
-            />
-            <Text
-              style={[
-                styles.moreLabel,
-                (moreActive || moreOpen) && styles.labelActive,
-              ]}
-            >
-              More
-            </Text>
-          </Pressable>
-        </View>
-      </GlassSurface>
-
-      <MorePane visible={moreOpen} onClose={() => setMoreOpen(false)} />
-    </>
+            Insights
+          </Text>
+        </Pressable>
+      </View>
+    </GlassSurface>
   );
 }
 
 const styles = StyleSheet.create({
   bar: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     borderTopColor: colors.border,
     borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 8,
+    paddingTop: 6,
   },
   side: {
     flex: 1,
-  },
-  sideRight: {
-    flex: 1,
-    alignItems: "flex-end",
-    paddingRight: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   center: {
-    flexDirection: "row",
+    width: CENTER_W,
     alignItems: "center",
-    gap: 8,
+    justifyContent: "center",
   },
-  mainItem: {
-    minWidth: 72,
+  tabItem: {
     alignItems: "center",
     justifyContent: "center",
     gap: 2,
     paddingVertical: 2,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     borderRadius: 10,
   },
-  moreItem: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 2,
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    minWidth: 48,
-  },
-  itemPressed: {
-    backgroundColor: colors.accentSoft,
-  },
-  mainLabel: {
+  tabLabel: {
     color: colors.tabInactive,
     fontSize: 11,
     fontWeight: "500",
     fontFamily: webFontBody,
   },
-  moreLabel: {
-    color: colors.tabInactive,
-    fontSize: 10,
-    fontWeight: "500",
-    fontFamily: webFontBody,
-  },
   labelActive: {
     color: colors.accent,
+  },
+  addBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.accent,
+  },
+  addPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.96 }],
+  },
+  itemPressed: {
+    backgroundColor: colors.accentSoft,
   },
 });

@@ -14,7 +14,6 @@ import { ActionMenu } from "@/components/ActionMenu";
 import { AppHeader } from "@/components/AppHeader";
 import { BudgetEditorModal } from "@/components/BudgetEditorModal";
 import { ConfirmModal } from "@/components/ConfirmModal";
-import { Fab } from "@/components/Fab";
 import { GhostButton } from "@/components/GhostButton";
 import {
   copyBudgetsFromMonth,
@@ -293,9 +292,6 @@ export default function BudgetsScreen() {
           }}
         />
       )}
-
-      <Fab />
-
       <ActionMenu
         visible={menuBudget != null}
         title={menuBudget?.category_name}

@@ -13,7 +13,6 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { ActionMenu } from "@/components/ActionMenu";
 import { AppHeader } from "@/components/AppHeader";
 import { CategoryEditorModal } from "@/components/CategoryEditorModal";
-import { Fab } from "@/components/Fab";
 import { GhostButton } from "@/components/GhostButton";
 import { GlassAtmosphere } from "@/components/GlassAtmosphere";
 import { TotalsHeader } from "@/components/TotalsHeader";
@@ -130,9 +129,6 @@ export default function CategoriesScreen() {
           }
         />
       )}
-
-      <Fab />
-
       <ActionMenu
         visible={menuCategory != null}
         title={menuCategory?.name}
