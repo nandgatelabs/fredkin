@@ -38,6 +38,7 @@ import {
   toIsoLocal,
 } from "@/lib/datetime";
 import { accountIcon, categoryColor, categoryIcon } from "@/lib/icons";
+import { log } from "@/lib/logger";
 import { webClickable } from "@/lib/web";
 import { colors } from "@/theme";
 
@@ -177,8 +178,13 @@ export default function NewRecordScreen() {
       };
       if (editId) await updateRecord(editId, payload);
       else await createRecord(payload);
+      log.info(editId ? "Record updated" : "Record created", {
+        type,
+        amount,
+      });
       router.back();
     } catch (e) {
+      log.error("Record save failed", e);
       setError(e instanceof Error ? e.message : "Save failed");
       setBusy(false);
     }
@@ -561,7 +567,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   webBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0, 0, 0, 0.55)",
   },
   /** Wider rectangle for laptop/web — not a tall phone sheet. */

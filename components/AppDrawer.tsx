@@ -1,10 +1,12 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useKeydown } from "@/hooks/useKeydown";
+import { downloadTextFile } from "@/lib/download";
+import { getLogText, log } from "@/lib/logger";
 import { webClickable, webFocusableProps, webFontDisplay } from "@/lib/web";
 import { colors } from "@/theme";
 
@@ -28,6 +30,7 @@ const ITEMS: {
 export function AppDrawer({ visible, onClose }: Props) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const [status, setStatus] = useState<string | null>(null);
 
   useKeydown(
     visible,
@@ -71,7 +74,35 @@ export function AppDrawer({ visible, onClose }: Props) {
                 <Text style={styles.itemLabel}>{item.label}</Text>
               </Pressable>
             ))}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Export app logs"
+              onPress={() => {
+                void (async () => {
+                  try {
+                    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+                    const name = `money-money-logs_${stamp}.txt`;
+                    const saved = await downloadTextFile(name, getLogText(), "text/plain");
+                    log.info("Logs exported", saved.locationLabel);
+                    setStatus(`Logs saved:\n${saved.locationLabel}`);
+                  } catch (e) {
+                    log.error("Log export failed", e);
+                    setStatus(e instanceof Error ? e.message : "Log export failed");
+                  }
+                })();
+              }}
+              {...webFocusableProps}
+              style={({ pressed }) => [
+                styles.item,
+                webClickable,
+                pressed && styles.itemPressed,
+              ]}
+            >
+              <Ionicons name="bug-outline" size={20} color={colors.accent} />
+              <Text style={styles.itemLabel}>Export app logs</Text>
+            </Pressable>
           </View>
+          {status ? <Text style={styles.status}>{status}</Text> : null}
         </View>
       </View>
     </Modal>
@@ -125,5 +156,11 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 16,
     fontWeight: "600",
+  },
+  status: {
+    marginTop: 16,
+    color: colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 17,
   },
 });

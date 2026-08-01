@@ -4,9 +4,11 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/Button";
+import { SaveLocationPanel } from "@/components/SaveLocationPanel";
 import { exportMoneyCsv } from "@/db/exportCsv";
 import { useKeydown } from "@/hooks/useKeydown";
 import { downloadTextFile } from "@/lib/download";
+import { log } from "@/lib/logger";
 import { webClickable, webFocusableProps } from "@/lib/web";
 import { colors } from "@/theme";
 
@@ -33,11 +35,13 @@ export default function ExportCsvScreen() {
     setSummary(null);
     try {
       const result = await exportMoneyCsv();
-      await downloadTextFile(result.fileName, result.text, "text/csv");
+      const saved = await downloadTextFile(result.fileName, result.text, "text/csv");
+      log.info("CSV export complete", saved.locationLabel);
       setSummary(
-        `Saved ${result.fileName}\n${result.accountOpenings} account opening balance${result.accountOpenings === 1 ? "" : "s"}, ${result.records} record${result.records === 1 ? "" : "s"}.`,
+        `Saved ${result.fileName}\nLocation: ${saved.locationLabel}\n${result.accountOpenings} account opening balance${result.accountOpenings === 1 ? "" : "s"}, ${result.records} record${result.records === 1 ? "" : "s"}.`,
       );
     } catch (e) {
+      log.error("CSV export failed", e);
       setError(e instanceof Error ? e.message : "Export failed");
     } finally {
       setBusy(false);
@@ -75,6 +79,8 @@ export default function ExportCsvScreen() {
         <Text style={styles.em}>(#) Opening</Text> row so a later import can restore
         it.
       </Text>
+
+      <SaveLocationPanel onStatus={setSummary} />
 
       <Button
         label={busy ? "EXPORTING…" : "EXPORT NOW"}

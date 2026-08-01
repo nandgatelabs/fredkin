@@ -1,27 +1,33 @@
 import { Platform, StyleSheet, View } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { WebAppShortcuts } from "@/components/WebAppShortcuts";
 import { webFontBody } from "@/lib/web";
 import { colors } from "@/theme";
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+  // Web: fixed bar (device-mode). Native: sit above 3-button system nav via insets.
+  const tabBarHeight =
+    Platform.OS === "web" ? 72 : 56 + Math.max(insets.bottom, 8);
+  const tabBarPadBottom =
+    Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
+
   return (
     <View style={{ flex: 1 }}>
       <WebAppShortcuts />
       <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarSafeAreaInsets: { bottom: 0 },
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
-          // Web device-mode viewports were clipping labels at height 60.
-          height: Platform.OS === "web" ? 72 : 64,
+          height: tabBarHeight,
           paddingTop: 8,
-          paddingBottom: Platform.OS === "web" ? 12 : 8,
+          paddingBottom: tabBarPadBottom,
           overflow: "visible",
         },
         tabBarActiveTintColor: colors.accent,

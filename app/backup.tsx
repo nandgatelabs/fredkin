@@ -6,6 +6,7 @@ import * as DocumentPicker from "expo-document-picker";
 
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { SaveLocationPanel } from "@/components/SaveLocationPanel";
 import {
   backupFileName,
   createBackupPayload,
@@ -14,6 +15,7 @@ import {
 } from "@/db/backup";
 import { useKeydown } from "@/hooks/useKeydown";
 import { downloadTextFile } from "@/lib/download";
+import { log } from "@/lib/logger";
 import { webClickable, webFocusableProps } from "@/lib/web";
 import { useSettingsStore } from "@/store/settings";
 import { colors } from "@/theme";
@@ -44,15 +46,17 @@ export default function BackupScreen() {
     try {
       const payload = await createBackupPayload();
       const name = backupFileName();
-      await downloadTextFile(
+      const saved = await downloadTextFile(
         name,
         JSON.stringify(payload, null, 2),
         "application/json",
       );
+      log.info("Backup complete", saved.locationLabel);
       setMessage(
-        `Backup saved as ${name} (${payload.records.length} records, ${payload.accounts.length} accounts).`,
+        `Backup saved as ${name}\nLocation: ${saved.locationLabel}\n(${payload.records.length} records, ${payload.accounts.length} accounts).`,
       );
     } catch (e) {
+      log.error("Backup failed", e);
       setError(e instanceof Error ? e.message : "Backup failed");
     } finally {
       setBusy(false);
@@ -130,6 +134,8 @@ export default function BackupScreen() {
         A `.mbak` file is a full local snapshot: accounts, categories, records,
         budgets, and settings. Prefer this over CSV when you want a complete restore.
       </Text>
+
+      <SaveLocationPanel onStatus={setMessage} />
 
       <Button
         label={busy ? "WORKING…" : "BACKUP NOW"}

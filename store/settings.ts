@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 import { getSetting, setSetting } from "@/db/client";
+import { log, setLogRecording } from "@/lib/logger";
 import { applyPalette, type ThemeId, type UiMode } from "@/theme/colors";
 
 export type ViewMode =
@@ -26,7 +27,8 @@ export type SettingsState = {
   passcodeSalt: string;
   passcodeHash: string;
   remindEveryday: boolean;
-  crashStats: boolean;
+  /** Local debug log buffer (not sent anywhere). Default on. */
+  recordLogs: boolean;
   /** Session-only: cleared on refresh. */
   sessionUnlocked: boolean;
   hydrate: () => Promise<void>;
@@ -48,7 +50,7 @@ export type SettingsState = {
     hash: string;
   }) => Promise<void>;
   persistRemind: (enabled: boolean) => Promise<void>;
-  persistCrashStats: (enabled: boolean) => Promise<void>;
+  persistRecordLogs: (enabled: boolean) => Promise<void>;
 };
 
 const DEFAULTS = {
@@ -65,7 +67,7 @@ const DEFAULTS = {
   passcodeSalt: "",
   passcodeHash: "",
   remindEveryday: false,
-  crashStats: false,
+  recordLogs: true,
 };
 
 async function readJson<T>(key: string, fallback: T): Promise<T> {
@@ -102,7 +104,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       passcodeSalt,
       passcodeHash,
       remindEveryday,
-      crashStats,
+      recordLogsStored,
+      legacyCrashStats,
     ] = await Promise.all([
       readJson<ViewMode>("viewMode", DEFAULTS.viewMode),
       readJson<boolean>("showTotal", DEFAULTS.showTotal),
@@ -117,10 +120,18 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       readJson<string>("passcodeSalt", DEFAULTS.passcodeSalt),
       readJson<string>("passcodeHash", DEFAULTS.passcodeHash),
       readJson<boolean>("remindEveryday", DEFAULTS.remindEveryday),
-      readJson<boolean>("crashStats", DEFAULTS.crashStats),
+      readJson<boolean | null>("recordLogs", null),
+      readJson<boolean | null>("crashStats", null),
     ]);
 
+    // Prefer recordLogs; migrate from old crashStats key; else default on.
+    const recordLogs =
+      recordLogsStored ??
+      (legacyCrashStats != null ? legacyCrashStats : DEFAULTS.recordLogs);
+
     applyPalette(themeId, uiMode);
+    setLogRecording(recordLogs);
+    log.info("Settings hydrated", { themeId, uiMode, recordLogs });
 
     set({
       hydrated: true,
@@ -137,7 +148,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       passcodeSalt,
       passcodeHash,
       remindEveryday,
-      crashStats,
+      recordLogs,
       // Unlocked when passcode is off; otherwise wait for PIN.
       sessionUnlocked: !passcodeEnabled,
     });
@@ -176,6 +187,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
     applyPalette(next.themeId, next.uiMode);
     set({ ...next });
+    if (themeChanged) {
+      log.info("Appearance theme changed", {
+        themeId: next.themeId,
+        uiMode: next.uiMode,
+      });
+    }
     return { themeChanged };
   },
 
@@ -198,8 +215,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     set({ remindEveryday });
   },
 
-  persistCrashStats: async (crashStats) => {
-    await writeJson("crashStats", crashStats);
-    set({ crashStats });
+  persistRecordLogs: async (recordLogs) => {
+    await writeJson("recordLogs", recordLogs);
+    setLogRecording(recordLogs);
+    set({ recordLogs });
+    log.info(recordLogs ? "Record logs on" : "Record logs off");
   },
 }));

@@ -9,13 +9,16 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import Constants from "expo-constants";
+import { reloadAppAsync } from "expo";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ChoiceSheet } from "@/components/ChoiceSheet";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { PasscodeSetupModal } from "@/components/PasscodeSetupModal";
 import { PreferenceRow } from "@/components/PreferenceRow";
+import { SaveLocationPanel } from "@/components/SaveLocationPanel";
 import { useKeydown } from "@/hooks/useKeydown";
+import { log } from "@/lib/logger";
 import {
   ensureRemindPermission,
   openSystemNotificationSettings,
@@ -56,15 +59,19 @@ type Sheet =
   | "decimals"
   | null;
 
-/** Full reload onto home so StyleSheets re-read the palette mirror. */
-function reloadHomeForTheme() {
-  if (Platform.OS !== "web") return;
-  // Prefer assign('/') over reload() on /preferences — keeps the initial
-  // route simple and avoids expo-router unhandled actions mid-stack.
-  window.setTimeout(() => {
-    const base = `${window.location.origin}/`;
-    window.location.assign(base);
-  }, 50);
+/** Full reload so StyleSheets re-read the palette (web mirror / native SQLite). */
+async function reloadHomeForTheme() {
+  log.info("Reloading app to apply theme");
+  if (Platform.OS === "web") {
+    // Prefer assign('/') over reload() on /preferences — keeps the initial
+    // route simple and avoids expo-router unhandled actions mid-stack.
+    window.setTimeout(() => {
+      const base = `${window.location.origin}/`;
+      window.location.assign(base);
+    }, 50);
+    return;
+  }
+  await reloadAppAsync("theme-change");
 }
 
 export default function PreferencesScreen() {
@@ -79,11 +86,11 @@ export default function PreferencesScreen() {
   const storedUi = useSettingsStore((s) => s.uiMode);
   const passcodeEnabled = useSettingsStore((s) => s.passcodeEnabled);
   const remindEveryday = useSettingsStore((s) => s.remindEveryday);
-  const crashStats = useSettingsStore((s) => s.crashStats);
+  const recordLogs = useSettingsStore((s) => s.recordLogs);
   const persistAppearance = useSettingsStore((s) => s.persistAppearance);
   const persistPasscode = useSettingsStore((s) => s.persistPasscode);
   const persistRemind = useSettingsStore((s) => s.persistRemind);
-  const persistCrashStats = useSettingsStore((s) => s.persistCrashStats);
+  const persistRecordLogs = useSettingsStore((s) => s.persistRecordLogs);
 
   const [themeId, setThemeId] = useState<ThemeId>(storedTheme);
   const [uiMode, setUiMode] = useState<UiMode>(storedUi);
@@ -112,7 +119,7 @@ export default function PreferencesScreen() {
       });
       if (themeChanged) {
         setStatus("Saved — applying theme…");
-        reloadHomeForTheme();
+        await reloadHomeForTheme();
         return;
       }
       setStatus("Saved");
@@ -245,6 +252,9 @@ export default function PreferencesScreen() {
           }}
         />
 
+        <Text style={[styles.section, styles.sectionSpaced]}>Files</Text>
+        <SaveLocationPanel onStatus={setStatus} />
+
         <Text style={[styles.section, styles.sectionSpaced]}>Notification</Text>
         <PreferenceRow
           label="Remind everyday"
@@ -254,9 +264,11 @@ export default function PreferencesScreen() {
             void (async () => {
               if (v) {
                 const ok = await ensureRemindPermission();
-                if (!ok && Platform.OS === "web") {
+                if (!ok) {
                   setStatus(
-                    "Notification permission blocked — enable it in site settings.",
+                    Platform.OS === "web"
+                      ? "Notification permission blocked — enable it in site settings."
+                      : "Notification permission not granted. Enable it in system settings.",
                   );
                 }
               }
@@ -267,22 +279,29 @@ export default function PreferencesScreen() {
         />
         <PreferenceRow
           label="Notification settings"
+          description={
+            Platform.OS === "web"
+              ? "Open browser site settings for this page."
+              : "Open system notification settings for money-money."
+          }
           onPress={() => {
             openSystemNotificationSettings();
             setStatus(
-              "Use the browser lock icon → Site settings to manage notifications.",
+              Platform.OS === "web"
+                ? "Use the browser lock icon → Site settings to manage notifications."
+                : "Open your phone’s Settings → Apps → money-money → Notifications.",
             );
           }}
         />
 
         <Text style={[styles.section, styles.sectionSpaced]}>About</Text>
         <PreferenceRow
-          label="Send crash and usage statistics"
-          description="Off by default. No telemetry is sent in v1."
-          switchValue={crashStats}
+          label="Record logs"
+          description="Keep a local debug log on this device (default on). Nothing is sent to a server. Export from the menu."
+          switchValue={recordLogs}
           onSwitch={(v) => {
-            void persistCrashStats(v).then(() =>
-              setStatus(v ? "Stats preference saved (no data sent yet)" : "Stats off"),
+            void persistRecordLogs(v).then(() =>
+              setStatus(v ? "Log recording on" : "Log recording off"),
             );
           }}
         />
@@ -301,7 +320,7 @@ export default function PreferencesScreen() {
         {status ? <Text style={styles.status}>{status}</Text> : null}
         <Text style={styles.hint}>
           Change Appearance options, then press SAVE. Theme / UI mode reloads the app
-          once after save.
+          once after save so every screen picks up the new colors.
         </Text>
       </ScrollView>
 
