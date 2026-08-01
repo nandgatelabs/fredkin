@@ -222,3 +222,70 @@ export async function writeTextToSaveLocation(
 export async function hasWebDirectoryHandle(): Promise<boolean> {
   return webDirHandle != null;
 }
+
+export type BackupFileInfo = {
+  name: string;
+  /** Absolute / SAF / web-relative URI when known */
+  uri: string | null;
+  /** Modified time when available */
+  modifiedAt: Date | null;
+  /** Read backup JSON text */
+  readText: () => Promise<string>;
+};
+
+/** List `.mbak` (and compatible `.json` backups) in the configured save folder. */
+export async function listBackupFiles(): Promise<BackupFileInfo[]> {
+  if (Platform.OS === "web") {
+    if (!webDirHandle) return [];
+    const out: BackupFileInfo[] = [];
+    for await (const [name, handle] of webDirHandle.entries()) {
+      if (handle.kind !== "file") continue;
+      if (!/\.(mbak|json)$/i.test(name)) continue;
+      const fileHandle = handle as FileSystemFileHandle;
+      const file = await fileHandle.getFile();
+      out.push({
+        name,
+        uri: null,
+        modifiedAt: new Date(file.lastModified),
+        readText: async () => {
+          const f = await fileHandle.getFile();
+          return f.text();
+        },
+      });
+    }
+    out.sort((a, b) => (b.modifiedAt?.getTime() ?? 0) - (a.modifiedAt?.getTime() ?? 0));
+    return out;
+  }
+
+  const loc = await getSaveLocation();
+  if (loc.uri && loc.uri.startsWith("content://")) {
+    // SAF tree listing is limited in Expo FS; fall back to empty list + file picker.
+    log.info("SAF backup listing unavailable; use file picker");
+    return [];
+  }
+
+  const dir = loc.uri ?? (await ensureDefaultNativeDir());
+  const names = await FileSystem.readDirectoryAsync(dir);
+  const out: BackupFileInfo[] = [];
+  for (const name of names) {
+    if (!/\.(mbak|json)$/i.test(name)) continue;
+    const uri = dir.endsWith("/") ? `${dir}${name}` : `${dir}/${name}`;
+    const info = await FileSystem.getInfoAsync(uri);
+    if (!info.exists || info.isDirectory) continue;
+    const modifiedAt =
+      "modificationTime" in info && typeof info.modificationTime === "number"
+        ? new Date(info.modificationTime * 1000)
+        : null;
+    out.push({
+      name,
+      uri,
+      modifiedAt,
+      readText: () =>
+        FileSystem.readAsStringAsync(uri, {
+          encoding: FileSystem.EncodingType.UTF8,
+        }),
+    });
+  }
+  out.sort((a, b) => (b.modifiedAt?.getTime() ?? 0) - (a.modifiedAt?.getTime() ?? 0));
+  return out;
+}
