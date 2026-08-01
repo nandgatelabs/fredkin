@@ -11,6 +11,7 @@
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "labs.nandgatelabs.moneymoney",
       "adaptiveIcon": {
         "backgroundColor": "#2C2B27",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -47,6 +48,18 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {
+        "headers": {
+          "Cross-Origin-Embedder-Policy": "credentialless",
+          "Cross-Origin-Opener-Policy": "same-origin"
+        }
+      },
+      "eas": {
+        "projectId": "8608c57c-f547-48f0-b181-085d3fd9a390"
+      }
+    },
+    "owner": "shivamruts-team"
   }
 }
