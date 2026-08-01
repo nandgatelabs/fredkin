@@ -56,6 +56,7 @@
     "desktop:install-user": "npm run desktop:pack && npm --prefix desktop run install-user",
     "version:sync": "node scripts/sync-version.mjs",
     "version:set": "node scripts/sync-version.mjs",
+    "changelog:extract": "node scripts/extract-changelog.mjs",
     "lint": "expo lint",
     "postinstall": "patch-package"
   },
