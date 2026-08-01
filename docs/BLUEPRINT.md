@@ -1,7 +1,7 @@
 # Fredkin — Feature Blueprint
 
 > Screen-by-screen product spec for v1.  
-> Product: **Fredkin by NandGateLabs**. Repo paths may still say `money-money`.  
+> Product: **Fredkin by NandGateLabs**. Canonical repo: [nandgatelabs/fredkin](https://github.com/nandgatelabs/fredkin).
 > Architecture & delivery: [`HLD.md`](./HLD.md).  
 > Agents: treat this as the UI/behavior checklist.
 

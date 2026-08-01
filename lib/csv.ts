@@ -1,4 +1,4 @@
-/** Minimal quoted-CSV parser / serializer for money-money worksheet exports. */
+/** Minimal quoted-CSV parser / serializer for Fredkin worksheet exports. */
 
 export type CsvRow = {
   time: string;
@@ -9,7 +9,7 @@ export type CsvRow = {
   notes: string;
 };
 
-/** money-money extension: account opening balance (not a ledger record). */
+/** Fredkin extension: account opening balance (not a ledger record). */
 export const CSV_TYPE_OPENING = "(#) Opening";
 export const CSV_TYPE_EXPENSE = "(-) Expense";
 export const CSV_TYPE_INCOME = "(+) Income";

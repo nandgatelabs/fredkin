@@ -1,4 +1,4 @@
-# money-money — High Level Design (HLD)
+# Fredkin — High Level Design (HLD)
 
 > Source of truth for architecture. Pair with [`BLUEPRINT.md`](./BLUEPRINT.md) for UI/feature detail.  
 > Stack: **Expo · React Native · TypeScript · expo-sqlite · expo-router · Zustand**  
@@ -239,7 +239,7 @@ Not a full backup (budgets/settings still need `.mbak`). Opening rows make accou
 
 - Versioned JSON.
 - Includes: records, accounts, categories, budgets, settings.
-- Filename pattern: `money-money-backup_DD_MM_YY_XXX.mbak`.
+- Filename pattern: `fredkin-backup_DD_MM_YY_XXX.mbak`.
 - Same download / Share path as CSV export.
 - Real user exports live under gitignored `private/` and must never be committed.
 
@@ -248,7 +248,7 @@ Not a full backup (budgets/settings still need `.mbak`). Opening rows make accou
 ## 9. UI / UX architecture
 
 - **Tokens:** bg charcoal, accent cream-gold, expense coral, income green, transfer blue.
-- **Logo:** distinctive wordmark for “money-money” (expressive font; not a default system stack).
+- **Logo:** distinctive wordmark for “Fredkin” (expressive font; not a default system stack).
 - **Shared components:** `PeriodHeader`, `SummaryTriple`, `RecordRow`, `AmountText`, `CalculatorKeypad`, `CategoryIcon`, `AccountIcon`, `EmptyState`, `GhostButton`, `DisplayOptionsModal`.
 - **Lists:** virtualized (`FlashList` / `FlatList`) with date section headers.
 
@@ -323,19 +323,19 @@ Full table: [`ROADMAP.md`](./ROADMAP.md). Highlights:
 
 | Issue | Topic |
 |-------|--------|
-| [#33](https://github.com/nandgatelabs/money-money/issues/33) | Publish GitHub Release v1.0.0 |
-| [#27](https://github.com/nandgatelabs/money-money/issues/27) | Attach Ubuntu AppImage/`.deb` to Releases |
-| [#19](https://github.com/nandgatelabs/money-money/issues/19) | CSV export From/To date range |
-| [#20](https://github.com/nandgatelabs/money-money/issues/20) | Backup directory + `.mbak` restore list |
-| [#21](https://github.com/nandgatelabs/money-money/issues/21) | Optional Help / Feedback drawer entry |
-| [#22](https://github.com/nandgatelabs/money-money/issues/22) | About: privacy + license links |
-| [#23](https://github.com/nandgatelabs/money-money/issues/23) | Daily remind on native (iOS/Android) |
-| [#28](https://github.com/nandgatelabs/money-money/issues/28) | Windows desktop shell |
-| [#29](https://github.com/nandgatelabs/money-money/issues/29) | macOS desktop shell |
-| [#30](https://github.com/nandgatelabs/money-money/issues/30) | Android EAS / store packaging |
-| [#31](https://github.com/nandgatelabs/money-money/issues/31) | iOS EAS / store packaging (optional) |
-| [#32](https://github.com/nandgatelabs/money-money/issues/32) | Public web hosting (COOP/COEP) |
-| [#16](https://github.com/nandgatelabs/money-money/issues/16) | Web save-location picker (parked) |
+| [#33](https://github.com/nandgatelabs/fredkin/issues/33) | Publish GitHub Release v1.0.0 |
+| [#27](https://github.com/nandgatelabs/fredkin/issues/27) | Attach Ubuntu AppImage/`.deb` to Releases |
+| [#19](https://github.com/nandgatelabs/fredkin/issues/19) | CSV export From/To date range |
+| [#20](https://github.com/nandgatelabs/fredkin/issues/20) | Backup directory + `.mbak` restore list |
+| [#21](https://github.com/nandgatelabs/fredkin/issues/21) | Optional Help / Feedback drawer entry |
+| [#22](https://github.com/nandgatelabs/fredkin/issues/22) | About: privacy + license links |
+| [#23](https://github.com/nandgatelabs/fredkin/issues/23) | Daily remind on native (iOS/Android) |
+| [#28](https://github.com/nandgatelabs/fredkin/issues/28) | Windows desktop shell |
+| [#29](https://github.com/nandgatelabs/fredkin/issues/29) | macOS desktop shell |
+| [#30](https://github.com/nandgatelabs/fredkin/issues/30) | Android EAS / store packaging |
+| [#31](https://github.com/nandgatelabs/fredkin/issues/31) | iOS EAS / store packaging (optional) |
+| [#32](https://github.com/nandgatelabs/fredkin/issues/32) | Public web hosting (COOP/COEP) |
+| [#16](https://github.com/nandgatelabs/fredkin/issues/16) | Web save-location picker (parked) |
 
 Earlier analysis/preferences bug issues (#12–#15) remain deferred indefinitely unless explicitly scheduled.
 

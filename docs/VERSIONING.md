@@ -1,6 +1,6 @@
 # Versioning
 
-**money-money** uses [Semantic Versioning 2.0.0](https://semver.org/): `MAJOR.MINOR.PATCH`.
+**Fredkin** uses [Semantic Versioning 2.0.0](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
 ## What the numbers mean
 

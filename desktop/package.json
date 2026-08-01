@@ -1,11 +1,11 @@
 {
-  "name": "money-money-desktop",
+  "name": "fredkin-desktop",
   "version": "1.0.0",
   "private": true,
-  "description": "Offline desktop shell for money-money (Electron + static web export)",
+  "description": "Offline desktop shell for Fredkin (Electron + static web export)",
   "author": "Shivamrut <gshivamrut@gmail.com>",
-  "homepage": "https://github.com/nandgatelabs/money-money",
-  "desktopName": "money-money.desktop",
+  "homepage": "https://github.com/nandgatelabs/fredkin",
+  "desktopName": "fredkin.desktop",
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
@@ -21,9 +21,9 @@
     "electron-builder": "^26.0.12"
   },
   "build": {
-    "appId": "labs.nandgatelabs.moneymoney",
-    "productName": "money-money",
-    "executableName": "money-money",
+    "appId": "labs.nandgatelabs.fredkin",
+    "productName": "Fredkin",
+    "executableName": "fredkin",
     "copyright": "Copyright © 2026 Shivamrut (NandGateLabs)",
     "directories": {
       "output": "release",
@@ -50,11 +50,11 @@
       "category": "Office",
       "icon": "../assets/images/icon.png",
       "synopsis": "Offline personal finance tracker",
-      "description": "Offline-first personal finance app (expenses, income, budgets, analysis).",
+      "description": "Offline-first personal finance app (Fredkin by NandGateLabs).",
       "syncDesktopName": true,
       "desktop": {
         "entry": {
-          "Name": "money-money",
+          "Name": "Fredkin",
           "Comment": "Offline personal finance tracker",
           "Categories": "Office;Finance;"
         }
@@ -83,7 +83,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "money-money"
+      "shortcutName": "Fredkin"
     },
     "mac": {
       "target": [
@@ -109,7 +109,7 @@
       "gatekeeperAssess": false
     },
     "dmg": {
-      "title": "money-money"
+      "title": "Fredkin"
     }
   }
 }

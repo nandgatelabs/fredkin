@@ -1,4 +1,4 @@
-/** SQL schema for money-money (HLD §6). */
+/** SQL schema for Fredkin (HLD §6). */
 
 export const SCHEMA_VERSION = 2;
 

@@ -1,6 +1,6 @@
 # Agent instructions
 
-This repo is **money-money**: an offline-first personal finance app.
+This repo is **Fredkin** ([nandgatelabs/fredkin](https://github.com/nandgatelabs/fredkin)): an offline-first personal finance app.
 
 ## Read first (source of truth)
 
@@ -28,7 +28,7 @@ v1 baseline (P0–P8) is shipped. Prefer small vertical slices from [`docs/ROADM
 
 ## GitHub workflow (required)
 
-Canonical repo: [nandgatelabs/money-money](https://github.com/nandgatelabs/money-money) (org: **nandgatelabs**).
+Canonical repo: [nandgatelabs/fredkin](https://github.com/nandgatelabs/fredkin) (org: **nandgatelabs**).
 
 Full detail: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 

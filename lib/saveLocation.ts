@@ -1,5 +1,5 @@
 /**
- * Default export/backup directory: a `money-money` folder.
+ * Default export/backup directory: a `fredkin` folder.
  * Native: app documents (or user-picked SAF tree on Android).
  * Web: browser Downloads by default; optional directory handle via File System Access API.
  */
@@ -9,7 +9,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import { getSetting, setSetting } from "@/db/client";
 import { log } from "@/lib/logger";
 
-const FOLDER = "money-money";
+const FOLDER = "fredkin";
 const KEY_CUSTOM_URI = "saveDirUri";
 const KEY_CUSTOM_LABEL = "saveDirLabel";
 
@@ -101,7 +101,7 @@ export async function pickSaveLocation(): Promise<SaveLocationInfo> {
   }
   // iOS: stick to app documents; document picker for dirs is limited
   throw new Error(
-    "Custom folders are supported on Android and web. iOS uses the app Documents/money-money folder.",
+    "Custom folders are supported on Android and web. iOS uses the app Documents/fredkin folder.",
   );
 }
 
@@ -155,7 +155,7 @@ async function pickWebDirectory(): Promise<SaveLocationInfo> {
     // readwrite so we can create CSV / .mbak files in the chosen folder
     const handle = await w.showDirectoryPicker({
       mode: "readwrite",
-      id: "money-money-exports",
+      id: "fredkin-exports",
       startIn: "downloads",
     });
     webDirHandle = handle;

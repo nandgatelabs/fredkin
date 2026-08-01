@@ -36,7 +36,7 @@ export type ExportCsvResult = {
 /** Suggested download name — sync so the save picker can open on click. */
 export function exportCsvFileName(now = new Date()): string {
   const pad = (n: number) => n.toString().padStart(2, "0");
-  return `money-money-export_${pad(now.getDate())}_${pad(now.getMonth() + 1)}_${String(now.getFullYear()).slice(-2)}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
+  return `fredkin-export_${pad(now.getDate())}_${pad(now.getMonth() + 1)}_${String(now.getFullYear()).slice(-2)}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
 }
 
 function formatCsvTime(iso: string): string {
@@ -62,7 +62,7 @@ function endOfDay(d: Date): Date {
   return x;
 }
 
-/** Build a worksheet CSV including account opening balances (money-money extension). */
+/** Build a worksheet CSV including account opening balances (Fredkin extension). */
 export async function exportMoneyCsv(
   options: ExportCsvOptions = {},
 ): Promise<ExportCsvResult> {

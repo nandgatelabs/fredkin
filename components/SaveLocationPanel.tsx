@@ -44,7 +44,7 @@ export function SaveLocationPanel({ onStatus }: Props) {
       <Text style={styles.title}>Save location</Text>
       <Text style={styles.body}>
         CSV exports and backups are written to a{" "}
-        <Text style={styles.em}>money-money</Text> folder by default.
+        <Text style={styles.em}>fredkin</Text> folder by default.
       </Text>
       <Text style={styles.path} selectable>
         {loc?.label ?? "…"}

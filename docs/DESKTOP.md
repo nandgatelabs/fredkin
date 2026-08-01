@@ -13,9 +13,11 @@ SQLite on web lives in Chromium OPFS, keyed by **origin** (`http://host:port`) a
 | Setting | Value |
 |---------|--------|
 | Origin | `http://127.0.0.1:47821` (override with `DESKTOP_PORT`) |
-| Profile (Linux) | `~/.config/money-money` |
-| Profile (Windows) | `%APPDATA%\money-money` |
-| Profile (macOS) | `~/Library/Application Support/money-money` |
+| Profile (Linux) | `~/.config/Fredkin` |
+| Profile (Windows) | `%APPDATA%\Fredkin` |
+| Profile (macOS) | `~/Library/Application Support/Fredkin` |
+
+Older installs may still have data under `money-money` profile folders. `desktop/main.cjs` reuses that legacy profile automatically when a `Fredkin` profile does not exist yet.
 
 `desktop:dev` and the installed app share that profile — close and reopen keeps your ledger.
 
@@ -33,14 +35,14 @@ What that does:
 
 1. Exports the web app to `dist/`
 2. Builds Electron under `desktop/release/linux-unpacked/`
-3. Copies the unpacked app to `~/.local/share/money-money/`
-4. Writes `~/.local/share/applications/money-money.desktop`
-5. Adds a `money-money` wrapper on your `PATH` (`~/.local/bin`)
+3. Copies the unpacked app to `~/.local/share/fredkin/`
+4. Writes `~/.local/share/applications/fredkin.desktop`
+5. Adds a `fredkin` wrapper on your `PATH` (`~/.local/bin`)
 
-Open **money-money** from the Ubuntu app grid, or:
+Open **Fredkin** from the Ubuntu app grid, or:
 
 ```bash
-money-money
+fredkin
 ```
 
 We install the **unpacked** binary (not the AppImage). AppImages need `libfuse2` / `libfuse2t64`, which many Ubuntu systems lack — the icon would show but fail to open.
@@ -53,16 +55,16 @@ npm install
 npm run desktop:install-user
 ```
 
-Your ledger in `~/.config/money-money` is left alone.
+Your ledger in `~/.config/Fredkin` is left alone.
 
 ### Uninstall (user install)
 
 ```bash
-rm -rf ~/.local/share/money-money
-rm -f ~/.local/share/applications/money-money.desktop
-rm -f ~/.local/bin/money-money
+rm -rf ~/.local/share/fredkin
+rm -f ~/.local/share/applications/fredkin.desktop
+rm -f ~/.local/bin/fredkin
 # optional: wipe local DB/profile
-# rm -rf ~/.config/money-money
+# rm -rf ~/.config/Fredkin
 ```
 
 ## Other Linux install options
@@ -71,7 +73,7 @@ rm -f ~/.local/bin/money-money
 
 ```bash
 npm run desktop:pack:linux
-sudo apt install ./desktop/release/money-money-desktop_*_amd64.deb
+sudo apt install ./desktop/release/fredkin*_amd64.deb
 ```
 
 ### AppImage (needs FUSE)
@@ -79,8 +81,8 @@ sudo apt install ./desktop/release/money-money-desktop_*_amd64.deb
 ```bash
 npm run desktop:pack:linux
 sudo apt install libfuse2t64   # Ubuntu 24.04+; older: libfuse2
-chmod +x desktop/release/money-money-*.AppImage
-./desktop/release/money-money-*.AppImage
+chmod +x desktop/release/Fredkin-*.AppImage
+./desktop/release/Fredkin-*.AppImage
 ```
 
 ## Windows
@@ -98,7 +100,7 @@ Artifacts under `desktop/release/`:
 - **NSIS installer** — guided install + Start Menu / desktop shortcut
 - **Portable** — single `.exe`, no install step
 
-Profile: `%APPDATA%\money-money` (survives reinstall). Code signing is optional for local use; Windows SmartScreen may warn on unsigned downloads.
+Profile: `%APPDATA%\Fredkin` (survives reinstall). Code signing is optional for local use; Windows SmartScreen may warn on unsigned downloads.
 
 ## macOS
 
@@ -112,7 +114,7 @@ npm run desktop:pack:mac
 
 Artifacts: `.dmg` and `.zip` for `x64` and `arm64`.
 
-Profile: `~/Library/Application Support/money-money`.
+Profile: `~/Library/Application Support/Fredkin`.
 
 **Signing / notarization:** local personal use can run unsigned builds (you may need right-click → Open the first time). Distributing outside your machine typically needs an Apple Developer ID + notarization — not configured in this repo by default (`hardenedRuntime` / Gatekeeper assess left off for local packs).
 

@@ -50,7 +50,7 @@ async function webSaveAsPicker(
 }
 
 /**
- * Save a text file into the configured money-money folder when possible,
+ * Save a text file into the configured fredkin folder when possible,
  * then offer the system share sheet on native so the user can copy elsewhere.
  */
 export async function downloadTextFile(
