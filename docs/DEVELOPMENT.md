@@ -37,40 +37,86 @@ npm run desktop:dev            # export + window window
 npm run desktop:install-user   # install into app grid (~/.local)
 ```
 
-## Android (Expo Go)
+## Android — installable APK (recommended)
 
-Physical phones work, but the toolchain is more fragile than web.
+No Android Studio required. Builds run in Expo’s cloud (**EAS**). Config lives in [`eas.json`](../eas.json) (`preview` → APK) and [`app.json`](../app.json) (`android.package`, `extra.eas.projectId`).
+
+### One-time setup
+
+1. Create / sign in at [expo.dev](https://expo.dev).
+2. From the repo:
+
+```bash
+cd ~/dev/money-money
+npx eas-cli@latest login
+```
+
+Project is already linked (`@shivamruts-team/money-money`). The Expo **slug** must stay `money-money` (same as `app.json`).
+
+Do **not** need a global `npm install -g eas-cli` — `npx eas-cli@latest` is enough.
+
+### Build a test APK
+
+```bash
+git pull origin main
+npm install
+npx eas-cli@latest build -p android --profile preview
+```
+
+- First run may ask to generate an Android keystore → choose **yes** (EAS stores it).
+- Wait for the build on the Expo dashboard (~15–25 minutes is normal while Gradle runs).
+- When status is **Finished**, download the `.apk`.
+
+### Install on a phone
+
+1. Copy the APK to the device (download link, USB, Drive, etc.).
+2. Allow **Install unknown apps** for the browser/file manager if prompted.
+3. Open the APK and install.
+4. Launch **money-money**. Data stays on-device (SQLite).
+
+After pulling new native-related or JS fixes, **rebuild** the preview APK — an old install will not pick up `main` until you install a new build.
+
+### Profiles (see `eas.json`)
+
+| Profile | Output | Use |
+|---------|--------|-----|
+| `preview` | **APK** | Sideload / device testing (this section) |
+| `production` | AAB | Play Store later ([#30](https://github.com/nandgatelabs/money-money/issues/30)) |
+| `development` | Dev client | Advanced; not needed for normal QA |
+
+### Troubleshooting
+
+| Symptom | What to do |
+|---------|------------|
+| Slug mismatch (`shivamrut` vs `money-money`) | On expo.dev, use/create a project whose slug is **`money-money`**, matching `app.json`. |
+| `eas` login / not logged in | `npx eas-cli@latest login` |
+| Global `npm i -g eas-cli` hangs | Cancel; use `npx eas-cli@latest …` only |
+| Tab bar under system buttons | Fixed on recent `main` — rebuild APK |
+| Export “saved” but file missing | Fixed on recent `main` — rebuild; files go under a `money-money` folder + Share sheet |
+
+## Android (Expo Go — optional)
+
+For quick UI against Metro without a cloud build:
 
 ```bash
 npm start
 ```
 
-Scan the QR code with **Expo Go**.
+Scan the QR code with **Expo Go** (SDK must match this project — see [expo.dev/go](https://expo.dev/go)).
 
-### SDK mismatch
+Expo Go is more fragile than a preview APK (SDK lag, Wi‑Fi drops). Prefer the APK path above for real device QA.
 
-This project targets a recent Expo SDK. The Expo Go build on app stores may lag.
-
-- Prefer Expo Go matching this project’s SDK from [expo.dev/go](https://expo.dev/go) when the store build reports incompatibility.
-- “Latest from the store” is not always new enough.
-
-### Connection drops after splash
-
-If the splash/logo appears and then the session dies, the phone often lost Metro over Wi‑Fi (VPN, guest Wi‑Fi isolation, firewall).
-
-Try:
+### Connection drops after splash (Expo Go)
 
 1. Same Wi‑Fi as the laptop, VPN off  
 2. USB debugging (below)  
-3. Tunnel only if needed (`npx expo start --tunnel`) — tunnels depend on a third-party relay and can fail with “session closed”
+3. Tunnel only if needed (`npx expo start --tunnel`)
 
-### USB debugging
+### USB debugging (Expo Go)
 
-More stable than LAN when it works:
-
-1. Enable **Developer options** and **USB debugging** (not only developer mode).  
-2. Use a data-capable cable; set USB mode to **File transfer / MTP**.  
-3. Accept **Allow USB debugging?** on the phone (`adb devices` must show `device`, not `unauthorized`).  
+1. Enable **Developer options** and **USB debugging**.  
+2. Data-capable cable; USB **File transfer / MTP**.  
+3. Accept **Allow USB debugging?** (`adb devices` → `device`).  
 4. Then:
 
 ```bash
