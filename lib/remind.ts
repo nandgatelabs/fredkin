@@ -5,9 +5,9 @@ import { log } from "@/lib/logger";
 
 const STORAGE_KEY = "money-money.lastRemindDate";
 const NATIVE_REMIND_ID = "money-money-daily-remind";
-/** Gentle evening nudge — local device time. */
-const REMIND_HOUR = 19;
-const REMIND_MINUTE = 0;
+
+export const DEFAULT_REMIND_HOUR = 19;
+export const DEFAULT_REMIND_MINUTE = 0;
 
 if (Platform.OS !== "web") {
   Notifications.setNotificationHandler({
@@ -43,6 +43,15 @@ function writeLast(value: string) {
   }
 }
 
+export function formatRemindTime(hour: number, minute: number): string {
+  const d = new Date();
+  d.setHours(hour, minute, 0, 0);
+  let h = d.getHours() % 12;
+  if (h === 0) h = 12;
+  const ampm = d.getHours() >= 12 ? "PM" : "AM";
+  return `${h}:${minute.toString().padStart(2, "0")} ${ampm}`;
+}
+
 async function ensureAndroidChannel() {
   if (Platform.OS !== "android") return;
   await Notifications.setNotificationChannelAsync("daily-remind", {
@@ -75,14 +84,21 @@ export async function ensureRemindPermission(): Promise<boolean> {
   }
 }
 
-/** Schedule or cancel the native daily local notification. */
-export async function syncNativeDailyRemind(enabled: boolean): Promise<void> {
+export type RemindSchedule = {
+  enabled: boolean;
+  hour?: number;
+  minute?: number;
+};
+
+/** Schedule or cancel the native daily local notification at the chosen local time. */
+export async function syncNativeDailyRemind(schedule: RemindSchedule): Promise<void> {
   if (Platform.OS === "web") return;
+  const hour = schedule.hour ?? DEFAULT_REMIND_HOUR;
+  const minute = schedule.minute ?? DEFAULT_REMIND_MINUTE;
   try {
     await Notifications.cancelScheduledNotificationAsync(NATIVE_REMIND_ID).catch(
       () => undefined,
     );
-    // Also clear any legacy schedules without a fixed id
     const pending = await Notifications.getAllScheduledNotificationsAsync();
     for (const n of pending) {
       if (n.identifier === NATIVE_REMIND_ID || n.content?.data?.kind === "daily-remind") {
@@ -90,7 +106,7 @@ export async function syncNativeDailyRemind(enabled: boolean): Promise<void> {
       }
     }
 
-    if (!enabled) {
+    if (!schedule.enabled) {
       log.info("Native daily remind cancelled");
       return;
     }
@@ -112,29 +128,36 @@ export async function syncNativeDailyRemind(enabled: boolean): Promise<void> {
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour: REMIND_HOUR,
-        minute: REMIND_MINUTE,
+        hour,
+        minute,
         ...(Platform.OS === "android" ? { channelId: "daily-remind" } : {}),
       },
     });
-    log.info("Native daily remind scheduled", { hour: REMIND_HOUR, minute: REMIND_MINUTE });
+    log.info("Native daily remind scheduled", { hour, minute });
   } catch (e) {
     log.warn("syncNativeDailyRemind failed", e);
   }
 }
 
 /**
- * Web: fire at most one local reminder per calendar day while the app is open.
- * Native: keep the OS schedule in sync (scheduled notification, not in-app poll).
+ * Web: fire at most once per day after the chosen local time while the app is open.
+ * Native: keep the OS schedule in sync.
  */
-export function maybeFireDailyRemind(enabled: boolean) {
+export function maybeFireDailyRemind(
+  enabled: boolean,
+  hour = DEFAULT_REMIND_HOUR,
+  minute = DEFAULT_REMIND_MINUTE,
+) {
   if (Platform.OS !== "web") {
-    void syncNativeDailyRemind(enabled);
+    void syncNativeDailyRemind({ enabled, hour, minute });
     return;
   }
   if (!enabled) return;
   if (typeof Notification === "undefined") return;
   if (Notification.permission !== "granted") return;
+  const now = new Date();
+  const mins = now.getHours() * 60 + now.getMinutes();
+  if (mins < hour * 60 + minute) return;
   const today = todayKey();
   if (readLast() === today) return;
   try {
@@ -143,7 +166,7 @@ export function maybeFireDailyRemind(enabled: boolean) {
       tag: "money-money-daily-remind",
     });
     writeLast(today);
-    log.info("Daily remind notification fired");
+    log.info("Daily remind notification fired", { hour, minute });
   } catch (e) {
     log.warn("Daily remind failed", e);
   }

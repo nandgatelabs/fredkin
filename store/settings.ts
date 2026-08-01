@@ -27,6 +27,10 @@ export type SettingsState = {
   passcodeSalt: string;
   passcodeHash: string;
   remindEveryday: boolean;
+  /** Local hour 0–23 for daily remind. */
+  remindHour: number;
+  /** Local minute 0–59 for daily remind. */
+  remindMinute: number;
   /** Local debug log buffer (not sent anywhere). Default on. */
   recordLogs: boolean;
   /** Session-only: cleared on refresh. */
@@ -50,6 +54,7 @@ export type SettingsState = {
     hash: string;
   }) => Promise<void>;
   persistRemind: (enabled: boolean) => Promise<void>;
+  persistRemindTime: (hour: number, minute: number) => Promise<void>;
   persistRecordLogs: (enabled: boolean) => Promise<void>;
 };
 
@@ -67,6 +72,8 @@ const DEFAULTS = {
   passcodeSalt: "",
   passcodeHash: "",
   remindEveryday: false,
+  remindHour: 19,
+  remindMinute: 0,
   recordLogs: true,
 };
 
@@ -104,6 +111,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       passcodeSalt,
       passcodeHash,
       remindEveryday,
+      remindHour,
+      remindMinute,
       recordLogsStored,
       legacyCrashStats,
     ] = await Promise.all([
@@ -122,6 +131,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       readJson<string>("passcodeSalt", DEFAULTS.passcodeSalt),
       readJson<string>("passcodeHash", DEFAULTS.passcodeHash),
       readJson<boolean>("remindEveryday", DEFAULTS.remindEveryday),
+      readJson<number>("remindHour", DEFAULTS.remindHour).then((n) =>
+        Math.max(0, Math.min(23, Math.trunc(Number.isFinite(n) ? n : DEFAULTS.remindHour))),
+      ),
+      readJson<number>("remindMinute", DEFAULTS.remindMinute).then((n) =>
+        Math.max(0, Math.min(59, Math.trunc(Number.isFinite(n) ? n : DEFAULTS.remindMinute))),
+      ),
       readJson<boolean | null>("recordLogs", null),
       readJson<boolean | null>("crashStats", null),
     ]);
@@ -150,6 +165,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       passcodeSalt,
       passcodeHash,
       remindEveryday,
+      remindHour,
+      remindMinute,
       recordLogs,
       // Unlocked when passcode is off; otherwise wait for PIN.
       sessionUnlocked: !passcodeEnabled,
@@ -221,9 +238,31 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   persistRemind: async (remindEveryday) => {
     await writeJson("remindEveryday", remindEveryday);
+    const { remindHour, remindMinute } = get();
     set({ remindEveryday });
     const { syncNativeDailyRemind } = await import("@/lib/remind");
-    await syncNativeDailyRemind(remindEveryday);
+    await syncNativeDailyRemind({
+      enabled: remindEveryday,
+      hour: remindHour,
+      minute: remindMinute,
+    });
+  },
+
+  persistRemindTime: async (hour, minute) => {
+    const remindHour = Math.max(0, Math.min(23, Math.trunc(hour)));
+    const remindMinute = Math.max(0, Math.min(59, Math.trunc(minute)));
+    await Promise.all([
+      writeJson("remindHour", remindHour),
+      writeJson("remindMinute", remindMinute),
+    ]);
+    const remindEveryday = get().remindEveryday;
+    set({ remindHour, remindMinute });
+    const { syncNativeDailyRemind } = await import("@/lib/remind");
+    await syncNativeDailyRemind({
+      enabled: remindEveryday,
+      hour: remindHour,
+      minute: remindMinute,
+    });
   },
 
   persistRecordLogs: async (recordLogs) => {

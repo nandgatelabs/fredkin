@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Platform,
   Pressable,
@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ChoiceSheet } from "@/components/ChoiceSheet";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { TimePickerModal } from "@/components/DateTimePickers";
 import { InfoModal } from "@/components/InfoModal";
 import { PasscodeSetupModal } from "@/components/PasscodeSetupModal";
 import { PreferenceRow } from "@/components/PreferenceRow";
@@ -22,6 +23,7 @@ import { useKeydown } from "@/hooks/useKeydown";
 import { log } from "@/lib/logger";
 import {
   ensureRemindPermission,
+  formatRemindTime,
   openSystemNotificationSettings,
 } from "@/lib/remind";
 import { webClickable, webFocusableProps } from "@/lib/web";
@@ -87,11 +89,20 @@ export default function PreferencesScreen() {
   const storedUi = useSettingsStore((s) => s.uiMode);
   const passcodeEnabled = useSettingsStore((s) => s.passcodeEnabled);
   const remindEveryday = useSettingsStore((s) => s.remindEveryday);
+  const remindHour = useSettingsStore((s) => s.remindHour);
+  const remindMinute = useSettingsStore((s) => s.remindMinute);
   const recordLogs = useSettingsStore((s) => s.recordLogs);
   const persistAppearance = useSettingsStore((s) => s.persistAppearance);
   const persistPasscode = useSettingsStore((s) => s.persistPasscode);
   const persistRemind = useSettingsStore((s) => s.persistRemind);
+  const persistRemindTime = useSettingsStore((s) => s.persistRemindTime);
   const persistRecordLogs = useSettingsStore((s) => s.persistRecordLogs);
+  const [remindTimeOpen, setRemindTimeOpen] = useState(false);
+  const remindTimeValue = useMemo(() => {
+    const d = new Date();
+    d.setHours(remindHour, remindMinute, 0, 0);
+    return d;
+  }, [remindHour, remindMinute]);
 
   const [themeId, setThemeId] = useState<ThemeId>(storedTheme);
   const [uiMode, setUiMode] = useState<UiMode>(storedUi);
@@ -275,15 +286,26 @@ export default function PreferencesScreen() {
                 }
               }
               await persistRemind(v);
+              const when = formatRemindTime(remindHour, remindMinute);
               setStatus(
                 v
                   ? Platform.OS === "web"
-                    ? "Daily remind on (while this tab is open)"
-                    : "Daily remind on (around 7:00 PM local time)"
+                    ? `Daily remind on — fires at ${when} while this tab is open`
+                    : `Daily remind on — every day at ${when} (local time)`
                   : "Daily remind off",
               );
             })();
           }}
+        />
+        <PreferenceRow
+          label="Remind at"
+          description={
+            Platform.OS === "web"
+              ? "Local time. Web only notifies while this tab stays open."
+              : "Local time for the OS daily notification."
+          }
+          valueText={formatRemindTime(remindHour, remindMinute)}
+          onPress={() => setRemindTimeOpen(true)}
         />
         <PreferenceRow
           label="Notification settings"
@@ -410,6 +432,20 @@ export default function PreferencesScreen() {
           setDisablePasscode(false);
           void persistPasscode({ enabled: false, salt: "", hash: "" }).then(() =>
             setStatus("Passcode disabled"),
+          );
+        }}
+      />
+
+      <TimePickerModal
+        visible={remindTimeOpen}
+        value={remindTimeValue}
+        onCancel={() => setRemindTimeOpen(false)}
+        onConfirm={(next) => {
+          setRemindTimeOpen(false);
+          void persistRemindTime(next.getHours(), next.getMinutes()).then(() =>
+            setStatus(
+              `Remind time set to ${formatRemindTime(next.getHours(), next.getMinutes())}`,
+            ),
           );
         }}
       />
