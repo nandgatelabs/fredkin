@@ -6,8 +6,8 @@ import {
   type ViewStyle,
 } from "react-native";
 
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { webClickable, webFocusableProps } from "@/lib/web";
-import { colors } from "@/theme";
 
 type Variant = "primary" | "secondary" | "danger" | "ghost";
 
@@ -28,7 +28,26 @@ export function Button({
   busy,
   style,
 }: Props) {
+  const c = useThemeColors();
   const isDisabled = disabled || busy;
+
+  const variantStyle =
+    variant === "primary"
+      ? { backgroundColor: c.accent, borderColor: c.accent }
+      : variant === "secondary"
+        ? { backgroundColor: "transparent", borderColor: c.accent }
+        : variant === "danger"
+          ? { backgroundColor: c.dangerMuted, borderColor: c.danger }
+          : { backgroundColor: c.surfaceElevated, borderColor: c.border };
+
+  const labelColor =
+    variant === "primary"
+      ? c.onAccent
+      : variant === "secondary"
+        ? c.accent
+        : variant === "danger"
+          ? c.danger
+          : c.text;
 
   return (
     <Pressable
@@ -39,7 +58,7 @@ export function Button({
       {...webFocusableProps}
       style={({ pressed }) => [
         styles.base,
-        variantStyles[variant],
+        variantStyle,
         webClickable,
         pressed && !isDisabled && styles.pressed,
         isDisabled && styles.disabled,
@@ -47,12 +66,9 @@ export function Button({
       ]}
     >
       {busy ? (
-        <ActivityIndicator
-          color={variant === "primary" ? colors.onAccent : colors.accent}
-          size="small"
-        />
+        <ActivityIndicator color={labelColor} size="small" />
       ) : (
-        <Text style={[styles.label, labelStyles[variant]]}>{label}</Text>
+        <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
       )}
     </Pressable>
   );
@@ -80,30 +96,4 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 0.5,
   },
-});
-
-const variantStyles = StyleSheet.create({
-  primary: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
-  },
-  secondary: {
-    backgroundColor: "transparent",
-    borderColor: colors.accent,
-  },
-  danger: {
-    backgroundColor: colors.dangerMuted,
-    borderColor: colors.danger,
-  },
-  ghost: {
-    backgroundColor: colors.surfaceElevated,
-    borderColor: colors.border,
-  },
-});
-
-const labelStyles = StyleSheet.create({
-  primary: { color: colors.onAccent },
-  secondary: { color: colors.accent },
-  danger: { color: colors.danger },
-  ghost: { color: colors.text },
 });

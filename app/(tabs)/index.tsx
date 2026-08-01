@@ -14,6 +14,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { DisplayOptionsModal } from "@/components/DisplayOptionsModal";
 import { EmptyTab } from "@/components/EmptyTab";
 import { Fab } from "@/components/Fab";
+import { GlassAtmosphere } from "@/components/GlassAtmosphere";
 import { PeriodHeader } from "@/components/PeriodHeader";
 import { RecordDetailModal } from "@/components/RecordDetailModal";
 import { RecordRow } from "@/components/RecordRow";
@@ -80,6 +81,7 @@ export default function RecordsScreen() {
 
   return (
     <View style={styles.screen}>
+      <GlassAtmosphere />
       <AppHeader />
       <PeriodHeader
         expense={expense}

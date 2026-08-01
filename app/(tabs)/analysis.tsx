@@ -24,6 +24,7 @@ import { ActionMenu } from "@/components/ActionMenu";
 import { AppHeader } from "@/components/AppHeader";
 import { DisplayOptionsModal } from "@/components/DisplayOptionsModal";
 import { Fab } from "@/components/Fab";
+import { GlassAtmosphere } from "@/components/GlassAtmosphere";
 import { PeriodHeader } from "@/components/PeriodHeader";
 import {
   getAccountPeriodBreakdown,
@@ -158,6 +159,7 @@ export default function AnalysisScreen() {
 
   return (
     <View style={styles.screen}>
+      <GlassAtmosphere />
       <AppHeader />
       <PeriodHeader
         expense={expense}

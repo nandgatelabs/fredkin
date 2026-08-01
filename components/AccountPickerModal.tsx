@@ -12,9 +12,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { MoneyText } from "@/components/MoneyText";
 import type { AccountWithBalance } from "@/db/types";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { accountIcon } from "@/lib/icons";
 import { webClickable } from "@/lib/web";
-import { colors } from "@/theme";
 
 type Props = {
   visible: boolean;
@@ -34,6 +34,7 @@ export function AccountPickerModal({
   onSelect,
 }: Props) {
   const insets = useSafeAreaInsets();
+  const c = useThemeColors();
   const isWeb = Platform.OS === "web";
   const data = excludeId
     ? accounts.filter((a) => a.id !== excludeId)
@@ -43,14 +44,18 @@ export function AccountPickerModal({
     <View
       style={[
         isWeb ? styles.webCard : styles.screen,
+        {
+          backgroundColor: isWeb ? c.dialog : c.background,
+          borderColor: c.border,
+        },
         !isWeb && { paddingTop: insets.top + 12, paddingBottom: insets.bottom },
       ]}
     >
       <View style={styles.header}>
         <Pressable onPress={onClose} hitSlop={10} style={webClickable}>
-          <Ionicons name="close" size={24} color={colors.accent} />
+          <Ionicons name="close" size={24} color={c.accent} />
         </Pressable>
-        <Text style={styles.title}>Select a wallet</Text>
+        <Text style={[styles.title, { color: c.accent }]}>Select a wallet</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -63,17 +68,22 @@ export function AccountPickerModal({
           const selected = item.id === selectedId;
           return (
             <Pressable
-              style={[styles.row, selected && styles.rowSelected, webClickable]}
+              style={[
+                styles.row,
+                { borderBottomColor: c.border },
+                selected && { backgroundColor: c.background, borderRadius: 8 },
+                webClickable,
+              ]}
               onPress={() => onSelect(item)}
             >
-              <View style={styles.iconWrap}>
+              <View style={[styles.iconWrap, { backgroundColor: c.background }]}>
                 <Ionicons
                   name={accountIcon(item.icon_key)}
                   size={22}
-                  color={colors.accent}
+                  color={c.accent}
                 />
               </View>
-              <Text style={styles.name} numberOfLines={2}>
+              <Text style={[styles.name, { color: c.accent }]} numberOfLines={2}>
                 {item.name}
               </Text>
               <MoneyText amount={item.balance} />
@@ -81,7 +91,7 @@ export function AccountPickerModal({
           );
         }}
         ListEmptyComponent={
-          <Text style={styles.empty}>
+          <Text style={[styles.empty, { color: c.textSecondary }]}>
             No wallets available. Add one on the Wallets tab.
           </Text>
         }
@@ -110,7 +120,6 @@ export function AccountPickerModal({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   webRoot: {
     flex: 1,
@@ -127,10 +136,8 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 420,
     maxHeight: "80%",
-    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
     paddingTop: 14,
     overflow: "hidden",
   },
@@ -145,7 +152,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   title: {
-    color: colors.accent,
     fontSize: 17,
     fontWeight: "600",
   },
@@ -160,28 +166,20 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  rowSelected: {
-    backgroundColor: colors.background,
-    borderRadius: 8,
   },
   iconWrap: {
     width: 44,
     height: 44,
     borderRadius: 10,
-    backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
   },
   name: {
     flex: 1,
-    color: colors.accent,
     fontSize: 16,
     fontWeight: "500",
   },
   empty: {
-    color: colors.textSecondary,
     textAlign: "center",
     marginTop: 40,
     paddingHorizontal: 24,

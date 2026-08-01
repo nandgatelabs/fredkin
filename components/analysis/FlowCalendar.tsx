@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: 8,
-    backgroundColor: "rgba(232, 212, 138, 0.04)",
+    backgroundColor: colors.accentSoft,
   },
   monthTitle: {
     color: colors.accent,
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
     borderRightColor: colors.border,
   },
   weekendHeader: {
-    backgroundColor: "rgba(232, 212, 138, 0.08)",
+    backgroundColor: colors.accentSoft,
   },
   weekday: {
     color: colors.accent,
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.inputBg,
   },
   weekendCell: {
-    backgroundColor: "rgba(232, 212, 138, 0.04)",
+    backgroundColor: colors.accentSoft,
   },
   cellMuted: {
     opacity: 0.4,

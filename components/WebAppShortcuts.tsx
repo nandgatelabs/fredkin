@@ -4,13 +4,8 @@ import { usePathname, useRouter } from "expo-router";
 import { useKeydown } from "@/hooks/useKeydown";
 import { usePeriodStore } from "@/store/period";
 
-const TAB_ROUTES = [
-  "/",
-  "/analysis",
-  "/budgets",
-  "/accounts",
-  "/categories",
-] as const;
+/** 1–2 = bottom tabs; 3–4 = More pane destinations (still keyboard-reachable). */
+const TAB_ROUTES = ["/", "/analysis", "/accounts", "/categories"] as const;
 
 function shiftMonthIso(iso: string, delta: number) {
   const [y, m] = iso.split("-").map(Number);
@@ -22,7 +17,7 @@ function shiftMonthIso(iso: string, delta: number) {
 
 /**
  * Laptop keyboard shortcuts for main tabs (web only via useKeydown).
- * / search · n new record · ← → period · 1–5 tabs
+ * / search · n new record · ← → period · 1–4 tabs (Events, Insights, Wallets, Event Type)
  */
 export function WebAppShortcuts() {
   const router = useRouter();

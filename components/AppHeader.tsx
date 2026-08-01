@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 import { AppDrawer } from "@/components/AppDrawer";
+import { GlassSurface } from "@/components/GlassSurface";
 import { webClickable, webFocusableProps, webFontDisplay } from "@/lib/web";
 import { colors } from "@/theme";
 
@@ -18,7 +19,7 @@ export function AppHeader({ onMenuPress }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <View style={[styles.wrap, { paddingTop: insets.top + 8 }]}>
+    <GlassSurface style={[styles.wrap, { paddingTop: insets.top + 8 }]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Open menu"
@@ -57,18 +58,19 @@ export function AppHeader({ onMenuPress }: Props) {
       </Pressable>
 
       <AppDrawer visible={drawerOpen} onClose={() => setDrawerOpen(false)} />
-    </View>
+    </GlassSurface>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
-    backgroundColor: colors.background,
     paddingHorizontal: 12,
     paddingBottom: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
   },
   iconBtn: {
     width: 40,
@@ -78,7 +80,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   iconBtnActive: {
-    backgroundColor: "rgba(229, 211, 138, 0.12)",
+    backgroundColor: colors.accentSoft,
   },
   logo: {
     color: colors.accent,

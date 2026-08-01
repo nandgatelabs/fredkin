@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { webClickable } from "@/lib/web";
-import { colors } from "@/theme";
 
 type Props = {
   expression: string;
@@ -48,10 +48,21 @@ export function CalculatorKeypad({
   onEquals,
   onBackspace,
 }: Props) {
+  const c = useThemeColors();
+
   return (
     <View style={styles.wrap}>
-      <View style={styles.displayRow}>
-        <Text style={styles.display} numberOfLines={1} adjustsFontSizeToFit>
+      <View
+        style={[
+          styles.displayRow,
+          { backgroundColor: c.inputBg, borderColor: c.borderSubtle },
+        ]}
+      >
+        <Text
+          style={[styles.display, { color: c.text }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+        >
           {expression}
         </Text>
         <Pressable
@@ -59,13 +70,13 @@ export function CalculatorKeypad({
           hitSlop={8}
           style={[styles.backspace, webClickable]}
         >
-          <Ionicons name="backspace-outline" size={22} color={colors.accent} />
+          <Ionicons name="backspace-outline" size={22} color={c.accent} />
         </Pressable>
       </View>
 
-      <View style={styles.grid}>
+      <View style={[styles.grid, { borderColor: c.borderSubtle }]}>
         {KEYS.map((row, ri) => (
-          <View key={ri} style={styles.row}>
+          <View key={ri} style={[styles.row, { borderColor: c.borderSubtle }]}>
             {row.map((key) => {
               const isOp = key.kind === "op" || key.kind === "eq";
               const opValue =
@@ -76,15 +87,23 @@ export function CalculatorKeypad({
                     : key.label === "÷"
                       ? "÷"
                       : key.label;
+              const bg =
+                key.kind === "eq"
+                  ? c.accentPressed
+                  : isOp
+                    ? c.surfaceElevated
+                    : c.surface;
               return (
                 <Pressable
                   key={key.label}
                   style={({ pressed }) => [
                     styles.key,
-                    isOp && styles.keyOp,
-                    key.kind === "eq" && styles.keyEq,
+                    {
+                      backgroundColor: bg,
+                      borderColor: c.borderSubtle,
+                      opacity: pressed ? 0.75 : 1,
+                    },
                     webClickable,
-                    pressed && styles.keyPressed,
                   ]}
                   onPress={() => {
                     if (key.kind === "digit" || key.kind === "zero") onDigit(key.label);
@@ -93,7 +112,13 @@ export function CalculatorKeypad({
                     else onOperator(opValue === "+" ? "+" : opValue);
                   }}
                 >
-                  <Text style={[styles.keyLabel, isOp && styles.keyLabelOp]}>
+                  <Text
+                    style={[
+                      styles.keyLabel,
+                      { color: isOp ? c.accent : c.text },
+                      isOp && styles.keyLabelOp,
+                    ]}
+                  >
                     {key.label}
                   </Text>
                 </Pressable>
@@ -115,13 +140,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 14,
     paddingVertical: 12,
-    backgroundColor: colors.inputBg,
     borderTopWidth: 1,
-    borderColor: colors.borderSubtle,
   },
   display: {
     flex: 1,
-    color: colors.text,
     fontSize: 36,
     fontWeight: "300",
     textAlign: "right",
@@ -133,12 +155,10 @@ const styles = StyleSheet.create({
   },
   grid: {
     borderTopWidth: 1,
-    borderColor: colors.borderSubtle,
   },
   row: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderColor: colors.borderSubtle,
   },
   key: {
     flex: 1,
@@ -146,25 +166,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRightWidth: 1,
-    borderColor: colors.borderSubtle,
-    backgroundColor: colors.surface,
-  },
-  keyOp: {
-    backgroundColor: colors.surfaceElevated,
-  },
-  keyEq: {
-    backgroundColor: colors.accentPressed,
-  },
-  keyPressed: {
-    opacity: 0.75,
   },
   keyLabel: {
-    color: colors.text,
     fontSize: 22,
     fontWeight: "500",
   },
   keyLabelOp: {
-    color: colors.accent,
     fontWeight: "600",
   },
 });

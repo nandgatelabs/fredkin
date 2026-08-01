@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   },
   scopeOn: {
     borderColor: colors.accent,
-    backgroundColor: "rgba(232, 212, 138, 0.12)",
+    backgroundColor: colors.accentSoft,
   },
   scopeText: { color: colors.textSecondary, fontSize: 12, fontWeight: "600" },
   scopeTextOn: { color: colors.accent },

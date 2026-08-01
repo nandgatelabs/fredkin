@@ -3,8 +3,8 @@ import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useKeydown } from "@/hooks/useKeydown";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { webClickable, webFocusableProps } from "@/lib/web";
-import { colors } from "@/theme";
 import { layout } from "@/theme/layout";
 
 export type ChoiceOption<T extends string> = {
@@ -30,6 +30,8 @@ export function ChoiceSheet<T extends string>({
   onSelect,
   onClose,
 }: Props<T>) {
+  const c = useThemeColors();
+
   useKeydown(
     visible,
     useCallback(
@@ -45,9 +47,21 @@ export function ChoiceSheet<T extends string>({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
-          <Text style={styles.title}>{title}</Text>
+      <Pressable
+        style={[styles.backdrop, { backgroundColor: c.overlay }]}
+        onPress={onClose}
+      >
+        <Pressable
+          style={[
+            styles.card,
+            {
+              backgroundColor: c.dialog,
+              borderColor: c.border,
+            },
+          ]}
+          onPress={(e) => e.stopPropagation()}
+        >
+          <Text style={[styles.title, { color: c.accent }]}>{title}</Text>
           {options.map((opt) => {
             const on = opt.id === selected;
             return (
@@ -63,20 +77,27 @@ export function ChoiceSheet<T extends string>({
                 style={({ pressed }) => [
                   styles.option,
                   webClickable,
-                  on && styles.optionOn,
+                  on && { backgroundColor: c.accentSoft },
                   pressed && styles.pressed,
                 ]}
               >
                 <View style={styles.optionText}>
-                  <Text style={[styles.optionLabel, on && styles.optionLabelOn]}>
+                  <Text
+                    style={[
+                      styles.optionLabel,
+                      { color: on ? c.accent : c.text },
+                    ]}
+                  >
                     {opt.label}
                   </Text>
                   {opt.description ? (
-                    <Text style={styles.optionDesc}>{opt.description}</Text>
+                    <Text style={[styles.optionDesc, { color: c.textSecondary }]}>
+                      {opt.description}
+                    </Text>
                   ) : null}
                 </View>
                 {on ? (
-                  <Ionicons name="checkmark" size={20} color={colors.accent} />
+                  <Ionicons name="checkmark" size={20} color={c.accent} />
                 ) : null}
               </Pressable>
             );
@@ -90,15 +111,12 @@ export function ChoiceSheet<T extends string>({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: colors.overlay,
     justifyContent: "center",
     padding: 16,
   },
   card: {
-    backgroundColor: colors.surfaceElevated,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: 16,
     width: "100%",
     maxWidth: layout.dialogMaxWidth,
@@ -106,7 +124,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    color: colors.accent,
     fontSize: 16,
     fontWeight: "700",
     marginBottom: 8,
@@ -119,12 +136,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 10,
   },
-  optionOn: {
-    backgroundColor: "rgba(232, 212, 138, 0.1)",
-  },
   pressed: { opacity: 0.9 },
   optionText: { flex: 1, gap: 2 },
-  optionLabel: { color: colors.text, fontSize: 15, fontWeight: "600" },
-  optionLabelOn: { color: colors.accent },
-  optionDesc: { color: colors.textSecondary, fontSize: 12 },
+  optionLabel: { fontSize: 15, fontWeight: "600" },
+  optionDesc: { fontSize: 12 },
 });

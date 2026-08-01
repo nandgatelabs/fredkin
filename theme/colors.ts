@@ -2,6 +2,7 @@ import { Platform } from "react-native";
 import * as SQLite from "expo-sqlite";
 
 import {
+  normalizeThemeId,
   resolvePalette,
   type ColorTokens,
   type ThemeId,
@@ -12,12 +13,8 @@ const MIRROR_KEY = "money-money.themeMirror";
 
 type Mirror = { themeId: ThemeId; uiMode: UiMode };
 
-const THEME_IDS = new Set(["original", "midnight", "forest"]);
 const UI_MODES = new Set(["dark", "light"]);
 
-function parseThemeId(raw: unknown): ThemeId | null {
-  return typeof raw === "string" && THEME_IDS.has(raw) ? (raw as ThemeId) : null;
-}
 function parseUiMode(raw: unknown): UiMode | null {
   return typeof raw === "string" && UI_MODES.has(raw) ? (raw as UiMode) : null;
 }
@@ -26,10 +23,10 @@ function readMirrorWeb(): Mirror | null {
   try {
     const raw = window.localStorage.getItem(MIRROR_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as Mirror;
-    const themeId = parseThemeId(parsed?.themeId);
+    const parsed = JSON.parse(raw) as { themeId?: unknown; uiMode?: unknown };
+    const themeId = normalizeThemeId(parsed?.themeId);
     const uiMode = parseUiMode(parsed?.uiMode);
-    if (themeId && uiMode) return { themeId, uiMode };
+    if (uiMode) return { themeId, uiMode };
   } catch {
     /* ignore */
   }
@@ -49,7 +46,7 @@ function readMirrorNative(): Mirror | null {
       "uiMode",
     );
     const themeId = themeRow?.value
-      ? parseThemeId(JSON.parse(themeRow.value))
+      ? normalizeThemeId(JSON.parse(themeRow.value))
       : null;
     const uiMode = uiRow?.value ? parseUiMode(JSON.parse(uiRow.value)) : null;
     if (themeId && uiMode) return { themeId, uiMode };
@@ -61,15 +58,18 @@ function readMirrorNative(): Mirror | null {
 
 function readMirror(): Mirror {
   if (Platform.OS === "web") {
-    return readMirrorWeb() ?? { themeId: "original", uiMode: "dark" };
+    return readMirrorWeb() ?? { themeId: "slate", uiMode: "dark" };
   }
-  return readMirrorNative() ?? { themeId: "original", uiMode: "dark" };
+  return readMirrorNative() ?? { themeId: "slate", uiMode: "dark" };
 }
 
 function writeMirror(themeId: ThemeId, uiMode: UiMode) {
   if (Platform.OS === "web") {
     try {
-      window.localStorage.setItem(MIRROR_KEY, JSON.stringify({ themeId, uiMode }));
+      window.localStorage.setItem(
+        MIRROR_KEY,
+        JSON.stringify({ themeId: normalizeThemeId(themeId), uiMode }),
+      );
     } catch {
       /* ignore */
     }
@@ -82,7 +82,7 @@ const boot = readMirror();
 export const colors: ColorTokens = { ...resolvePalette(boot.themeId, boot.uiMode) };
 
 export function applyPalette(themeId: ThemeId, uiMode: UiMode) {
-  const next = resolvePalette(themeId, uiMode);
+  const next = resolvePalette(normalizeThemeId(themeId), uiMode);
   (Object.keys(next) as (keyof ColorTokens)[]).forEach((key) => {
     colors[key] = next[key];
   });
@@ -90,3 +90,4 @@ export function applyPalette(themeId: ThemeId, uiMode: UiMode) {
 }
 
 export type { ColorTokens, ThemeId, UiMode };
+export { normalizeThemeId } from "./palettes";

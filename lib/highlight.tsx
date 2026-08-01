@@ -48,7 +48,7 @@ function splitHighlight(text: string, query: string): { value: string; hit: bool
 
 const styles = StyleSheet.create({
   hit: {
-    backgroundColor: "rgba(232, 212, 138, 0.35)",
+    backgroundColor: colors.accentSoft,
     color: colors.text,
     fontWeight: "700",
   },

@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.borderSubtle,
   },
   itemPressed: {
-    backgroundColor: "rgba(232, 212, 138, 0.08)",
+    backgroundColor: colors.accentSoft,
   },
   itemLabel: {
     color: colors.accent,

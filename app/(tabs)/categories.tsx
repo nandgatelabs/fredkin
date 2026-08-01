@@ -15,6 +15,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { CategoryEditorModal } from "@/components/CategoryEditorModal";
 import { Fab } from "@/components/Fab";
 import { GhostButton } from "@/components/GhostButton";
+import { GlassAtmosphere } from "@/components/GlassAtmosphere";
 import { TotalsHeader } from "@/components/TotalsHeader";
 import { getLifetimeTotals } from "@/db/accounts";
 import {
@@ -76,6 +77,7 @@ export default function CategoriesScreen() {
 
   return (
     <View style={styles.screen}>
+      <GlassAtmosphere />
       <AppHeader />
       {totals ? <TotalsHeader totals={totals} /> : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}

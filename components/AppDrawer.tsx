@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { GlassSurface } from "@/components/GlassSurface";
 import { InfoModal } from "@/components/InfoModal";
 import { useKeydown } from "@/hooks/useKeydown";
 import { downloadTextFile } from "@/lib/download";
@@ -49,7 +50,13 @@ export function AppDrawer({ visible, onClose }: Props) {
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.root}>
         <Pressable style={styles.scrim} onPress={onClose} />
-        <View style={[styles.panel, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }]}>
+        <GlassSurface
+          elevated
+          style={[
+            styles.panel,
+            { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 },
+          ]}
+        >
           <Text style={styles.brand}>Fredkin</Text>
           <Text style={styles.sub}>Fredkin by NandGateLabs</Text>
           <Text style={styles.tag}>Offline ledger. Your device only.</Text>
@@ -109,7 +116,7 @@ export function AppDrawer({ visible, onClose }: Props) {
             message={status ?? ""}
             onClose={() => setStatus(null)}
           />
-        </View>
+        </GlassSurface>
       </View>
     </Modal>
   );
@@ -128,7 +135,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: 280,
     maxWidth: "82%",
-    backgroundColor: colors.surfaceElevated,
     borderRightWidth: 1,
     borderRightColor: colors.border,
     paddingHorizontal: 18,
@@ -161,7 +167,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   itemPressed: {
-    backgroundColor: "rgba(232, 212, 138, 0.1)",
+    backgroundColor: colors.accentSoft,
   },
   itemLabel: {
     color: colors.text,
