@@ -316,12 +316,12 @@ export default function PreferencesScreen() {
         <PreferenceRow
           label="Privacy"
           description="Local-only storage · no accounts · no cloud sync in v1"
-          onPress={() => router.push({ pathname: "/about-doc", params: { kind: "privacy" } })}
+          onPress={() => router.push("/about-doc?kind=privacy" as never)}
         />
         <PreferenceRow
           label="License"
           description="MIT — tap to read"
-          onPress={() => router.push({ pathname: "/about-doc", params: { kind: "license" } })}
+          onPress={() => router.push("/about-doc?kind=license" as never)}
         />
         <PreferenceRow
           label={`money-money : ${version}`}

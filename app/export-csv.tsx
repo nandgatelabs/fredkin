@@ -61,6 +61,7 @@ export default function ExportCsvScreen() {
         `Saved ${result.fileName}\nLocation: ${saved.locationLabel}\nRange: ${result.fromLabel} → ${result.toLabel}\n${result.accountOpenings} account opening balance${result.accountOpenings === 1 ? "" : "s"}, ${result.records} record${result.records === 1 ? "" : "s"}.`,
       );
     } catch (e) {
+      if (e instanceof Error && e.message === "cancelled") return;
       log.error("CSV export failed", e);
       setError(e instanceof Error ? e.message : "Export failed");
     } finally {

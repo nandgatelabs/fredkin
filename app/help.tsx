@@ -42,7 +42,7 @@ async function openUrl(url: string) {
   try {
     await Linking.openURL(url);
   } catch (e) {
-    log.warn("openURL failed", url, e);
+    log.warn("openURL failed", { url, e });
   }
 }
 
