@@ -170,10 +170,11 @@ export default function PreferencesScreen() {
     ),
   )
 
+  // Prefer expo config (synced from package.json). Fallback was stuck on pre-1.0 "0.1.0".
   const version =
     Constants.expoConfig?.version ??
     Constants.nativeAppVersion ??
-    "0.1.0";
+    "1.0.0";
 
   const themeLabel =
     THEME_OPTIONS.find((t) => t.id === themeId)?.label ?? "Original";
