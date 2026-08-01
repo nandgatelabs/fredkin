@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { PasscodeGate } from "@/components/PasscodeGate";
 import { getDb } from "@/db/client";
+import { log } from "@/lib/logger";
 import { maybeFireDailyRemind } from "@/lib/remind";
 import { useSettingsStore } from "@/store/settings";
 import { colors } from "@/theme";
@@ -27,12 +28,14 @@ export default function RootLayout() {
     (async () => {
       await getDb();
       await hydrate();
+      log.info("App boot complete");
       if (!cancelled) {
         setBootError(null);
         setDbReady(true);
       }
     })().catch((err) => {
       console.error("Failed to boot database", err);
+      log.error("App boot failed", err);
       if (!cancelled) {
         setBootError(err instanceof Error ? err.message : String(err));
         setDbReady(true);

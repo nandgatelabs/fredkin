@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 import * as SQLite from "expo-sqlite";
 
+import { log } from "@/lib/logger";
 import { CREATE_TABLES_SQL, SCHEMA_VERSION } from "./schema";
 import { seedDefaultsIfEmpty } from "./seed";
 
@@ -74,11 +75,14 @@ async function openAppDatabase(): Promise<SQLite.SQLiteDatabase> {
 export async function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (!dbPromise) {
     dbPromise = (async () => {
+      log.info("Opening database", { platform: Platform.OS });
       const db = await openAppDatabase();
       await migrate(db);
+      log.info("Database ready");
       return db;
     })().catch((err) => {
       // Allow a later retry after the user closes a conflicting tab / reloads.
+      log.error("Database open failed", err);
       dbPromise = null;
       throw err;
     });

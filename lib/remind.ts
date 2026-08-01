@@ -1,4 +1,6 @@
-import { Platform } from "react-native";
+import { Linking, Platform } from "react-native";
+
+import { log } from "@/lib/logger";
 
 const STORAGE_KEY = "money-money.lastRemindDate";
 
@@ -25,9 +27,13 @@ function writeLast(value: string) {
   }
 }
 
-/** Ask for notification permission (web). Returns whether permission is granted. */
+/** Ask for notification permission. Native daily remind is tracked separately (#23). */
 export async function ensureRemindPermission(): Promise<boolean> {
-  if (Platform.OS !== "web") return false;
+  if (Platform.OS !== "web") {
+    // Preference can still be stored; native notifications land with #23.
+    log.info("Remind permission: native deferred to system notifications work");
+    return true;
+  }
   if (typeof Notification === "undefined") return false;
   if (Notification.permission === "granted") return true;
   if (Notification.permission === "denied") return false;
@@ -35,7 +41,7 @@ export async function ensureRemindPermission(): Promise<boolean> {
   return result === "granted";
 }
 
-/** Fire at most one local reminder per calendar day while the app is open. */
+/** Fire at most one local reminder per calendar day while the app is open (web). */
 export function maybeFireDailyRemind(enabled: boolean) {
   if (!enabled || Platform.OS !== "web") return;
   if (typeof Notification === "undefined") return;
@@ -48,15 +54,21 @@ export function maybeFireDailyRemind(enabled: boolean) {
       tag: "money-money-daily-remind",
     });
     writeLast(today);
-  } catch {
-    /* ignore blocked notifications */
+    log.info("Daily remind notification fired");
+  } catch (e) {
+    log.warn("Daily remind failed", e);
   }
 }
 
 export function openSystemNotificationSettings() {
-  if (Platform.OS !== "web") return;
-  // Avoid window.alert — it can fight focus with React Native Web modals.
-  console.info(
-    "[money-money] Manage notification permission in the browser’s site settings for this origin.",
-  );
+  if (Platform.OS === "web") {
+    log.info("Opened web notification settings hint");
+    console.info(
+      "[money-money] Manage notification permission in the browser’s site settings for this origin.",
+    );
+    return;
+  }
+  void Linking.openSettings().catch((e) => {
+    log.warn("openSettings failed", e);
+  });
 }

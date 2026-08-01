@@ -17,6 +17,7 @@ import { CalculatorKeypad } from "@/components/CalculatorKeypad";
 import { CategoryEditorModal } from "@/components/CategoryEditorModal";
 import { CategoryPickerModal } from "@/components/CategoryPickerModal";
 import { DatePickerModal, TimePickerModal } from "@/components/DateTimePickers";
+import { InfoModal } from "@/components/InfoModal";
 import { listAccounts } from "@/db/accounts";
 import { createCategory, listCategories } from "@/db/categories";
 import { createRecord, getRecord, updateRecord } from "@/db/records";
@@ -38,6 +39,7 @@ import {
   toIsoLocal,
 } from "@/lib/datetime";
 import { accountIcon, categoryColor, categoryIcon } from "@/lib/icons";
+import { log } from "@/lib/logger";
 import { webClickable } from "@/lib/web";
 import { colors } from "@/theme";
 
@@ -177,8 +179,13 @@ export default function NewRecordScreen() {
       };
       if (editId) await updateRecord(editId, payload);
       else await createRecord(payload);
+      log.info(editId ? "Record updated" : "Record created", {
+        type,
+        amount,
+      });
       router.back();
     } catch (e) {
+      log.error("Record save failed", e);
       setError(e instanceof Error ? e.message : "Save failed");
       setBusy(false);
     }
@@ -426,8 +433,6 @@ export default function NewRecordScreen() {
             multiline
           />
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-
           <View style={styles.keypadBlock}>
             <CalculatorKeypad
               expression={expression}
@@ -515,6 +520,13 @@ export default function NewRecordScreen() {
           setTimeOpen(false);
         }}
       />
+
+      <InfoModal
+        visible={error != null}
+        title="Add record"
+        message={error ?? ""}
+        onClose={() => setError(null)}
+      />
     </View>
   );
 
@@ -561,7 +573,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   webBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0, 0, 0, 0.55)",
   },
   /** Wider rectangle for laptop/web — not a tall phone sheet. */
