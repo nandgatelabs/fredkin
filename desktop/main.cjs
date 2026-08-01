@@ -1,5 +1,5 @@
 /**
- * Electron shell for money-money.
+ * Electron shell for Fredkin.
  *
  * Serves the Expo static web export (../dist) over loopback HTTP with the
  * COOP/COEP headers expo-sqlite (OPFS) needs. file:// is intentionally avoided.
@@ -16,6 +16,8 @@ const COEP = "credentialless";
 const COOP = "same-origin";
 /** Stable origin: http://127.0.0.1:47821 — override with DESKTOP_PORT */
 const APP_PORT = Number(process.env.DESKTOP_PORT || 47821);
+const PROFILE = "Fredkin";
+const LEGACY_PROFILE = "money-money";
 
 // Optional on headless / broken GPU hosts: DESKTOP_NO_GPU=1 npm run desktop:dev
 if (process.env.DESKTOP_NO_GPU === "1") {
@@ -23,8 +25,16 @@ if (process.env.DESKTOP_NO_GPU === "1") {
 }
 
 // Same profile for `desktop:dev` and packaged builds → data survives both.
-app.setName("money-money");
-app.setPath("userData", path.join(app.getPath("appData"), "money-money"));
+// One-time: reuse legacy money-money profile if Fredkin profile is absent.
+app.setName("Fredkin");
+{
+  const appData = app.getPath("appData");
+  const nextPath = path.join(appData, PROFILE);
+  const legacyPath = path.join(appData, LEGACY_PROFILE);
+  const profilePath =
+    !fs.existsSync(nextPath) && fs.existsSync(legacyPath) ? legacyPath : nextPath;
+  app.setPath("userData", profilePath);
+}
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -106,7 +116,7 @@ function createStaticServer(root) {
     const file = tryCandidates(root, req.url || "/");
     if (!file) {
       res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-      res.end("money-money desktop: dist not found or incomplete. Run npm run web:export");
+      res.end("Fredkin desktop: dist not found or incomplete. Run npm run web:export");
       return;
     }
 
@@ -142,7 +152,7 @@ async function createWindow(port) {
     minWidth: 800,
     minHeight: 560,
     backgroundColor: "#2C2B27",
-    title: "money-money",
+    title: "Fredkin",
     autoHideMenuBar: true,
     webPreferences: {
       contextIsolation: true,
@@ -177,7 +187,7 @@ if (!gotLock) {
       const root = distDir();
       if (!fs.existsSync(path.join(root, "index.html"))) {
         dialog.showErrorBox(
-          "money-money desktop",
+          "Fredkin desktop",
           `Missing web export at:\n${root}\n\nFrom the repo root run:\n  npm run web:export\n  npm run desktop:dev`
         );
         app.quit();
@@ -189,9 +199,9 @@ if (!gotLock) {
         await listen(server, APP_PORT);
       } catch (err) {
         dialog.showErrorBox(
-          "money-money desktop",
+          "Fredkin desktop",
           `Could not bind 127.0.0.1:${APP_PORT}.\n` +
-            `Another process may be using it (or an old money-money window).\n\n${err}`
+            `Another process may be using it (or an old Fredkin window).\n\n${err}`
         );
         app.quit();
         return;
@@ -210,7 +220,7 @@ if (!gotLock) {
       });
     })
     .catch((err) => {
-      dialog.showErrorBox("money-money desktop", String(err?.stack || err));
+      dialog.showErrorBox("Fredkin desktop", String(err?.stack || err));
       app.quit();
     });
 }

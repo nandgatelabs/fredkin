@@ -44,7 +44,7 @@ function push(level: LogLevel, msg: string, data?: unknown) {
   entries.push(entry);
   if (entries.length > MAX) entries.splice(0, entries.length - MAX);
 
-  const line = `[money-money] ${entry.level.toUpperCase()} ${entry.msg}${
+  const line = `[Fredkin] ${entry.level.toUpperCase()} ${entry.msg}${
     entry.data ? ` ${entry.data}` : ""
   }`;
   if (level === "error") console.error(line);

@@ -8,7 +8,7 @@ import { log } from "@/lib/logger";
 import { webClickable, webFocusableProps } from "@/lib/web";
 import { colors } from "@/theme";
 
-const REPO = "https://github.com/nandgatelabs/money-money";
+const REPO = "https://github.com/nandgatelabs/fredkin";
 
 const LINKS: { label: string; description: string; url: string }[] = [
   {
@@ -33,7 +33,7 @@ const LINKS: { label: string; description: string; url: string }[] = [
   },
   {
     label: "Source code",
-    description: "nandgatelabs/money-money on GitHub",
+    description: "nandgatelabs/fredkin on GitHub",
     url: REPO,
   },
 ];

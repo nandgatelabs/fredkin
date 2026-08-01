@@ -2,8 +2,6 @@
 
 **Fredkin by NandGateLabs** — offline-first personal finance app. Local SQLite storage, CSV export, and JSON backups — no account, no cloud, no paywall.
 
-> Repo / package paths may still say `money-money` until a later rename.
-
 > **v1.0.0** baseline shipped. Prefer **web** for day-to-day runs; Ubuntu desktop install below. See [`CHANGELOG.md`](CHANGELOG.md) and [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Quick start (web — recommended)
@@ -17,7 +15,7 @@ Opens in Chrome/Edge at `http://localhost:8081`. Full runbook (Android caveats, 
 
 ## Ubuntu desktop (offline install)
 
-Install **money-money** into your app grid (no sudo). Data persists in `~/.config/money-money`.
+Install **Fredkin** into your app grid (no sudo). Data persists in `~/.config/Fredkin`.
 
 ```bash
 npm install
@@ -25,7 +23,7 @@ npm run desktop:install        # once — Electron tooling
 npm run desktop:install-user   # pack + install launcher
 ```
 
-Then open **money-money** from the app grid, or run `money-money` in a terminal.
+Then open **Fredkin** from the app grid, or run `fredkin` in a terminal.
 
 **Update later** (after `git pull`):
 
@@ -64,7 +62,7 @@ Download the `.apk` from the Expo build page and install on your phone. Full ste
 | [`SECURITY.md`](SECURITY.md) | Vulnerability reporting |
 | [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) | Community standards |
 
-Repo: [nandgatelabs/money-money](https://github.com/nandgatelabs/money-money)
+Repo: [nandgatelabs/fredkin](https://github.com/nandgatelabs/fredkin)
 
 ## Development
 

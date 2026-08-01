@@ -1,6 +1,6 @@
 # Security Policy
 
-money-money is an offline personal finance app. Treat ledger data, backups, and exports as sensitive.
+Fredkin is an offline personal finance app. Treat ledger data, backups, and exports as sensitive.
 
 ## Supported versions
 

@@ -1,9 +1,9 @@
-# money-money desktop (Electron)
+# Fredkin desktop (Electron)
 
 Offline desktop shell around the Expo **web** export (Linux, Windows, macOS).
 
 - Serves `../dist` at **`http://127.0.0.1:47821`** with COOP/COEP
-- Profile / DB under Electron `userData` → app folder **`money-money`**
+- Profile / DB under Electron `userData` → app folder **`Fredkin`**
 - Packaged builds share that same profile with `npm run desktop:dev`
 
 ## One-time setup
@@ -21,7 +21,7 @@ npm run desktop:install
 npm run desktop:install-user
 ```
 
-Copies `release/linux-unpacked` → `~/.local/share/money-money/` (no FUSE / AppImage required).
+Copies `release/linux-unpacked` → `~/.local/share/fredkin/` (no FUSE / AppImage required).
 
 Update after pulling new code: run the same command again.
 

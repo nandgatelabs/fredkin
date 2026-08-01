@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/nandgatelabs/money-money/blob/main/SECURITY.md
+    url: https://github.com/nandgatelabs/fredkin/blob/main/SECURITY.md
     about: Do not file public issues for security — follow SECURITY.md
   - name: Contributing guide
-    url: https://github.com/nandgatelabs/money-money/blob/main/CONTRIBUTING.md
+    url: https://github.com/nandgatelabs/fredkin/blob/main/CONTRIBUTING.md
     about: Branch, commit, and PR workflow

@@ -35,7 +35,7 @@ export async function createBackupPayload(): Promise<MoneyBackup> {
 export function backupFileName() {
   const now = new Date();
   const pad = (n: number) => n.toString().padStart(2, "0");
-  return `money-money-backup_${pad(now.getDate())}_${pad(now.getMonth() + 1)}_${String(now.getFullYear()).slice(-2)}_${pad(now.getHours())}${pad(now.getMinutes())}.mbak`;
+  return `fredkin-backup_${pad(now.getDate())}_${pad(now.getMonth() + 1)}_${String(now.getFullYear()).slice(-2)}_${pad(now.getHours())}${pad(now.getMinutes())}.mbak`;
 }
 
 export async function restoreBackupPayload(payload: MoneyBackup): Promise<void> {

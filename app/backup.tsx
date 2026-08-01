@@ -106,7 +106,7 @@ export default function BackupScreen() {
 
   async function prepareRestore(text: string, name: string) {
     const parsed = JSON.parse(text) as MoneyBackup;
-    if (parsed.version !== 1) throw new Error("Not a money-money v1 backup");
+    if (parsed.version !== 1) throw new Error("Not a Fredkin v1 backup");
     setPendingRestore(parsed);
     setMessage(`Ready to restore ${name}`);
   }

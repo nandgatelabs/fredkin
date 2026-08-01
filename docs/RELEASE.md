@@ -1,6 +1,6 @@
 # Releases
 
-How to cut a **money-money** release (maintainer).
+How to cut a **Fredkin** release (maintainer).
 
 ## Checklist
 
@@ -32,16 +32,16 @@ How to cut a **money-money** release (maintainer).
    # Linux (this machine / Ubuntu CI)
    npm run desktop:pack:linux
    gh release upload "vX.Y.Z" \
-     desktop/release/money-money-*.AppImage \
-     desktop/release/money-money-desktop_*_amd64.deb
+     desktop/release/Fredkin-*.AppImage \
+     desktop/release/fredkin*_amd64.deb
 
    # Windows (build on Windows host)
    npm run desktop:pack:win
-   gh release upload "vX.Y.Z" desktop/release/money-money-*-win-*.*
+   gh release upload "vX.Y.Z" desktop/release/Fredkin-*-win-*.*
 
    # macOS (build on a Mac)
    npm run desktop:pack:mac
-   gh release upload "vX.Y.Z" desktop/release/money-money-*-mac-*.*
+   gh release upload "vX.Y.Z" desktop/release/Fredkin-*-mac-*.*
    ```
 
    Release notes should mention:
@@ -64,8 +64,8 @@ gh release create v1.0.0 --title "v1.0.0" --notes-file /tmp/mm-notes.md
 
 npm run desktop:pack:linux
 gh release upload v1.0.0 \
-  desktop/release/money-money-*.AppImage \
-  desktop/release/money-money-desktop_*_amd64.deb
+  desktop/release/Fredkin-*.AppImage \
+  desktop/release/fredkin*_amd64.deb
 ```
 
 Do **not** create the tag/release from a feature branch — only from merged `main`.

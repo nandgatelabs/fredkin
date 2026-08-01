@@ -1,11 +1,16 @@
 # Changelog
 
-All notable changes to **money-money** are documented in this file.
+All notable changes to **Fredkin** are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/) — see [`docs/VERSIONING.md`](docs/VERSIONING.md).
 
 ## [Unreleased]
+
+### Changed
+
+- Product / repo rebrand to **Fredkin** ([nandgatelabs/fredkin](https://github.com/nandgatelabs/fredkin)): UI chrome, npm/desktop package names, Expo slug/scheme, Android package `labs.nandgatelabs.fredkin`, export folder and CSV/`.mbak` filenames
+- SQLite file remains `money-money.db` so existing local ledgers keep working
 
 ### Fixed
 
@@ -39,7 +44,7 @@ First public **v1** baseline: offline personal finance on web and Ubuntu desktop
 - Analysis: overview, flow, calendar, account bars
 - Budgets by category; preferences (themes, UI mode, passcode, daily remind on web)
 - Account and category detail screens
-- Ubuntu desktop shell (Electron): `npm run desktop:install-user` installs into the app grid with persistent local data (`~/.config/money-money`)
+- Ubuntu desktop shell (Electron): `npm run desktop:install-user` installs into the app grid with persistent local data (`~/.config/Fredkin`)
 - Project docs: HLD, BLUEPRINT, DEVELOPMENT, DESKTOP; MIT license and community files
 
 ### Notes
@@ -47,5 +52,5 @@ First public **v1** baseline: offline personal finance on web and Ubuntu desktop
 - Public web hosting and store/mobile packaging are out of scope for 1.0.0 (see roadmap).
 - Deferred polish tracked as GitHub issues (#16, #19–#23, and older deferred bugs).
 
-[Unreleased]: https://github.com/nandgatelabs/money-money/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/nandgatelabs/money-money/releases/tag/v1.0.0
+[Unreleased]: https://github.com/nandgatelabs/fredkin/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/nandgatelabs/fredkin/releases/tag/v1.0.0

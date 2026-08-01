@@ -47,11 +47,11 @@ No Android Studio required. Builds run in Expo’s cloud (**EAS**). Config lives
 2. From the repo:
 
 ```bash
-cd ~/dev/money-money
+cd ~/dev/fredkin
 npx eas-cli@latest login
 ```
 
-Project is already linked (`@shivamruts-team/money-money`). The Expo **slug** must stay `money-money` (same as `app.json`).
+Project is already linked (`@shivamruts-team/fredkin`). The Expo **slug** must stay `fredkin` (same as `app.json`).
 
 Do **not** need a global `npm install -g eas-cli` — `npx eas-cli@latest` is enough.
 
@@ -72,7 +72,7 @@ npx eas-cli@latest build -p android --profile preview
 1. Copy the APK to the device (download link, USB, Drive, etc.).
 2. Allow **Install unknown apps** for the browser/file manager if prompted.
 3. Open the APK and install.
-4. Launch **money-money**. Data stays on-device (SQLite).
+4. Launch **Fredkin**. Data stays on-device (SQLite).
 
 After pulling new native-related or JS fixes, **rebuild** the preview APK — an old install will not pick up `main` until you install a new build.
 
@@ -92,7 +92,7 @@ Preview APK packaging is done. For a store-shaped Android App Bundle:
 npx eas-cli@latest build -p android --profile production
 ```
 
-Then create a Play Console app with package `labs.nandgatelabs.moneymoney` and either upload the AAB manually or:
+Then create a Play Console app with package `labs.nandgatelabs.fredkin` and either upload the AAB manually or:
 
 ```bash
 npx eas-cli@latest submit -p android --profile production
@@ -104,11 +104,11 @@ Verify on a device: offline SQLite, backup/export/share, daily remind permission
 
 | Symptom | What to do |
 |---------|------------|
-| Slug mismatch (`shivamrut` vs `money-money`) | On expo.dev, use/create a project whose slug is **`money-money`**, matching `app.json`. |
+| Slug mismatch (`shivamrut` vs `fredkin`) | On expo.dev, use/create a project whose slug is **`fredkin`**, matching `app.json`. |
 | `eas` login / not logged in | `npx eas-cli@latest login` |
 | Global `npm i -g eas-cli` hangs | Cancel; use `npx eas-cli@latest …` only |
 | Tab bar under system buttons | Fixed on recent `main` — rebuild APK |
-| Export “saved” but file missing | Fixed on recent `main` — rebuild; files go under a `money-money` folder + Share sheet |
+| Export “saved” but file missing | Fixed on recent `main` — rebuild; files go under a `fredkin` folder + Share sheet |
 
 ## Android (Expo Go — optional)
 
@@ -148,7 +148,7 @@ Requires an **Apple Developer** account. Config stubs live in `app.json` (`ios.i
 
 ```json
 "ios": {
-  "bundleIdentifier": "labs.nandgatelabs.moneymoney",
+  "bundleIdentifier": "labs.nandgatelabs.fredkin",
   "icon": "./assets/expo.icon"
 }
 ```
@@ -158,7 +158,7 @@ npx eas-cli@latest build -p ios --profile preview
 # or production → TestFlight / App Store via eas submit
 ```
 
-Prerequisites: Apple team membership, provisioning via EAS credentials prompts, macOS not required for cloud builds. On device, confirm offline SQLite, Share-based export/backup, and notification permission for daily remind. Custom save folders are limited on iOS (app Documents / `money-money`).
+Prerequisites: Apple team membership, provisioning via EAS credentials prompts, macOS not required for cloud builds. On device, confirm offline SQLite, Share-based export/backup, and notification permission for daily remind. Custom save folders are limited on iOS (app Documents / `fredkin`).
 
 ## Web hosting (COOP/COEP static deploy)
 

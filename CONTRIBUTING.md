@@ -1,6 +1,6 @@
 # Contributing
 
-Canonical remote: [nandgatelabs/money-money](https://github.com/nandgatelabs/money-money)
+Canonical remote: [nandgatelabs/fredkin](https://github.com/nandgatelabs/fredkin)
 
 Owner org: **nandgatelabs**. Use **GitHub CLI (`gh`)** for branches, PRs, and merges. Do not push straight to `main` for normal work.
 

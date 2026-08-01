@@ -127,7 +127,7 @@ export default function ImportCsvScreen() {
       <Text style={styles.body}>
         Load a worksheet export with columns TIME, TYPE, AMOUNT, CATEGORY,
         ACCOUNT, NOTES. Missing wallets and event types are created automatically.
-        Rows typed `(#) Opening` restore each account’s initial balance (money-money
+        Rows typed `(#) Opening` restore each account’s initial balance (Fredkin
         extension).
       </Text>
 
