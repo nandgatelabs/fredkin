@@ -7,9 +7,24 @@ Versioning follows [Semantic Versioning](https://semver.org/) — see [`docs/VER
 
 ## [Unreleased]
 
+### Fixed
+
+- Expense/income flow line chart point selection on web; keep selected days when the series is sampled
+- Flow calendar renders every month in 3/6/yearly ranges
+- Decimal places capped at 0–4; All Accounts balance uses consistent money formatting
+
+### Added
+
+- CSV export From/To date range (defaults to this month; All time available)
+- Backup restore list of `.mbak` files in the save folder; web Save As dialog when no folder is chosen
+- Drawer Help / Feedback; Preferences Privacy and MIT License screens
+- Native daily remind via `expo-notifications` (≈7 PM local)
+- Electron pack targets for Windows (NSIS/portable) and macOS (dmg/zip)
+- Docs: web hosting COOP/COEP recipe, iOS EAS notes, release artifact upload steps
+
 ### Planned
 
-- See [`docs/ROADMAP.md`](docs/ROADMAP.md) and open GitHub issues.
+- See [`docs/ROADMAP.md`](docs/ROADMAP.md); GitHub Release tag/upload runs from `main` after merge.
 
 ## [1.0.0] — 2026-08-01
 
