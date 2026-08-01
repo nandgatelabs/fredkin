@@ -68,6 +68,12 @@ function longLabel(isoDay: string) {
   return `${months[m - 1]} ${d}, ${y}`;
 }
 
+/** Sqrt scale so small daily totals stay visible when one day dominates. */
+function visualRatio(amount: number, max: number) {
+  if (max <= 0 || amount <= 0) return 0;
+  return Math.sqrt(amount / max);
+}
+
 export function FlowLineChart({
   days,
   rangeStart,
@@ -81,47 +87,33 @@ export function FlowLineChart({
   const [width, setWidth] = useState(340);
   const hitRef = useRef<ViewType | null>(null);
 
+  // Every calendar day in the analysis period — no sampling, so chart ↔ calendar map 1:1.
   const series = useMemo(() => {
     const map = new Map(days.map((d) => [d.day, d.amount]));
-    const all: string[] = [];
+    const out: { day: string; amount: number }[] = [];
     const cur = new Date(rangeStart);
     const end = new Date(rangeEnd);
     cur.setHours(0, 0, 0, 0);
     end.setHours(0, 0, 0, 0);
     while (cur <= end) {
-      all.push(dayKey(cur));
+      const day = dayKey(cur);
+      out.push({ day, amount: map.get(day) ?? 0 });
       cur.setDate(cur.getDate() + 1);
     }
-    const step = all.length > 93 ? Math.ceil(all.length / 60) : 1;
-    const out: { day: string; amount: number }[] = [];
-    for (let i = 0; i < all.length; i += step) {
-      const day = all[i];
-      out.push({ day, amount: map.get(day) ?? 0 });
-    }
-    if (all.length && out[out.length - 1]?.day !== all[all.length - 1]) {
-      const day = all[all.length - 1];
-      out.push({ day, amount: map.get(day) ?? 0 });
-    }
-    // Keep calendar selection visible when that day was skipped by sampling
-    if (selectedDay && !out.some((s) => s.day === selectedDay) && map.has(selectedDay)) {
-      out.push({ day: selectedDay, amount: map.get(selectedDay) ?? 0 });
-      out.sort((a, b) => a.day.localeCompare(b.day));
-    }
     return out;
-  }, [days, rangeEnd, rangeStart, selectedDay]);
+  }, [days, rangeEnd, rangeStart]);
 
   const max = Math.max(...series.map((s) => s.amount), 1);
   const padL = 12;
   const padR = 12;
   const padT = 16;
-  const padB = 8;
   const plotH = height - 56;
   const plotW = Math.max(40, width - padL - padR);
 
   const coords = series.map((s, i) => {
     const x =
       padL + (series.length <= 1 ? plotW / 2 : (i / (series.length - 1)) * plotW);
-    const y = padT + plotH - (s.amount / max) * plotH;
+    const y = padT + plotH - visualRatio(s.amount, max) * plotH;
     return { ...s, x, y };
   });
 
@@ -157,7 +149,8 @@ export function FlowLineChart({
     onSelectDay?.(selectedDay === best.day ? null : best.day);
   }
 
-  const yTicks = [max, (max * 2) / 3, max / 3, 0];
+  // Tick labels stay in real money space (not sqrt); positions use the same visual curve.
+  const yTickAmounts = [max, max * 0.5, max * 0.2, 0];
 
   return (
     <View style={styles.wrap}>
@@ -175,7 +168,7 @@ export function FlowLineChart({
 
       <View style={styles.chartRow}>
         <View style={[styles.yAxis, { height: height - 36 }]}>
-          {yTicks.map((v, i) => (
+          {yTickAmounts.map((v, i) => (
             <Text key={i} style={[styles.yTick, { color: stroke }]} numberOfLines={1}>
               {tone === "expense" ? "−" : "+"}
               {formatMoney(v, { sign: "never" })}
@@ -206,8 +199,8 @@ export function FlowLineChart({
               </LinearGradient>
             </Defs>
 
-            {yTicks.map((_, i) => {
-              const y = padT + (plotH * i) / (yTicks.length - 1);
+            {yTickAmounts.map((amt, i) => {
+              const y = padT + plotH - visualRatio(amt, max) * plotH;
               return (
                 <Line
                   key={i}
@@ -216,8 +209,8 @@ export function FlowLineChart({
                   x2={padL + plotW}
                   y2={y}
                   stroke={colors.borderSubtle}
-                  strokeWidth={i === yTicks.length - 1 ? 1.5 : 1}
-                  strokeDasharray={i === yTicks.length - 1 ? undefined : "4 6"}
+                  strokeWidth={i === yTickAmounts.length - 1 ? 1.5 : 1}
+                  strokeDasharray={i === yTickAmounts.length - 1 ? undefined : "4 6"}
                 />
               );
             })}
@@ -229,23 +222,22 @@ export function FlowLineChart({
                   d={linePath}
                   fill="none"
                   stroke={stroke}
-                  strokeWidth={2.5}
+                  strokeWidth={2}
                   strokeLinejoin="round"
                   strokeLinecap="round"
                 />
                 {coords.map((s) => {
+                  if (s.amount <= 0 && selectedDay !== s.day) return null;
                   const active = selectedDay === s.day;
-                  const hasValue = s.amount > 0;
                   return (
                     <Circle
                       key={s.day}
                       cx={s.x}
                       cy={s.y}
-                      r={active ? 7 : hasValue ? 4.5 : 3}
-                      fill={active || hasValue ? stroke : colors.surfaceElevated}
+                      r={active ? 7 : s.amount > 0 ? 3.5 : 3}
+                      fill={active || s.amount > 0 ? stroke : colors.surfaceElevated}
                       stroke={active ? colors.text : colors.background}
-                      strokeWidth={active ? 2.5 : 1.5}
-                      opacity={hasValue || active ? 1 : 0.45}
+                      strokeWidth={active ? 2.5 : 1.2}
                     />
                   );
                 })}

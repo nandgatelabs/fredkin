@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { DayTotal } from "@/db/analysis";
@@ -13,6 +13,8 @@ type Props = {
   tone: "expense" | "income";
   selectedDay?: string | null;
   onSelectDay?: (day: string | null) => void;
+  /** Y offset of the selected day’s month inside this component (for parent scroll). */
+  onSelectedMonthLayout?: (y: number) => void;
 };
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -47,7 +49,8 @@ function heatStyle(amount: number, max: number, tone: "expense" | "income") {
   if (amount <= 0 || max <= 0) {
     return { backgroundColor: colors.surface };
   }
-  const t = Math.min(1, amount / max);
+  // Match chart: soft sqrt heat so mid-range days still tint
+  const t = Math.min(1, Math.sqrt(amount / max));
   if (tone === "expense") {
     const a = 0.1 + t * 0.45;
     return { backgroundColor: `rgba(232, 154, 132, ${a})` };
@@ -84,6 +87,7 @@ type MonthGridProps = {
   amountColor: string;
   selectedDay: string | null;
   onSelectDay?: (day: string | null) => void;
+  onLayoutY?: (y: number) => void;
 };
 
 function MonthGrid({
@@ -97,6 +101,7 @@ function MonthGrid({
   amountColor,
   selectedDay,
   onSelectDay,
+  onLayoutY,
 }: MonthGridProps) {
   const first = new Date(year, month, 1);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -134,8 +139,17 @@ function MonthGrid({
     });
   }
 
+  const isSelectedMonth =
+    selectedDay != null &&
+    selectedDay.startsWith(
+      `${year}-${String(month + 1).padStart(2, "0")}`,
+    );
+
   return (
-    <View style={styles.monthBlock}>
+    <View
+      style={[styles.monthBlock, isSelectedMonth && styles.monthBlockActive]}
+      onLayout={(e) => onLayoutY?.(e.nativeEvent.layout.y)}
+    >
       <Text style={styles.monthTitle}>
         {MONTH_NAMES[month]} {year}
       </Text>
@@ -200,7 +214,7 @@ function MonthGrid({
   );
 }
 
-/** Month grid(s) covering the full analysis range (3/6/yearly included). */
+/** Month grid(s) covering the full analysis range; scrolls to the selected day. */
 export function FlowCalendar({
   rangeStart,
   rangeEnd,
@@ -208,6 +222,7 @@ export function FlowCalendar({
   tone,
   selectedDay = null,
   onSelectDay,
+  onSelectedMonthLayout,
 }: Props) {
   const amountColor = tone === "expense" ? colors.expense : colors.income;
   const map = useMemo(() => new Map(days.map((d) => [d.day, d.amount])), [days]);
@@ -217,6 +232,15 @@ export function FlowCalendar({
     [rangeStart, rangeEnd],
   );
   const selectedAmount = selectedDay ? (map.get(selectedDay) ?? 0) : null;
+  const monthY = useRef<Record<string, number>>({});
+
+  useEffect(() => {
+    if (!selectedDay || !onSelectedMonthLayout) return;
+    const key = selectedDay.slice(0, 7); // YYYY-MM
+    const y = monthY.current[key];
+    if (y == null) return;
+    onSelectedMonthLayout(y);
+  }, [onSelectedMonthLayout, selectedDay]);
 
   return (
     <View style={styles.wrap}>
@@ -230,21 +254,27 @@ export function FlowCalendar({
         </View>
       ) : null}
 
-      {months.map(({ y, m }) => (
-        <MonthGrid
-          key={`${y}-${m}`}
-          year={y}
-          month={m}
-          rangeStart={rangeStart}
-          rangeEnd={rangeEnd}
-          map={map}
-          max={max}
-          tone={tone}
-          amountColor={amountColor}
-          selectedDay={selectedDay}
-          onSelectDay={onSelectDay}
-        />
-      ))}
+      {months.map(({ y, m }) => {
+        const key = `${y}-${String(m + 1).padStart(2, "0")}`;
+        return (
+          <MonthGrid
+            key={key}
+            year={y}
+            month={m}
+            rangeStart={rangeStart}
+            rangeEnd={rangeEnd}
+            map={map}
+            max={max}
+            tone={tone}
+            amountColor={amountColor}
+            selectedDay={selectedDay}
+            onSelectDay={onSelectDay}
+            onLayoutY={(layoutY) => {
+              monthY.current[key] = layoutY;
+            }}
+          />
+        );
+      })}
     </View>
   );
 }
@@ -257,6 +287,13 @@ const styles = StyleSheet.create({
   },
   monthBlock: {
     gap: 10,
+  },
+  monthBlockActive: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 8,
+    backgroundColor: "rgba(232, 212, 138, 0.04)",
   },
   monthTitle: {
     color: colors.accent,
