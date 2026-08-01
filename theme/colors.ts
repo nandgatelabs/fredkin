@@ -58,9 +58,9 @@ function readMirrorNative(): Mirror | null {
 
 function readMirror(): Mirror {
   if (Platform.OS === "web") {
-    return readMirrorWeb() ?? { themeId: "slate", uiMode: "dark" };
+    return readMirrorWeb() ?? { themeId: "glassMist", uiMode: "dark" };
   }
-  return readMirrorNative() ?? { themeId: "slate", uiMode: "dark" };
+  return readMirrorNative() ?? { themeId: "glassMist", uiMode: "dark" };
 }
 
 function writeMirror(themeId: ThemeId, uiMode: UiMode) {

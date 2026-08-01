@@ -1,5 +1,13 @@
-import { useCallback, useEffect } from "react";
-import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import {
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -12,8 +20,11 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { GlassSurface } from "@/components/GlassSurface";
+import { InfoModal } from "@/components/InfoModal";
 import { useKeydown } from "@/hooks/useKeydown";
-import { webClickable, webFocusableProps } from "@/lib/web";
+import { downloadTextFile } from "@/lib/download";
+import { getLogText, log } from "@/lib/logger";
+import { webClickable, webFocusableProps, webFontDisplay } from "@/lib/web";
 import { colors } from "@/theme";
 
 type Props = {
@@ -21,12 +32,14 @@ type Props = {
   onClose: () => void;
 };
 
-const ITEMS: {
+type NavItem = {
   label: string;
-  description: string;
+  description?: string;
   icon: keyof typeof Ionicons.glyphMap;
-  href: "/accounts" | "/categories";
-}[] = [
+  href: string;
+};
+
+const MANAGE: NavItem[] = [
   {
     label: "Wallets",
     description: "Balances and accounts",
@@ -41,6 +54,13 @@ const ITEMS: {
   },
 ];
 
+const APP: NavItem[] = [
+  { label: "Settings", icon: "settings-outline", href: "/preferences" },
+  { label: "Data", icon: "folder-outline", href: "/data" },
+  { label: "Support", icon: "help-circle-outline", href: "/help" },
+  { label: "Reset", icon: "trash-outline", href: "/reset" },
+];
+
 const PANEL_W = 280;
 const DISMISS_X = 80;
 
@@ -49,6 +69,7 @@ export function MorePane({ visible, onClose }: Props) {
   const insets = useSafeAreaInsets();
   const translateX = useSharedValue(PANEL_W);
   const backdrop = useSharedValue(0);
+  const [logStatus, setLogStatus] = useState<string | null>(null);
 
   const close = useCallback(() => {
     onClose();
@@ -108,6 +129,11 @@ export function MorePane({ visible, onClose }: Props) {
     opacity: backdrop.value,
   }));
 
+  function go(href: string) {
+    close();
+    router.push(href as never);
+  }
+
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={dismissAnimated}>
       <View style={styles.root}>
@@ -126,48 +152,111 @@ export function MorePane({ visible, onClose }: Props) {
               style={[
                 styles.panel,
                 {
-                  paddingTop: insets.top + 16,
+                  paddingTop: Math.max(insets.top, 8) + 8,
                   paddingBottom: insets.bottom + 16,
                 },
               ]}
             >
-              <View style={styles.handleRow}>
-                <View style={styles.handle} />
-              </View>
-              <Text style={styles.title}>More</Text>
-              <Text style={styles.sub}>Manage wallets and event types</Text>
-              <View style={styles.list}>
-                {ITEMS.map((item, index) => (
-                  <Pressable
+              <Text style={styles.brand}>Fredkin</Text>
+              <Text style={styles.tagline}>Fredkin by NandGateLabs</Text>
+              <Text style={styles.sub}>Offline ledger. Your device only.</Text>
+
+              <ScrollView
+                style={styles.scroll}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+              >
+                <Text style={styles.section}>Manage</Text>
+                {MANAGE.map((item) => (
+                  <MoreRow
                     key={item.href}
-                    accessibilityRole="button"
-                    accessibilityLabel={item.label}
-                    accessibilityHint={`Item ${index + 1} of ${ITEMS.length}`}
-                    onPress={() => {
-                      close();
-                      router.push(item.href as never);
-                    }}
-                    {...webFocusableProps}
-                    style={({ pressed }) => [
-                      styles.item,
-                      webClickable,
-                      pressed && styles.itemPressed,
-                    ]}
-                  >
-                    <Ionicons name={item.icon} size={20} color={colors.accent} />
-                    <View style={styles.itemText}>
-                      <Text style={styles.itemLabel}>{item.label}</Text>
-                      <Text style={styles.itemDesc}>{item.description}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
-                  </Pressable>
+                    item={item}
+                    onPress={() => go(item.href)}
+                  />
                 ))}
-              </View>
+
+                <Text style={[styles.section, styles.sectionSpaced]}>App</Text>
+                {APP.map((item) => (
+                  <MoreRow
+                    key={item.href}
+                    item={item}
+                    onPress={() => go(item.href)}
+                  />
+                ))}
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Export Logs"
+                  onPress={() => {
+                    void (async () => {
+                      try {
+                        const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+                        const name = `fredkin-logs_${stamp}.txt`;
+                        const saved = await downloadTextFile(
+                          name,
+                          getLogText(),
+                          "text/plain",
+                        );
+                        log.info("Logs exported", saved.locationLabel);
+                        setLogStatus(`Logs saved:\n${saved.locationLabel}`);
+                      } catch (e) {
+                        log.error("Log export failed", e);
+                        setLogStatus(
+                          e instanceof Error ? e.message : "Log export failed",
+                        );
+                      }
+                    })();
+                  }}
+                  {...webFocusableProps}
+                  style={({ pressed }) => [
+                    styles.item,
+                    webClickable,
+                    pressed && styles.itemPressed,
+                  ]}
+                >
+                  <Ionicons name="bug-outline" size={20} color={colors.accent} />
+                  <View style={styles.itemText}>
+                    <Text style={styles.itemLabel}>Export Logs</Text>
+                  </View>
+                </Pressable>
+              </ScrollView>
+
+              <InfoModal
+                visible={logStatus != null}
+                title="Export Logs"
+                message={logStatus ?? ""}
+                onClose={() => setLogStatus(null)}
+              />
             </GlassSurface>
           </Animated.View>
         </GestureDetector>
       </View>
     </Modal>
+  );
+}
+
+function MoreRow({ item, onPress }: { item: NavItem; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={item.label}
+      onPress={onPress}
+      {...webFocusableProps}
+      style={({ pressed }) => [
+        styles.item,
+        webClickable,
+        pressed && styles.itemPressed,
+      ]}
+    >
+      <Ionicons name={item.icon} size={20} color={colors.accent} />
+      <View style={styles.itemText}>
+        <Text style={styles.itemLabel}>{item.label}</Text>
+        {item.description ? (
+          <Text style={styles.itemDesc}>{item.description}</Text>
+        ) : null}
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+    </Pressable>
   );
 }
 
@@ -193,33 +282,43 @@ const styles = StyleSheet.create({
     borderLeftColor: colors.border,
     paddingHorizontal: 18,
   },
-  handleRow: {
-    alignItems: "flex-start",
-    marginBottom: 12,
-  },
-  handle: {
-    width: 4,
-    height: 36,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-  },
-  title: {
+  brand: {
     color: colors.accent,
-    fontSize: 20,
-    fontWeight: "700",
+    fontSize: 24,
+    fontWeight: "600",
+    fontStyle: "italic",
+    fontFamily: webFontDisplay,
+  },
+  tagline: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    marginTop: 4,
   },
   sub: {
     color: colors.textSecondary,
     fontSize: 12,
-    marginTop: 4,
+    marginTop: 2,
     marginBottom: 16,
   },
-  list: { gap: 6 },
+  scroll: { flex: 1 },
+  scrollContent: { paddingBottom: 8 },
+  section: {
+    color: colors.accentMuted,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    marginBottom: 4,
+    marginLeft: 10,
+  },
+  sectionSpaced: {
+    marginTop: 16,
+  },
   item: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    paddingVertical: 14,
+    paddingVertical: 12,
     paddingHorizontal: 10,
     borderRadius: 10,
   },

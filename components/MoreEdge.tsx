@@ -7,7 +7,15 @@ import { MorePane } from "@/components/MorePane";
 import { webClickable, webFocusableProps } from "@/lib/web";
 import { colors } from "@/theme";
 
-const MORE_PATHS = ["/accounts", "/categories", "/budgets"];
+const MORE_PATHS = [
+  "/accounts",
+  "/categories",
+  "/budgets",
+  "/preferences",
+  "/data",
+  "/help",
+  "/reset",
+];
 
 /**
  * Right-edge vertical tab (edge-panel pattern) that opens the More drawer.

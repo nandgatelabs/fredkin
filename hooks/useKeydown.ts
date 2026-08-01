@@ -8,11 +8,17 @@ type Handler = (event: KeyboardEvent) => void;
 type Options = {
   /** Skip handler while focus is in an input/textarea (default false). */
   ignoreWhenTyping?: boolean;
+  /**
+   * Use capture phase so Escape still reaches the handler while an input is focused
+   * (RN Web TextInput often stops bubble propagation).
+   */
+  capture?: boolean;
 };
 
 /** Web-only window keydown listener. No-op on native. */
 export function useKeydown(enabled: boolean, handler: Handler, options?: Options) {
   const ignoreWhenTyping = options?.ignoreWhenTyping ?? false;
+  const capture = options?.capture ?? false;
 
   useEffect(() => {
     if (!enabled || Platform.OS !== "web") return;
@@ -22,7 +28,7 @@ export function useKeydown(enabled: boolean, handler: Handler, options?: Options
       handler(event);
     };
 
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [enabled, handler, ignoreWhenTyping]);
+    window.addEventListener("keydown", onKeyDown, capture);
+    return () => window.removeEventListener("keydown", onKeyDown, capture);
+  }, [enabled, handler, ignoreWhenTyping, capture]);
 }

@@ -33,18 +33,23 @@ export default function SearchScreen() {
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<RecordListItem | null>(null);
 
+  const leaveSearch = useCallback(() => {
+    if (selected) setSelected(null);
+    else router.back();
+  }, [router, selected]);
+
   useKeydown(
     true,
     useCallback(
       (event) => {
         if (event.key === "Escape") {
           event.preventDefault();
-          if (selected) setSelected(null);
-          else router.back();
+          leaveSearch();
         }
       },
-      [router, selected],
+      [leaveSearch],
     ),
+    { capture: true },
   );
 
   useEffect(() => {
@@ -78,19 +83,26 @@ export default function SearchScreen() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 8 }]}>
       <View style={styles.searchRow}>
-        <Ionicons name="search" size={18} color={colors.accentMuted} />
-        <TextInput
-          autoFocus
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search for events"
-          placeholderTextColor={colors.accentMuted}
-          style={styles.input}
-          returnKeyType="search"
-          autoCorrect={false}
-          autoCapitalize="none"
-          accessibilityLabel="Search events"
-        />
+        <View style={styles.pill}>
+          <Ionicons name="search" size={18} color={colors.textSecondary} />
+          <TextInput
+            autoFocus
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search events"
+            placeholderTextColor={colors.textSecondary}
+            style={styles.input}
+            returnKeyType="search"
+            autoCorrect={false}
+            autoCapitalize="none"
+            accessibilityLabel="Search events"
+            onKeyPress={(e) => {
+              if (e.nativeEvent.key === "Escape") {
+                leaveSearch();
+              }
+            }}
+          />
+        </View>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Cancel search"
@@ -168,20 +180,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: colors.inputBg,
     marginBottom: 12,
+  },
+  pill: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    minHeight: 42,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: colors.accent,
+    backgroundColor: colors.inputBg,
   },
   input: {
     flex: 1,
     color: colors.text,
     fontSize: 16,
-    padding: 0,
-  },
+    paddingVertical: 8,
+    paddingHorizontal: 0,
+    outlineStyle: "none",
+  } as never,
   cancel: {
     color: colors.accent,
     fontSize: 14,

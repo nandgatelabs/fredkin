@@ -8,7 +8,6 @@ import {
   View,
 } from "react-native";
 import { useRouter } from "expo-router";
-import Constants from "expo-constants";
 import { reloadAppAsync } from "expo";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -20,6 +19,7 @@ import { PasscodeSetupModal } from "@/components/PasscodeSetupModal";
 import { PreferenceRow } from "@/components/PreferenceRow";
 import { SaveLocationPanel } from "@/components/SaveLocationPanel";
 import { useKeydown } from "@/hooks/useKeydown";
+import { APP_VERSION } from "@/lib/appVersion";
 import { log } from "@/lib/logger";
 import {
   ensureRemindPermission,
@@ -170,14 +170,8 @@ export default function PreferencesScreen() {
     ),
   )
 
-  // Prefer expo config (synced from package.json). Fallback was stuck on pre-1.0 "0.1.0".
-  const version =
-    Constants.expoConfig?.version ??
-    Constants.nativeAppVersion ??
-    "1.0.0";
-
   const themeLabel =
-    THEME_OPTIONS.find((t) => t.id === themeId)?.label ?? "Slate";
+    THEME_OPTIONS.find((t) => t.id === themeId)?.label ?? "Glass Mist";
   const uiLabel =
     UI_MODE_OPTIONS.find((t) => t.id === uiMode)?.label ?? "Dark";
   const currencyLabel =
@@ -347,7 +341,7 @@ export default function PreferencesScreen() {
           onPress={() => router.push("/about-doc?kind=license" as never)}
         />
         <PreferenceRow
-          label={`Fredkin : ${version}`}
+          label={`Fredkin : ${APP_VERSION}`}
           description="Fredkin by NandGateLabs · offline personal finance"
         />
 
