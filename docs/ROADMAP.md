@@ -29,7 +29,7 @@ Living plan after **v1.0.0**. Priorities change when a maintainer schedules work
 |-------|--------|
 | Windows desktop shell | [#28](https://github.com/nandgatelabs/money-money/issues/28) |
 | macOS desktop shell | [#29](https://github.com/nandgatelabs/money-money/issues/29) |
-| Android EAS / store packaging | [#30](https://github.com/nandgatelabs/money-money/issues/30) |
+| Android Play Store / production AAB | [#30](https://github.com/nandgatelabs/money-money/issues/30) — preview APK via EAS already documented in [`DEVELOPMENT.md`](./DEVELOPMENT.md) |
 | iOS EAS / store packaging (optional) | [#31](https://github.com/nandgatelabs/money-money/issues/31) |
 | Public web hosting (COOP/COEP) | [#32](https://github.com/nandgatelabs/money-money/issues/32) |
 | Web save-location picker | [#16](https://github.com/nandgatelabs/money-money/issues/16) |

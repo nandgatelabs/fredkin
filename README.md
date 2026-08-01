@@ -34,6 +34,17 @@ npm run desktop:install-user
 
 Full detail (`.deb`, AppImage/FUSE notes, persistence): [`docs/DESKTOP.md`](docs/DESKTOP.md).
 
+## Android APK (device test)
+
+Cloud build via EAS (no Android Studio):
+
+```bash
+npx eas-cli@latest login          # once
+npx eas-cli@latest build -p android --profile preview
+```
+
+Download the `.apk` from the Expo build page and install on your phone. Full steps and troubleshooting: [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
+
 ## Docs
 
 | Doc | Description |
