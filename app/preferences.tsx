@@ -308,10 +308,13 @@ export default function PreferencesScreen() {
         />
         <PreferenceRow
           label="Privacy"
-          description="All ledger data stays on this device. MIT licensed."
-          onPress={() =>
-            setStatus("Privacy: local-only storage · no accounts · no cloud sync in v1")
-          }
+          description="Local-only storage · no accounts · no cloud sync in v1"
+          onPress={() => router.push({ pathname: "/about-doc", params: { kind: "privacy" } })}
+        />
+        <PreferenceRow
+          label="License"
+          description="MIT — tap to read"
+          onPress={() => router.push({ pathname: "/about-doc", params: { kind: "license" } })}
         />
         <PreferenceRow
           label={`money-money : ${version}`}

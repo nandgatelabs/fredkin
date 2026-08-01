@@ -25,6 +25,7 @@ const ITEMS: {
   { label: "Export CSV", icon: "download-outline", href: "/export-csv" },
   { label: "Import CSV", icon: "cloud-upload-outline", href: "/import-csv" },
   { label: "Backup & Restore", icon: "archive-outline", href: "/backup" },
+  { label: "Help / Feedback", icon: "help-circle-outline", href: "/help" },
   { label: "Delete & Reset", icon: "trash-outline", href: "/reset" },
 ];
 
