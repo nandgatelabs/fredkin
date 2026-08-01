@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Platform, StyleSheet, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -78,7 +78,15 @@ export default function RootLayout() {
         <Stack.Screen name="category/[id]" options={{ animation: "slide_from_right" }} />
         <Stack.Screen
           name="record/new"
-          options={{ presentation: "modal", animation: "slide_from_bottom" }}
+          options={{
+            // Web: overlay dialog (transparent). Native: full-screen sheet.
+            presentation: Platform.OS === "web" ? "transparentModal" : "modal",
+            animation: Platform.OS === "web" ? "fade" : "slide_from_bottom",
+            contentStyle:
+              Platform.OS === "web"
+                ? { backgroundColor: "transparent" }
+                : { backgroundColor: colors.background },
+          }}
         />
       </Stack>
 

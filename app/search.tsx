@@ -2,6 +2,7 @@ import { useCallback, useDeferredValue, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -108,7 +109,9 @@ export default function SearchScreen() {
           <Text style={styles.hint}>
             Search records by notes, category name or account name
           </Text>
-          <Text style={styles.kbdHint}>Esc close · type to search</Text>
+          {Platform.OS === "web" ? (
+            <Text style={styles.kbdHint}>Esc close · type to search</Text>
+          ) : null}
         </View>
       ) : loading && results.length === 0 ? (
         <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />

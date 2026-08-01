@@ -46,7 +46,7 @@ export default function AccountDetailsScreen() {
   const shiftPeriod = usePeriodStore((s) => s.shiftPeriod);
   const viewMode = useSettingsStore((s) => s.viewMode);
 
-  const [scope, setScope] = useState<Scope>("period");
+  const [scope, setScope] = useState<Scope>("all");
   const [account, setAccount] = useState<Account | null>(null);
   const [balance, setBalance] = useState(0);
   const [stats, setStats] = useState<AccountPeriodStats | null>(null);

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -101,7 +102,9 @@ export function CategoryEditorModal({
           <Text style={styles.title}>
             {mode === "edit" ? "Edit category" : "Add new category"}
           </Text>
-          <Text style={styles.hint}>Esc cancel · Enter save</Text>
+          {Platform.OS === "web" ? (
+            <Text style={styles.hint}>Esc cancel · Enter save</Text>
+          ) : null}
 
           {mode === "create" ? (
             <View style={styles.typeRow}>

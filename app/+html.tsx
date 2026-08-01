@@ -31,13 +31,20 @@ export default function Root({ children }: PropsWithChildren) {
 const WEB_STYLE = `
 html, body, #root {
   height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
   margin: 0;
+  overflow: hidden;
   background: #24231F;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 body {
   font-family: "Source Sans 3", "Segoe UI", sans-serif;
+}
+#root, #root > div {
+  height: 100%;
+  max-height: 100%;
 }
 input, textarea, button {
   font-family: inherit;
