@@ -1,6 +1,8 @@
-# money-money
+# Fredkin
 
-Offline-first personal finance app. Local SQLite storage, CSV export, and JSON backups — no account, no cloud, no paywall.
+**Fredkin by NandGateLabs** — offline-first personal finance app. Local SQLite storage, CSV export, and JSON backups — no account, no cloud, no paywall.
+
+> Repo / package paths may still say `money-money` until a later rename.
 
 > **v1.0.0** baseline shipped. Prefer **web** for day-to-day runs; Ubuntu desktop install below. See [`CHANGELOG.md`](CHANGELOG.md) and [`docs/ROADMAP.md`](docs/ROADMAP.md).
 

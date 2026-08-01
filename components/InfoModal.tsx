@@ -17,7 +17,7 @@ type Props = {
 /** Single-button alert dialog for status / validation messages. */
 export function InfoModal({
   visible,
-  title = "money-money",
+  title = "Fredkin",
   message,
   confirmLabel = "OK",
   onClose,

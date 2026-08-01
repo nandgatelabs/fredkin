@@ -60,7 +60,7 @@ export function PasscodeGate({ onUnlocked }: Props) {
         { paddingTop: insets.top + 40, paddingBottom: insets.bottom + 24 },
       ]}
     >
-      <Text style={styles.brand}>money-money</Text>
+      <Text style={styles.brand}>Fredkin</Text>
       <Text style={styles.title}>Enter passcode</Text>
       <Text style={styles.hint}>Unlock to open your local ledger</Text>
 

@@ -9,7 +9,7 @@ import { colors } from "@/theme";
 
 const PRIVACY = `Privacy
 
-money-money is offline-first. Your ledger (accounts, categories, records, budgets, settings, passcode hash) stays on this device in local SQLite / OPFS storage.
+Fredkin by NandGateLabs is offline-first. Your ledger (wallets, event types, events, budgets, settings, passcode hash) stays on this device in local SQLite / OPFS storage.
 
 • No accounts or cloud sync in v1
 • No analytics or crash telemetry by default

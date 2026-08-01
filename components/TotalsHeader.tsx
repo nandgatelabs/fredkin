@@ -15,7 +15,7 @@ export function TotalsHeader({ totals }: Props) {
   return (
     <View style={styles.wrap}>
       <Text style={styles.all}>
-        [ All Accounts{" "}
+        [ All Wallets{" "}
         <Text style={{ color: balanceTone }}>
           {formatMoney(totals.allAccountsBalance, { sign: "auto" })}
         </Text>{" "}
@@ -23,7 +23,7 @@ export function TotalsHeader({ totals }: Props) {
       </Text>
       <View style={styles.row}>
         <View style={styles.col}>
-          <Text style={styles.label}>EXPENSE SO FAR</Text>
+          <Text style={styles.label}>SPEND SO FAR</Text>
           <MoneyText amount={-Math.abs(totals.expenseSoFar)} />
         </View>
         <View style={styles.col}>

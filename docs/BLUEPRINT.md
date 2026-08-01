@@ -1,6 +1,7 @@
-# money-money — Feature Blueprint
+# Fredkin — Feature Blueprint
 
 > Screen-by-screen product spec for v1.  
+> Product: **Fredkin by NandGateLabs**. Repo paths may still say `money-money`.  
 > Architecture & delivery: [`HLD.md`](./HLD.md).  
 > Agents: treat this as the UI/behavior checklist.
 
@@ -12,13 +13,15 @@ Offline personal finance ledger: dark charcoal UI, cream-gold accents, ₹ forma
 
 | Surface | Role |
 |---------|------|
-| 5 tabs | Records · Analysis · Budgets · Accounts · Categories |
+| 4 tabs | Events · Insights · Wallets · Event Type (Budgets unlinked from nav) |
 | Shell | Hamburger drawer, search, FAB `+` |
-| Record types | Expense · Income · Transfer |
-| Analysis | Donut overview, flow line + calendar, account bars |
-| Management | Preferences, CSV export, `.mbak` backup/restore, delete/reset |
+| Event types | Spend · Income · Transfer |
+| Insights | Donut by type, timeline + calendar, wallet bars |
+| Management | Settings, Data (Export / Import / Backup / Restore), Support, Reset |
 
 All features unlocked — including multi-month and yearly period views, themes, passcode, and full icons.
+
+SQLite / CSV on-disk TYPE strings stay `expense` / `income` for compatibility; UI shows **Spend** / **Income**.
 
 ---
 
@@ -26,28 +29,30 @@ All features unlocked — including multi-month and yearly period views, themes,
 
 Persistent chrome on main tabs:
 
-- **Top bar:** hamburger · wordmark · search
-- **Bottom nav:** 5 tabs (active = gold highlight)
-- **FAB:** dark circle, gold `+` → add record
+- **Top bar:** hamburger · **Fredkin** wordmark · search
+- **Bottom nav:** 4 tabs (active = gold highlight)
+- **FAB:** dark circle, gold `+` → add event
 
 ### Drawer
 
 | Item | Destination |
 |------|-------------|
-| Preferences | Settings screen |
-| Export records | Date-range CSV export |
-| Backup & Restore | `.mbak` backup/restore/directory |
-| Delete & Reset | Wipe options |
-| Help / Feedback | Optional for OSS |
+| Settings | Preferences screen (title: Settings) |
+| Data | Hub → Export, Import, Backup, Restore |
+| Support | Help / feedback links |
+| Reset | Wipe options |
+| Export Logs | Local debug log file |
+
+Attribution line: **Fredkin by NandGateLabs**.
 
 ---
 
-## 2. Records (home ledger)
+## 2. Events (home ledger)
 
 ### Period & summary
 
 - Chevrons navigate period; filter icon opens **Display options**.
-- Summary: **EXPENSE** (coral) · **INCOME** (green) · **TOTAL** (signed color).
+- Summary: **SPEND** (coral) · **INCOME** (green) · **NET** (signed color).
 
 ### Display options
 
@@ -115,25 +120,25 @@ Bills, Clothing, Education, Electronics, Entertainment, Food, Health, Home, Loan
 
 ---
 
-## 5. Analysis
+## 5. Insights
 
-Same period header + EXPENSE/INCOME/TOTAL as Records.
+Same period header + SPEND/INCOME/NET as Events.
 
 Mode dropdown:
 
 | Mode | UI |
 |------|-----|
-| Expense Overview | Donut + legend + category rows (amount, % bar, %) |
-| Income Overview | Same, green amounts |
-| Expense Flow | Line chart by day + calendar cells with day totals |
-| Income Flow | Green line + calendar income overlays |
-| Account Analysis | Grouped bars (Expense vs Income per account) + period chips |
+| Expense by type | Donut + legend + event-type rows (amount, % bar, %) |
+| Income by type | Same, green amounts |
+| Expense timeline | Line chart by day + calendar cells with day totals |
+| Income timeline | Green line + calendar income overlays |
+| Wallet breakdown | Grouped bars (Spend vs Income per wallet) + period chips |
 
-FAB still opens add-record.
+FAB still opens add-event.
 
 ---
 
-## 6. Budgets
+## 6. Budgets (hidden from nav; code retained)
 
 - Month selector; **TOTAL BUDGET** (gold) + **TOTAL SPENT** (coral).
 - **Budgeted categories:** card — Limit / Spent / Remaining, progress bar, period tag, `⋯` menu.
@@ -144,9 +149,9 @@ FAB still opens add-record.
 
 ---
 
-## 7. Accounts
+## 7. Wallets
 
-- Header: `[ All Accounts ₹… ]` + **EXPENSE SO FAR** / **INCOME SO FAR**.
+- Header: `[ All Wallets ₹… ]` + **SPEND SO FAR** / **INCOME SO FAR**.
 - Card (gold border): illustrative icon · name · `Balance:` (signed color) · `⋯`.
 - **+ ADD NEW ACCOUNT** ghost button at list end (and FAB still available).
 - Balance = opening + income − expense ± transfers.
@@ -211,7 +216,7 @@ Refs: `private/new/category-details-expense.jpeg`, `private/new/category-details
 
 ---
 
-## 9. Preferences
+## 9. Settings (Preferences route)
 
 | Section | Settings |
 |---------|----------|

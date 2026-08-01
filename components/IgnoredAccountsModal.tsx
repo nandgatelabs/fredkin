@@ -80,13 +80,13 @@ export function IgnoredAccountsModal({ visible, onClose, onChanged }: Props) {
         <Pressable style={styles.backdrop} onPress={onClose}>
           <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
             <View style={styles.header}>
-              <Text style={styles.title}>Ignored accounts</Text>
+              <Text style={styles.title}>Ignored wallets</Text>
               <Pressable onPress={onClose} hitSlop={10} style={webClickable}>
                 <Ionicons name="close" size={22} color={colors.accent} />
               </Pressable>
             </View>
             <Text style={styles.hint}>
-              Restore an account to show it again on the Accounts tab. Edit or delete
+              Restore a wallet to show it again on the Wallets tab. Edit or delete
               permanently from here.
             </Text>
 
@@ -95,7 +95,7 @@ export function IgnoredAccountsModal({ visible, onClose, onChanged }: Props) {
             {loading && accounts.length === 0 ? (
               <ActivityIndicator color={colors.accent} style={{ marginVertical: 24 }} />
             ) : accounts.length === 0 ? (
-              <Text style={styles.empty}>No ignored accounts</Text>
+              <Text style={styles.empty}>No ignored wallets</Text>
             ) : (
               <FlatList
                 data={accounts}
@@ -200,11 +200,11 @@ export function IgnoredAccountsModal({ visible, onClose, onChanged }: Props) {
 
       <ConfirmModal
         visible={deleteTarget != null}
-        title="Delete account?"
+        title="Delete wallet?"
         message={
           deleteTarget
             ? deleteTarget.related > 0
-              ? `Delete “${deleteTarget.account.name}”? All ${deleteTarget.related} related record${deleteTarget.related === 1 ? "" : "s"} (including transfers) will be deleted as well. This cannot be undone.`
+              ? `Delete “${deleteTarget.account.name}”? All ${deleteTarget.related} related event${deleteTarget.related === 1 ? "" : "s"} (including transfers) will be deleted as well. This cannot be undone.`
               : `Delete “${deleteTarget.account.name}”? This cannot be undone.`
             : ""
         }

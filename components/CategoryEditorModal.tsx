@@ -100,7 +100,7 @@ export function CategoryEditorModal({
       <Pressable style={styles.backdrop} onPress={onCancel}>
         <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
           <Text style={styles.title}>
-            {mode === "edit" ? "Edit category" : "Add new category"}
+            {mode === "edit" ? "Edit event type" : "Add event type"}
           </Text>
           {Platform.OS === "web" ? (
             <Text style={styles.hint}>Esc cancel · Enter save</Text>
@@ -115,7 +115,7 @@ export function CategoryEditorModal({
                 onPress={() => setType("income")}
               />
               <TypeOption
-                label="EXPENSE"
+                label="SPEND"
                 selected={type === "expense"}
                 onPress={() => setType("expense")}
               />

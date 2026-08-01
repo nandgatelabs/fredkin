@@ -38,12 +38,12 @@ export function AppHeader({ onMenuPress }: Props) {
       </Pressable>
 
       <Text style={styles.logo} accessibilityRole="header">
-        money-money
+        Fredkin
       </Text>
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Search records"
+        accessibilityLabel="Search events"
         onPress={() => router.push("/search")}
         hitSlop={12}
         {...webFocusableProps}

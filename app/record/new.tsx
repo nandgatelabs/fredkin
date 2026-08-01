@@ -45,6 +45,12 @@ import { colors } from "@/theme";
 
 const TYPES: RecordType[] = ["income", "expense", "transfer"];
 
+const TYPE_LABELS: Record<RecordType, string> = {
+  income: "INCOME",
+  expense: "SPEND",
+  transfer: "TRANSFER",
+};
+
 export default function NewRecordScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -305,7 +311,7 @@ export default function NewRecordScreen() {
           disabled={busy}
           style={[styles.headerBtn, webClickable]}
         >
-          <Text style={styles.action}>✕ CANCEL</Text>
+          <Text style={styles.action}>✕ DISCARD</Text>
         </Pressable>
         {isWeb ? (
           <Text style={styles.keyboardHint}>keys · Esc · Enter/=</Text>
@@ -335,7 +341,7 @@ export default function NewRecordScreen() {
                   <View style={styles.typeSpacer} />
                 )}
                 <Text style={[styles.typeLabel, selected && styles.typeLabelOn]}>
-                  {t.toUpperCase()}
+                  {TYPE_LABELS[t]}
                 </Text>
               </Pressable>
             </View>
@@ -366,7 +372,7 @@ export default function NewRecordScreen() {
               ) : (
                 <>
                   <Ionicons name="wallet-outline" size={18} color={colors.accentMuted} />
-                  <Text style={styles.pickPlaceholder}>Account</Text>
+                  <Text style={styles.pickPlaceholder}>Wallet</Text>
                 </>
               )}
             </PickerField>
@@ -387,7 +393,7 @@ export default function NewRecordScreen() {
                 ) : (
                   <>
                     <Ionicons name="wallet-outline" size={18} color={colors.accentMuted} />
-                    <Text style={styles.pickPlaceholder}>Account</Text>
+                    <Text style={styles.pickPlaceholder}>Wallet</Text>
                   </>
                 )}
               </PickerField>
@@ -417,7 +423,7 @@ export default function NewRecordScreen() {
                 ) : (
                   <>
                     <Ionicons name="pricetag-outline" size={18} color={colors.accentMuted} />
-                    <Text style={styles.pickPlaceholder}>Category</Text>
+                    <Text style={styles.pickPlaceholder}>Event type</Text>
                   </>
                 )}
               </PickerField>
@@ -523,7 +529,7 @@ export default function NewRecordScreen() {
 
       <InfoModal
         visible={error != null}
-        title="Add record"
+        title="Add event"
         message={error ?? ""}
         onClose={() => setError(null)}
       />

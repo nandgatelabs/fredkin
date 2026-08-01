@@ -203,10 +203,10 @@ export default function PreferencesScreen() {
         >
           <Text style={styles.back}>✕ CLOSE</Text>
         </Pressable>
-        <Text style={styles.title}>Preferences</Text>
+        <Text style={styles.title}>Settings</Text>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Save preferences"
+          accessibilityLabel="Save settings"
           onPress={() => void onSave()}
           hitSlop={10}
           disabled={busy}
@@ -256,7 +256,7 @@ export default function PreferencesScreen() {
         <Text style={[styles.section, styles.sectionSpaced]}>Security</Text>
         <PreferenceRow
           label="Passcode protection"
-          description="Requires a passcode to enter money-money."
+          description="Requires a passcode to enter Fredkin."
           switchValue={passcodeEnabled}
           onSwitch={(v) => {
             if (v) setPasscodeSetup(true);
@@ -270,7 +270,7 @@ export default function PreferencesScreen() {
         <Text style={[styles.section, styles.sectionSpaced]}>Notification</Text>
         <PreferenceRow
           label="Remind everyday"
-          description="Remind to add expenses occasionally."
+          description="Remind to add spend occasionally."
           switchValue={remindEveryday}
           onSwitch={(v) => {
             void (async () => {
@@ -312,14 +312,14 @@ export default function PreferencesScreen() {
           description={
             Platform.OS === "web"
               ? "Open browser site settings for this page."
-              : "Open system notification settings for money-money."
+              : "Open system notification settings for Fredkin."
           }
           onPress={() => {
             openSystemNotificationSettings();
             setStatus(
               Platform.OS === "web"
                 ? "Use the browser lock icon → Site settings to manage notifications."
-                : "Open your phone’s Settings → Apps → money-money → Notifications.",
+                : "Open your phone’s Settings → Apps → Fredkin → Notifications.",
             );
           }}
         />
@@ -346,8 +346,8 @@ export default function PreferencesScreen() {
           onPress={() => router.push("/about-doc?kind=license" as never)}
         />
         <PreferenceRow
-          label={`money-money : ${version}`}
-          description="Offline personal finance · nandgatelabs"
+          label={`Fredkin : ${version}`}
+          description="Fredkin by NandGateLabs · offline personal finance"
         />
 
         <Text style={styles.hint}>
@@ -358,7 +358,7 @@ export default function PreferencesScreen() {
 
       <InfoModal
         visible={status != null}
-        title="Preferences"
+        title="Settings"
         message={status ?? ""}
         onClose={() => setStatus(null)}
       />

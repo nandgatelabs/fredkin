@@ -121,8 +121,8 @@ export async function syncNativeDailyRemind(schedule: RemindSchedule): Promise<v
     await Notifications.scheduleNotificationAsync({
       identifier: NATIVE_REMIND_ID,
       content: {
-        title: "money-money",
-        body: "Quick check-in — add today’s expenses when you have a moment.",
+        title: "Fredkin",
+        body: "Quick check-in — add today’s spend when you have a moment.",
         data: { kind: "daily-remind" },
         ...(Platform.OS === "android" ? { channelId: "daily-remind" } : {}),
       },
@@ -161,8 +161,8 @@ export function maybeFireDailyRemind(
   const today = todayKey();
   if (readLast() === today) return;
   try {
-    new Notification("money-money", {
-      body: "Quick check-in — add today’s expenses when you have a moment.",
+    new Notification("Fredkin", {
+      body: "Quick check-in — add today’s spend when you have a moment.",
       tag: "money-money-daily-remind",
     });
     writeLast(today);
@@ -176,7 +176,7 @@ export function openSystemNotificationSettings() {
   if (Platform.OS === "web") {
     log.info("Opened web notification settings hint");
     console.info(
-      "[money-money] Manage notification permission in the browser’s site settings for this origin.",
+      "[Fredkin] Manage notification permission in the browser’s site settings for this origin.",
     );
     return;
   }

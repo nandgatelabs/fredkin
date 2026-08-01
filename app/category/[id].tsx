@@ -121,7 +121,7 @@ export default function CategoryDetailsScreen() {
           <Text style={styles.close}>✕</Text>
         </Pressable>
         <View style={styles.headerText}>
-          <Text style={styles.title}>Category details</Text>
+          <Text style={styles.title}>Event type details</Text>
           <Text style={styles.subtitle}>Time selected: {periodLabel}</Text>
         </View>
         <View style={styles.periodNav}>
@@ -176,7 +176,7 @@ export default function CategoryDetailsScreen() {
                 <View>
                   <Text style={styles.catName}>{category.name}</Text>
                   <Text style={styles.catType}>
-                    {category.type === "income" ? "Income category" : "Expense category"}
+                    {category.type === "income" ? "Income event type" : "Spend event type"}
                   </Text>
                 </View>
               </View>
@@ -191,13 +191,13 @@ export default function CategoryDetailsScreen() {
                   <View style={styles.pctCol}>
                     <Text style={styles.bigPct}>{stats.percent.toFixed(2)}%</Text>
                     <Text style={styles.pctHint}>
-                      of total {tone} in this period
+                      of total {tone === "expense" ? "spend" : tone} in this period
                     </Text>
                   </View>
                 </View>
                 <View style={styles.cardFooter}>
                   <Text style={styles.footerLabel}>
-                    {category.type === "income" ? "Income" : "Expense"} in this period:{" "}
+                    {category.type === "income" ? "Income" : "Spend"} in this period:{" "}
                     <Text style={{ color: amountColor, fontWeight: "700" }}>
                       {formatMoney(
                         category.type === "expense" ? -stats.amount : stats.amount,

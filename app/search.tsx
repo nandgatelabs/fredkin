@@ -83,13 +83,13 @@ export default function SearchScreen() {
           autoFocus
           value={query}
           onChangeText={setQuery}
-          placeholder="Search for records"
+          placeholder="Search for events"
           placeholderTextColor={colors.accentMuted}
           style={styles.input}
           returnKeyType="search"
           autoCorrect={false}
           autoCapitalize="none"
-          accessibilityLabel="Search records"
+          accessibilityLabel="Search events"
         />
         <Pressable
           accessibilityRole="button"
@@ -107,7 +107,7 @@ export default function SearchScreen() {
         <View style={styles.empty}>
           <Ionicons name="document-text-outline" size={48} color={colors.accentMuted} />
           <Text style={styles.hint}>
-            Search records by notes, category name or account name
+            Search events by notes, event type, or wallet name
           </Text>
           {Platform.OS === "web" ? (
             <Text style={styles.kbdHint}>Esc close · type to search</Text>
