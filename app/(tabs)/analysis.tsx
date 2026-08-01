@@ -23,7 +23,6 @@ import { FlowLineChart } from "@/components/analysis/FlowLineChart";
 import { ActionMenu } from "@/components/ActionMenu";
 import { AppHeader } from "@/components/AppHeader";
 import { DisplayOptionsModal } from "@/components/DisplayOptionsModal";
-import { Fab } from "@/components/Fab";
 import { GlassAtmosphere } from "@/components/GlassAtmosphere";
 import { PeriodHeader } from "@/components/PeriodHeader";
 import {
@@ -279,9 +278,6 @@ export default function AnalysisScreen() {
           )}
         </ScrollView>
       )}
-
-      <Fab />
-
       <ActionMenu
         visible={modeOpen}
         title="Insights mode"

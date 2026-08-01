@@ -123,21 +123,19 @@ export function AppDrawer({ visible, onClose }: Props) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, flexDirection: "row" },
+  root: { flex: 1, flexDirection: "row", justifyContent: "flex-end" },
   scrim: {
-    flex: 1,
+    ...StyleSheet.absoluteFill,
     backgroundColor: colors.overlay,
   },
   panel: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
     width: 280,
     maxWidth: "82%",
-    borderRightWidth: 1,
-    borderRightColor: colors.border,
+    height: "100%",
+    borderLeftWidth: 1,
+    borderLeftColor: colors.border,
     paddingHorizontal: 18,
+    zIndex: 1,
   },
   brand: {
     color: colors.accent,

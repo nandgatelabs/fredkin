@@ -13,7 +13,6 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { AppHeader } from "@/components/AppHeader";
 import { DisplayOptionsModal } from "@/components/DisplayOptionsModal";
 import { EmptyTab } from "@/components/EmptyTab";
-import { Fab } from "@/components/Fab";
 import { GlassAtmosphere } from "@/components/GlassAtmosphere";
 import { PeriodHeader } from "@/components/PeriodHeader";
 import { RecordDetailModal } from "@/components/RecordDetailModal";
@@ -116,9 +115,6 @@ export default function RecordsScreen() {
           )}
         />
       )}
-
-      <Fab />
-
       <DisplayOptionsModal
         visible={displayOpen}
         onClose={() => {
