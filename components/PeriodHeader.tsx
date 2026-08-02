@@ -15,6 +15,10 @@ type Props = {
   income?: number;
   /** Extra amount added to Net (carry-over). */
   carryAmount?: number;
+  /** When false, period label is static (nav lives elsewhere, e.g. header chip). */
+  showPeriodNav?: boolean;
+  /** Expand this pane to full screen (web split). */
+  onMaximize?: () => void;
 };
 
 export function PeriodHeader({
@@ -23,6 +27,8 @@ export function PeriodHeader({
   expense = 0,
   income = 0,
   carryAmount = 0,
+  showPeriodNav = true,
+  onMaximize,
 }: Props) {
   const anchorDate = usePeriodStore((s) => s.anchorDate);
   const shiftPeriod = usePeriodStore((s) => s.shiftPeriod);
@@ -35,31 +41,39 @@ export function PeriodHeader({
   return (
     <View style={styles.wrap}>
       <View style={styles.periodRow}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Previous period"
-          onPress={() => shiftPeriod(-1)}
-          hitSlop={10}
-          {...webFocusableProps}
-          style={[styles.chevron, webClickable]}
-        >
-          <Ionicons name="chevron-back" size={20} color={colors.accent} />
-        </Pressable>
+        {showPeriodNav ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Previous period"
+            onPress={() => shiftPeriod(-1)}
+            hitSlop={10}
+            {...webFocusableProps}
+            style={[styles.chevron, webClickable]}
+          >
+            <Ionicons name="chevron-back" size={20} color={colors.accent} />
+          </Pressable>
+        ) : (
+          <View style={styles.chevronSpacer} />
+        )}
 
         <Text style={styles.periodLabel} accessibilityRole="header">
           {label}
         </Text>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Next period"
-          onPress={() => shiftPeriod(1)}
-          hitSlop={10}
-          {...webFocusableProps}
-          style={[styles.chevron, webClickable]}
-        >
-          <Ionicons name="chevron-forward" size={20} color={colors.accent} />
-        </Pressable>
+        {showPeriodNav ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Next period"
+            onPress={() => shiftPeriod(1)}
+            hitSlop={10}
+            {...webFocusableProps}
+            style={[styles.chevron, webClickable]}
+          >
+            <Ionicons name="chevron-forward" size={20} color={colors.accent} />
+          </Pressable>
+        ) : (
+          <View style={styles.chevronSpacer} />
+        )}
 
         {onFilterPress ? (
           <Pressable
@@ -71,6 +85,19 @@ export function PeriodHeader({
             style={[styles.filter, webClickable]}
           >
             <Ionicons name="options-outline" size={18} color={colors.accent} />
+          </Pressable>
+        ) : null}
+
+        {onMaximize ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Expand Events to full screen"
+            onPress={onMaximize}
+            hitSlop={10}
+            {...webFocusableProps}
+            style={[styles.filter, webClickable]}
+          >
+            <Ionicons name="expand-outline" size={18} color={colors.accent} />
           </Pressable>
         ) : null}
       </View>
@@ -126,6 +153,9 @@ const styles = StyleSheet.create({
   },
   chevron: {
     padding: 4,
+  },
+  chevronSpacer: {
+    width: 28,
   },
   periodLabel: {
     flex: 1,

@@ -31,10 +31,18 @@ import { colors } from "@/theme";
 type Props = {
   /** Extra bottom padding (e.g. native tab bar clearance). */
   listBottomPad?: number;
+  /** When false, period chevrons hide (shared header chip owns nav). */
+  showPeriodNav?: boolean;
+  /** Expand Events to full screen (web split). */
+  onMaximize?: () => void;
 };
 
 /** Events list + period strip (no app header / atmosphere). */
-export function EventsPane({ listBottomPad = 24 }: Props) {
+export function EventsPane({
+  listBottomPad = 24,
+  showPeriodNav = true,
+  onMaximize,
+}: Props) {
   const router = useRouter();
   const anchorDate = usePeriodStore((s) => s.anchorDate);
   const viewMode = useSettingsStore((s) => s.viewMode);
@@ -88,6 +96,8 @@ export function EventsPane({ listBottomPad = 24 }: Props) {
         expense={expense}
         income={income}
         carryAmount={carryAmount}
+        showPeriodNav={showPeriodNav}
+        onMaximize={onMaximize}
         onFilterPress={() => setDisplayOpen(true)}
       />
 

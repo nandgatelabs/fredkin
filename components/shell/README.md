@@ -21,6 +21,9 @@ UI chrome diverges via Metro platform extensions:
 - Header **Events** / **Insights** → that pane full-screen  
 - Header **Split** → side-by-side (hidden when too narrow)  
 - Activate the current full-screen nav item again → back to split (when wide enough)  
+- In split: header period chip syncs both panes; pane **expand** icons go full-screen  
+- Scroll stays independent per pane; only period is shared  
+
 
 
 Shared panes: `EventsPane`, `InsightsPane`. Full screens: `EventsHome`, `InsightsHome`.

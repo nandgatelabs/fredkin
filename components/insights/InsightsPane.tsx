@@ -55,12 +55,15 @@ type Props = {
   /** Show display-options entry (native Insights has PeriodHeader filter instead). */
   showDisplayOptions?: boolean;
   contentBottomPad?: number;
+  /** Expand Insights to full screen (web split). */
+  onMaximize?: () => void;
 };
 
 /** Insights body: mode picker + charts (no app header / period strip). */
 export function InsightsPane({
   showDisplayOptions = false,
   contentBottomPad = 40,
+  onMaximize,
 }: Props) {
   const router = useRouter();
   const anchorDate = usePeriodStore((s) => s.anchorDate);
@@ -167,6 +170,16 @@ export function InsightsPane({
             accessibilityLabel="Display options"
           >
             <Ionicons name="options-outline" size={20} color={colors.accent} />
+          </Pressable>
+        ) : null}
+        {onMaximize ? (
+          <Pressable
+            onPress={onMaximize}
+            hitSlop={8}
+            style={[styles.filterBtn, webClickable]}
+            accessibilityLabel="Expand Insights to full screen"
+          >
+            <Ionicons name="expand-outline" size={20} color={colors.accent} />
           </Pressable>
         ) : null}
       </View>

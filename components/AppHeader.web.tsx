@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
 
 import { GlassSurface } from "@/components/GlassSurface";
+import { HeaderPeriodChip } from "@/components/shell/HeaderPeriodChip";
 import { isMorePath } from "@/components/shell/morePaths";
 import { useEffectiveDesktopView } from "@/hooks/useEffectiveDesktopView";
 import { useCanSplit } from "@/hooks/useViewportWidth";
@@ -13,7 +14,7 @@ import { useMorePaneStore } from "@/store/morePane";
 import { colors, layout } from "@/theme";
 
 /**
- * Web header: Fredkin · search · Events/+ /Insights · Split · More.
+ * Web header: Fredkin · search · period (split) · Events/+ /Insights · Split · More.
  * Replaces the mobile bottom tab bar on desktop.
  */
 export function AppHeader() {
@@ -80,6 +81,8 @@ export function AppHeader() {
           </Text>
         </Pressable>
       </View>
+
+      {splitActive ? <HeaderPeriodChip /> : null}
 
       <View style={styles.navCluster} accessibilityRole="toolbar">
         <Pressable
