@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { PasscodeGate } from "@/components/PasscodeGate";
 import { MorePaneHost } from "@/components/shell/MorePaneHost";
+import { SearchModalHost } from "@/components/shell/SearchModalHost";
 import { ShellFrame } from "@/components/shell/ShellFrame";
 import { getDb } from "@/db/client";
 import { log } from "@/lib/logger";
@@ -105,6 +106,7 @@ export default function RootLayout() {
         </Stack>
 
         <MorePaneHost />
+        <SearchModalHost />
 
         {!ready ? (
           <View style={[styles.overlay, styles.overlayCentered]} pointerEvents="auto">

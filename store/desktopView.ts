@@ -24,6 +24,9 @@ type Persisted = {
   left: PaneId;
   right: PaneId;
   activeSide: "left" | "right";
+  /** Last split pair to restore when re-entering split. */
+  lastSplitLeft: PaneId;
+  lastSplitRight: PaneId;
 };
 
 function isPaneId(v: unknown): v is PaneId {
@@ -41,6 +44,8 @@ function readStored(): Persisted {
     left: "events",
     right: "insights",
     activeSide: "left",
+    lastSplitLeft: "events",
+    lastSplitRight: "insights",
   };
   if (typeof window === "undefined") return fallback;
   try {
@@ -52,15 +57,30 @@ function readStored(): Persisted {
         isPaneId(parsed.left) &&
         isPaneId(parsed.right)
       ) {
+        const lastSplitLeft = isPaneId(parsed.lastSplitLeft)
+          ? parsed.lastSplitLeft
+          : parsed.mode === "split"
+            ? parsed.left
+            : "events";
+        let lastSplitRight = isPaneId(parsed.lastSplitRight)
+          ? parsed.lastSplitRight
+          : parsed.mode === "split"
+            ? parsed.right
+            : "insights";
+        if (lastSplitRight === lastSplitLeft) {
+          lastSplitRight =
+            lastSplitLeft === "events" ? "insights" : "events";
+        }
         return {
           mode: parsed.mode,
           left: parsed.left,
           right: parsed.right,
           activeSide: parsed.activeSide === "right" ? "right" : "left",
+          lastSplitLeft,
+          lastSplitRight,
         };
       }
     }
-    // Migrate legacy key from earlier desktop view store.
     const legacy = window.localStorage.getItem("fredkin.desktopView");
     if (legacy === "split") return fallback;
     if (legacy === "events")
@@ -82,12 +102,20 @@ function persist(state: Persisted) {
   }
 }
 
+function withLastSplit(
+  state: Persisted,
+  left: PaneId,
+  right: PaneId,
+): Persisted {
+  if (left === right) return state;
+  return { ...state, lastSplitLeft: left, lastSplitRight: right };
+}
+
 type DesktopViewState = Persisted & {
   setMode: (mode: "single" | "split") => void;
   setLeft: (pane: PaneId) => void;
   setRight: (pane: PaneId) => void;
   setActiveSide: (side: "left" | "right") => void;
-  /** Open a pane: single full-screen, or assign/focus in split. */
   openPane: (pane: PaneId) => void;
   enterSplit: () => void;
   maximize: (side: "left" | "right") => void;
@@ -99,21 +127,52 @@ export const useDesktopViewStore = create<DesktopViewState>((set, get) => ({
   ...initial,
 
   setMode: (mode) => {
-    const next = { ...get(), mode };
+    const cur = get();
+    if (mode === "split") {
+      get().enterSplit();
+      return;
+    }
+    const next = { ...cur, mode };
     persist(next);
     set({ mode });
   },
 
   setLeft: (left) => {
-    const next = { ...get(), left };
+    const cur = get();
+    const next = withLastSplit(
+      { ...cur, left },
+      left,
+      cur.mode === "split" ? cur.right : cur.lastSplitRight,
+    );
+    if (cur.mode !== "split") {
+      const single = { ...cur, left };
+      persist(single);
+      set({ left });
+      return;
+    }
     persist(next);
-    set({ left });
+    set({
+      left,
+      lastSplitLeft: next.lastSplitLeft,
+      lastSplitRight: next.lastSplitRight,
+    });
   },
 
   setRight: (right) => {
-    const next = { ...get(), right };
+    const cur = get();
+    if (cur.mode !== "split") {
+      const next = { ...cur, right };
+      persist(next);
+      set({ right });
+      return;
+    }
+    const next = withLastSplit({ ...cur, right }, cur.left, right);
     persist(next);
-    set({ right });
+    set({
+      right,
+      lastSplitLeft: next.lastSplitLeft,
+      lastSplitRight: next.lastSplitRight,
+    });
   },
 
   setActiveSide: (activeSide) => {
@@ -137,15 +196,22 @@ export const useDesktopViewStore = create<DesktopViewState>((set, get) => ({
         set({ activeSide: "right" });
         return;
       }
-      // Not visible: put it on the active side (any pair).
       if (cur.activeSide === "left") {
-        const next = { ...cur, left: pane };
+        const next = withLastSplit({ ...cur, left: pane }, pane, cur.right);
         persist(next);
-        set({ left: pane });
+        set({
+          left: pane,
+          lastSplitLeft: next.lastSplitLeft,
+          lastSplitRight: next.lastSplitRight,
+        });
       } else {
-        const next = { ...cur, right: pane };
+        const next = withLastSplit({ ...cur, right: pane }, cur.left, pane);
         persist(next);
-        set({ right: pane });
+        set({
+          right: pane,
+          lastSplitLeft: next.lastSplitLeft,
+          lastSplitRight: next.lastSplitRight,
+        });
       }
       return;
     }
@@ -158,25 +224,46 @@ export const useDesktopViewStore = create<DesktopViewState>((set, get) => ({
 
   enterSplit: () => {
     const cur = get();
-    let right = cur.right;
-    if (right === cur.left) {
-      right = cur.left === "events" ? "insights" : "events";
+    let left = cur.lastSplitLeft;
+    let right = cur.lastSplitRight;
+    if (left === right) {
+      right = left === "events" ? "insights" : "events";
     }
     const next = {
       ...cur,
       mode: "split" as const,
+      left,
       right,
       activeSide: "left" as const,
+      lastSplitLeft: left,
+      lastSplitRight: right,
     };
     persist(next);
-    set({ mode: "split", right, activeSide: "left" });
+    set({
+      mode: "split",
+      left,
+      right,
+      activeSide: "left",
+      lastSplitLeft: left,
+      lastSplitRight: right,
+    });
   },
 
   maximize: (side) => {
     const cur = get();
     const pane = side === "left" ? cur.left : cur.right;
-    const next = { ...cur, mode: "single" as const, left: pane };
+    const remembered = withLastSplit(cur, cur.left, cur.right);
+    const next = {
+      ...remembered,
+      mode: "single" as const,
+      left: pane,
+    };
     persist(next);
-    set({ mode: "single", left: pane });
+    set({
+      mode: "single",
+      left: pane,
+      lastSplitLeft: next.lastSplitLeft,
+      lastSplitRight: next.lastSplitRight,
+    });
   },
 }));

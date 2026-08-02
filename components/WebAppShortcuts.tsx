@@ -5,6 +5,7 @@ import { useCanSplit } from "@/hooks/useViewportWidth";
 import { useKeydown } from "@/hooks/useKeydown";
 import { useDesktopViewStore, type PaneId } from "@/store/desktopView";
 import { usePeriodStore } from "@/store/period";
+import { useSearchModalStore } from "@/store/searchModal";
 import { useShortcutsHelpStore } from "@/store/shortcutsHelp";
 
 const PANE_BY_DIGIT: Record<number, PaneId> = {
@@ -25,7 +26,6 @@ function shiftMonthIso(iso: string, delta: number) {
 function isEditorRoute(pathname: string) {
   return (
     pathname.startsWith("/record") ||
-    pathname.startsWith("/search") ||
     pathname.startsWith("/import") ||
     pathname.startsWith("/export") ||
     pathname.startsWith("/backup") ||
@@ -50,6 +50,8 @@ export function WebAppShortcuts() {
   const setMode = useDesktopViewStore((s) => s.setMode);
   const canSplit = useCanSplit();
   const openHelp = useShortcutsHelpStore((s) => s.openHelp);
+  const openSearch = useSearchModalStore((s) => s.openSearch);
+  const searchOpen = useSearchModalStore((s) => s.open);
 
   useKeydown(
     true,
@@ -59,16 +61,17 @@ export function WebAppShortcuts() {
 
         if (mod && (event.key === "k" || event.key === "K")) {
           event.preventDefault();
-          router.push("/search");
+          openSearch();
           return;
         }
 
         if (event.metaKey || event.ctrlKey || event.altKey) return;
+        if (searchOpen) return;
         if (isEditorRoute(pathname)) return;
 
         if (event.key === "/") {
           event.preventDefault();
-          router.push("/search");
+          openSearch();
           return;
         }
 
@@ -124,8 +127,10 @@ export function WebAppShortcuts() {
         mode,
         openHelp,
         openPane,
+        openSearch,
         pathname,
         router,
+        searchOpen,
         setAnchorDate,
         setMode,
         shiftPeriod,
