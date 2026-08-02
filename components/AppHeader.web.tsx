@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "expo-router";
 import { GlassSurface } from "@/components/GlassSurface";
 import { isMorePath } from "@/components/shell/morePaths";
 import { webClickable, webFocusableProps, webFontDisplay } from "@/lib/web";
+import { useEffectiveDesktopView } from "@/hooks/useEffectiveDesktopView";
+import { useCanSplit } from "@/hooks/useViewportWidth";
 import { useDesktopViewStore } from "@/store/desktopView";
 import { useMorePaneStore } from "@/store/morePane";
 import { colors, layout } from "@/theme";
@@ -19,8 +21,9 @@ export function AppHeader() {
   const pathname = usePathname();
   const openMore = useMorePaneStore((s) => s.openMore);
   const moreActive = isMorePath(pathname);
-  const view = useDesktopViewStore((s) => s.view);
   const setView = useDesktopViewStore((s) => s.setView);
+  const view = useEffectiveDesktopView();
+  const canSplit = useCanSplit();
   const splitActive = view === "split";
 
   return (
@@ -48,32 +51,36 @@ export function AppHeader() {
         </Pressable>
       </View>
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Split view"
-        accessibilityState={{ selected: splitActive }}
-        onPress={() => {
-          setView("split");
-          router.navigate("/");
-        }}
-        hitSlop={10}
-        {...webFocusableProps}
-        style={({ pressed }) => [
-          styles.splitBtn,
-          webClickable,
-          splitActive && styles.splitBtnActive,
-          pressed && styles.splitBtnPressed,
-        ]}
-      >
-        <Ionicons
-          name="grid-outline"
-          size={20}
-          color={splitActive ? colors.accent : colors.tabInactive}
-        />
-        <Text style={[styles.splitLabel, splitActive && styles.splitLabelActive]}>
-          Split
-        </Text>
-      </Pressable>
+      {canSplit ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Split view"
+          accessibilityState={{ selected: splitActive }}
+          onPress={() => {
+            setView("split");
+            router.navigate("/");
+          }}
+          hitSlop={10}
+          {...webFocusableProps}
+          style={({ pressed }) => [
+            styles.splitBtn,
+            webClickable,
+            splitActive && styles.splitBtnActive,
+            pressed && styles.splitBtnPressed,
+          ]}
+        >
+          <Ionicons
+            name="grid-outline"
+            size={20}
+            color={splitActive ? colors.accent : colors.tabInactive}
+          />
+          <Text
+            style={[styles.splitLabel, splitActive && styles.splitLabelActive]}
+          >
+            Split
+          </Text>
+        </Pressable>
+      ) : null}
 
       <Pressable
         accessibilityRole="button"

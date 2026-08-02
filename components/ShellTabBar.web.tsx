@@ -4,6 +4,8 @@ import { useRouter } from "expo-router";
 
 import { GlassSurface } from "@/components/GlassSurface";
 import { webClickable, webFocusableProps, webFontBody } from "@/lib/web";
+import { useEffectiveDesktopView } from "@/hooks/useEffectiveDesktopView";
+import { useCanSplit } from "@/hooks/useViewportWidth";
 import { useDesktopViewStore } from "@/store/desktopView";
 import { colors } from "@/theme";
 
@@ -26,8 +28,10 @@ const CENTER_W = 52;
  */
 export function ShellTabBar({ navigation }: ShellTabBarProps) {
   const router = useRouter();
-  const view = useDesktopViewStore((s) => s.view);
+  const preferred = useDesktopViewStore((s) => s.view);
   const setView = useDesktopViewStore((s) => s.setView);
+  const view = useEffectiveDesktopView();
+  const canSplit = useCanSplit();
 
   const eventsActive = view === "events";
   const insightsActive = view === "insights";
@@ -38,11 +42,13 @@ export function ShellTabBar({ navigation }: ShellTabBarProps) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={
-            eventsActive ? "Events, tap again for split view" : "Events"
+            eventsActive && canSplit
+              ? "Events, tap again for split view"
+              : "Events"
           }
           accessibilityState={{ selected: eventsActive }}
           onPress={() => {
-            if (view === "events") {
+            if (preferred === "events" && canSplit) {
               setView("split");
               navigation.navigate("index");
               return;
@@ -92,7 +98,7 @@ export function ShellTabBar({ navigation }: ShellTabBarProps) {
           }
           accessibilityState={{ selected: insightsActive }}
           onPress={() => {
-            if (view === "insights") {
+            if (preferred === "insights" && canSplit) {
               setView("split");
               navigation.navigate("index");
               return;

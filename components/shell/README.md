@@ -16,9 +16,12 @@ UI chrome diverges via Metro platform extensions:
 
 **Web layout modes** (`store/desktopView.ts`): `split` (default) · `events` · `insights`
 
-- Header **Split** → side-by-side Events | Insights  
+- Preference persisted in `localStorage` (`fredkin.desktopView`)
+- Below `layout.splitMinWidth` (900px), split falls back to full Events (preference kept)
+- Header **Split** → side-by-side Events | Insights (hidden when too narrow)
 - Bottom **Events** / **Insights** → that pane full-screen  
-- Tap the active full-screen tab again → back to split  
+- Tap the active full-screen tab again → back to split (when wide enough)  
+
 
 Shared panes: `EventsPane`, `InsightsPane`. Full screens: `EventsHome`, `InsightsHome`.
 
