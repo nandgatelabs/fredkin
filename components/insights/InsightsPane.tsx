@@ -22,6 +22,7 @@ import { FlowCalendar } from "@/components/analysis/FlowCalendar";
 import { FlowLineChart } from "@/components/analysis/FlowLineChart";
 import { ActionMenu } from "@/components/ActionMenu";
 import { DisplayOptionsModal } from "@/components/DisplayOptionsModal";
+import { EmptyTab } from "@/components/EmptyTab";
 import {
   getAccountPeriodBreakdown,
   getCategoryBreakdown,
@@ -132,6 +133,29 @@ export function InsightsPane({
   const tone: "expense" | "income" =
     mode === "income_overview" || mode === "income_flow" ? "income" : "expense";
 
+  const isEmpty =
+    mode === "expense_overview" || mode === "income_overview"
+      ? slices.length === 0
+      : mode === "expense_flow" || mode === "income_flow"
+        ? !days.some((d) => d.amount > 0)
+        : accounts.length === 0;
+
+  const emptyCopy =
+    tone === "income"
+      ? {
+          title: "No income yet",
+          subtitle: "Add income events for this period to see Insights.",
+        }
+      : mode === "account"
+        ? {
+            title: "No wallet activity",
+            subtitle: "Add events for this period to see Insights.",
+          }
+        : {
+            title: "No spend yet",
+            subtitle: "Add events for this period to see Insights.",
+          };
+
   const donutSegments = slices.map((s, i) => ({
     amount: s.amount,
     color: donutColor(i),
@@ -188,6 +212,8 @@ export function InsightsPane({
 
       {loading ? (
         <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
+      ) : isEmpty ? (
+        <EmptyTab title={emptyCopy.title} subtitle={emptyCopy.subtitle} />
       ) : (
         <ScrollView
           ref={scrollRef}
