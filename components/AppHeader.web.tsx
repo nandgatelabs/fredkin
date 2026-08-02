@@ -9,7 +9,12 @@ import { KeyboardShortcutsModal } from "@/components/shell/KeyboardShortcutsModa
 import { isMorePath } from "@/components/shell/morePaths";
 import { useEffectiveDesktopLayout } from "@/hooks/useEffectiveDesktopView";
 import { useCanSplit } from "@/hooks/useViewportWidth";
-import { webClickable, webFocusableProps, webFontDisplay } from "@/lib/web";
+import {
+  webClickable,
+  webFocusableProps,
+  webFontDisplay,
+  webTitle,
+} from "@/lib/web";
 import {
   ALL_PANES,
   PANE_LABELS,
@@ -28,7 +33,7 @@ const PANE_ICONS: Record<PaneId, keyof typeof Ionicons.glyphMap> = {
 };
 
 /**
- * Web header: brand · search · period · pane icons · + · Split · ? · More.
+ * Web header: brand | centered search | period · panes · + · tools
  */
 export function AppHeader() {
   const insets = useSafeAreaInsets();
@@ -53,16 +58,19 @@ export function AppHeader() {
 
   return (
     <GlassSurface style={[styles.wrap, { paddingTop: insets.top + 8 }]}>
-      <Text style={styles.logo} accessibilityRole="header">
-        Fredkin
-      </Text>
+      <View style={styles.left}>
+        <Text style={styles.logo} accessibilityRole="header">
+          Fredkin
+        </Text>
+      </View>
 
-      <View style={styles.searchWrap}>
+      <View style={styles.center}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Search events"
           onPress={() => router.push("/search")}
           {...webFocusableProps}
+          {...webTitle("Search (⌘K)")}
           style={({ pressed }) => [
             styles.search,
             webClickable,
@@ -76,119 +84,126 @@ export function AppHeader() {
         </Pressable>
       </View>
 
-      {splitActive ? <HeaderPeriodChip /> : null}
+      <View style={styles.right}>
+        {splitActive ? <HeaderPeriodChip /> : null}
 
-      <View style={styles.navCluster} accessibilityRole="toolbar">
-        {ALL_PANES.map((pane) => {
-          const selected = activePanes.has(pane);
-          return (
-            <Pressable
-              key={pane}
-              accessibilityRole="button"
-              accessibilityLabel={PANE_LABELS[pane]}
-              accessibilityState={{ selected }}
-              onPress={() => {
-                openPane(pane);
-                router.navigate("/");
-              }}
-              {...webFocusableProps}
-              style={({ pressed }) => [
-                styles.navIcon,
-                webClickable,
-                selected && styles.navIconActive,
-                pressed && styles.navIconPressed,
-              ]}
-            >
-              <Ionicons
-                name={PANE_ICONS[pane]}
-                size={18}
-                color={selected ? colors.accent : colors.tabInactive}
-              />
-            </Pressable>
-          );
-        })}
+        <View style={styles.navCluster} accessibilityRole="toolbar">
+          {ALL_PANES.map((pane) => {
+            const selected = activePanes.has(pane);
+            return (
+              <Pressable
+                key={pane}
+                accessibilityRole="button"
+                accessibilityLabel={PANE_LABELS[pane]}
+                accessibilityState={{ selected }}
+                onPress={() => {
+                  openPane(pane);
+                  router.navigate("/");
+                }}
+                {...webFocusableProps}
+                {...webTitle(PANE_LABELS[pane])}
+                style={({ pressed }) => [
+                  styles.navIcon,
+                  webClickable,
+                  selected && styles.navIconActive,
+                  pressed && styles.navIconPressed,
+                ]}
+              >
+                <Ionicons
+                  name={PANE_ICONS[pane]}
+                  size={18}
+                  color={selected ? colors.accent : colors.tabInactive}
+                />
+              </Pressable>
+            );
+          })}
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Add event"
+            onPress={() => router.push("/record/new")}
+            {...webFocusableProps}
+            {...webTitle("Add event (N)")}
+            style={({ pressed }) => [
+              styles.addBtn,
+              webClickable,
+              pressed && styles.addPressed,
+            ]}
+          >
+            <Ionicons name="add" size={20} color={colors.onAccent} />
+          </Pressable>
+        </View>
+
+        {canSplit ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Split view"
+            accessibilityState={{ selected: splitActive }}
+            onPress={() => {
+              if (splitActive) setMode("single");
+              else enterSplit();
+              router.navigate("/");
+            }}
+            hitSlop={8}
+            {...webFocusableProps}
+            {...webTitle(splitActive ? "Exit split (S)" : "Split view (S)")}
+            style={({ pressed }) => [
+              styles.toolBtn,
+              webClickable,
+              splitActive && styles.toolBtnActive,
+              pressed && styles.toolBtnPressed,
+            ]}
+          >
+            <Ionicons
+              name="grid-outline"
+              size={18}
+              color={splitActive ? colors.accent : colors.tabInactive}
+            />
+          </Pressable>
+        ) : null}
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Add event"
-          onPress={() => router.push("/record/new")}
-          {...webFocusableProps}
-          style={({ pressed }) => [
-            styles.addBtn,
-            webClickable,
-            pressed && styles.addPressed,
-          ]}
-        >
-          <Ionicons name="add" size={20} color={colors.onAccent} />
-        </Pressable>
-      </View>
-
-      {canSplit ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Split view"
-          accessibilityState={{ selected: splitActive }}
-          onPress={() => {
-            if (splitActive) setMode("single");
-            else enterSplit();
-            router.navigate("/");
-          }}
+          accessibilityLabel="Keyboard shortcuts"
+          onPress={openHelp}
           hitSlop={8}
           {...webFocusableProps}
+          {...webTitle("Keyboard shortcuts (?)")}
           style={({ pressed }) => [
             styles.toolBtn,
             webClickable,
-            splitActive && styles.toolBtnActive,
             pressed && styles.toolBtnPressed,
           ]}
         >
           <Ionicons
-            name="grid-outline"
+            name="help-circle-outline"
             size={18}
-            color={splitActive ? colors.accent : colors.tabInactive}
+            color={colors.tabInactive}
           />
         </Pressable>
-      ) : null}
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Keyboard shortcuts"
-        onPress={openHelp}
-        hitSlop={8}
-        {...webFocusableProps}
-        style={({ pressed }) => [
-          styles.toolBtn,
-          webClickable,
-          pressed && styles.toolBtnPressed,
-        ]}
-      >
-        <Ionicons
-          name="help-circle-outline"
-          size={18}
-          color={colors.tabInactive}
-        />
-      </Pressable>
-
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Open more"
-        accessibilityState={{ selected: moreActive }}
-        onPress={openMore}
-        hitSlop={8}
-        {...webFocusableProps}
-        style={({ pressed }) => [
-          styles.toolBtn,
-          webClickable,
-          moreActive && styles.toolBtnActive,
-          pressed && styles.toolBtnPressed,
-        ]}
-      >
-        <Ionicons
-          name="menu-outline"
-          size={20}
-          color={moreActive ? colors.accent : colors.tabInactive}
-        />
-      </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open more"
+          accessibilityState={{ selected: moreActive }}
+          onPress={openMore}
+          hitSlop={8}
+          {...webFocusableProps}
+          {...webTitle("More")}
+          style={({ pressed }) => [
+            styles.toolBtn,
+            webClickable,
+            moreActive && styles.toolBtnActive,
+            pressed && styles.toolBtnPressed,
+          ]}
+        >
+          <Ionicons
+            name="menu-outline"
+            size={20}
+            color={moreActive ? colors.accent : colors.tabInactive}
+          />
+        </Pressable>
+      </View>
 
       <KeyboardShortcutsModal visible={shortcutsOpen} onClose={closeHelp} />
     </GlassSurface>
@@ -197,34 +212,51 @@ export function AppHeader() {
 
 const styles = StyleSheet.create({
   wrap: {
-    paddingHorizontal: 14,
-    paddingBottom: 10,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
   },
-  logo: {
-    color: colors.accent,
-    fontSize: 20,
-    fontWeight: "600",
-    fontStyle: "italic",
-    letterSpacing: 0.4,
-    fontFamily: webFontDisplay,
-    flexShrink: 0,
-  },
-  searchWrap: {
+  left: {
     flex: 1,
     minWidth: 0,
+    alignItems: "flex-start",
+    justifyContent: "center",
+  },
+  center: {
+    flex: 1.15,
+    minWidth: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  right: {
+    flex: 1.35,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 8,
+    flexShrink: 1,
+  },
+  logo: {
+    color: colors.accent,
+    fontSize: 26,
+    fontWeight: "600",
+    fontStyle: "italic",
+    letterSpacing: 0.3,
+    fontFamily: webFontDisplay,
   },
   search: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    minHeight: 34,
+    width: "100%",
     maxWidth: layout.searchMaxWidth,
-    paddingHorizontal: 12,
+    minHeight: 38,
+    paddingHorizontal: 14,
     borderRadius: 999,
     borderWidth: 1.5,
     borderColor: colors.accent,
@@ -234,7 +266,7 @@ const styles = StyleSheet.create({
   searchPlaceholder: {
     flexShrink: 1,
     color: colors.textSecondary,
-    fontSize: 13,
+    fontSize: 14,
   },
   navCluster: {
     flexDirection: "row",

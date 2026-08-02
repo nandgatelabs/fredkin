@@ -3,13 +3,14 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ActionMenu } from "@/components/ActionMenu";
+import { DisplayOptionsModal } from "@/components/DisplayOptionsModal";
 import { AccountDetailPane } from "@/components/account/AccountDetailPane";
 import { CategoriesPane } from "@/components/categories/CategoriesPane";
 import { CategoryDetailPane } from "@/components/category/CategoryDetailPane";
 import { EventsPane } from "@/components/events/EventsPane";
 import { InsightsPane } from "@/components/insights/InsightsPane";
 import { WalletsPane } from "@/components/wallets/WalletsPane";
-import { webClickable, webFocusableProps } from "@/lib/web";
+import { webClickable, webFocusableProps, webTitle } from "@/lib/web";
 import {
   ALL_PANES,
   PANE_LABELS,
@@ -44,7 +45,9 @@ export function PaneSlot({
   splitChrome = false,
 }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [displayOpen, setDisplayOpen] = useState(false);
   const [detail, setDetail] = useState<Detail>(null);
+  const [insightsEpoch, setInsightsEpoch] = useState(0);
 
   useEffect(() => {
     setDetail(null);
@@ -53,6 +56,7 @@ export function PaneSlot({
   const goCategory = (id: string) => setDetail({ kind: "category", id });
   const goAccount = (id: string) => setDetail({ kind: "account", id });
   const showChrome = splitChrome || onMaximize != null;
+  const insightsInSplit = splitChrome && paneId === "insights";
 
   return (
     <View
@@ -72,11 +76,25 @@ export function PaneSlot({
               setPickerOpen(true);
             }}
             {...webFocusableProps}
+            {...webTitle("Switch pane")}
             style={[styles.pickerBtn, webClickable]}
           >
             <Text style={styles.pickerLabel}>{PANE_LABELS[paneId]}</Text>
             <Ionicons name="chevron-down" size={16} color={colors.accent} />
           </Pressable>
+          {insightsInSplit ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Display options"
+              onPress={() => setDisplayOpen(true)}
+              hitSlop={8}
+              {...webFocusableProps}
+              {...webTitle("Display options")}
+              style={[styles.iconBtn, webClickable]}
+            >
+              <Ionicons name="options-outline" size={18} color={colors.accent} />
+            </Pressable>
+          ) : null}
           {onMaximize ? (
             <Pressable
               accessibilityRole="button"
@@ -84,6 +102,7 @@ export function PaneSlot({
               onPress={onMaximize}
               hitSlop={8}
               {...webFocusableProps}
+              {...webTitle("Expand")}
               style={[styles.iconBtn, webClickable]}
             >
               <Ionicons name="expand-outline" size={18} color={colors.accent} />
@@ -113,7 +132,9 @@ export function PaneSlot({
           />
         ) : paneId === "insights" ? (
           <InsightsPane
-            showDisplayOptions
+            key={insightsEpoch}
+            showDisplayOptions={!insightsInSplit}
+            dense={insightsInSplit}
             contentBottomPad={40}
             onOpenCategory={goCategory}
             onOpenAccount={goAccount}
@@ -134,6 +155,14 @@ export function PaneSlot({
           onPress: () => onSelectPane(id),
         }))}
       />
+
+      <DisplayOptionsModal
+        visible={displayOpen}
+        onClose={() => {
+          setDisplayOpen(false);
+          setInsightsEpoch((n) => n + 1);
+        }}
+      />
     </View>
   );
 }
@@ -142,13 +171,15 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     minWidth: 0,
-    borderWidth: 1,
-    borderColor: "transparent",
+    borderWidth: 1.5,
+    borderColor: colors.borderSubtle,
     borderRadius: 12,
     overflow: "hidden",
+    backgroundColor: "transparent",
   },
   rootActive: {
-    borderColor: colors.border,
+    borderColor: colors.accent,
+    borderWidth: 2,
   },
   chrome: {
     flexDirection: "row",

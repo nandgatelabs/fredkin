@@ -8,8 +8,8 @@ import { useSettingsStore } from "@/store/settings";
 import { colors } from "@/theme";
 
 /**
- * Compact shared period control for the web header (split mode).
- * Keeps Insights visually tied to the same month as Events.
+ * Shared period control for the web header (split mode).
+ * Sized as a primary control so Insights stays clearly tied to the month.
  */
 export function HeaderPeriodChip() {
   const anchorDate = usePeriodStore((s) => s.anchorDate);
@@ -27,7 +27,7 @@ export function HeaderPeriodChip() {
         {...webFocusableProps}
         style={[styles.chevron, webClickable]}
       >
-        <Ionicons name="chevron-back" size={14} color={colors.accent} />
+        <Ionicons name="chevron-back" size={18} color={colors.accent} />
       </Pressable>
       <Text style={styles.label} numberOfLines={1}>
         {label}
@@ -40,7 +40,7 @@ export function HeaderPeriodChip() {
         {...webFocusableProps}
         style={[styles.chevron, webClickable]}
       >
-        <Ionicons name="chevron-forward" size={14} color={colors.accent} />
+        <Ionicons name="chevron-forward" size={18} color={colors.accent} />
       </Pressable>
     </View>
   );
@@ -51,14 +51,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 2,
-    paddingVertical: 4,
-    paddingHorizontal: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
     borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
     flexShrink: 1,
-    maxWidth: 200,
+    maxWidth: 240,
   },
   chevron: {
     padding: 4,
@@ -66,10 +66,10 @@ const styles = StyleSheet.create({
   },
   label: {
     color: colors.accent,
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
     letterSpacing: 0.2,
-    paddingHorizontal: 4,
+    paddingHorizontal: 6,
     flexShrink: 1,
   },
 });

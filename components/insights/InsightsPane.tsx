@@ -62,6 +62,8 @@ type Props = {
   onOpenCategory?: (categoryId: string) => void;
   /** When set, wallet opens in-pane instead of stacking a full route. */
   onOpenAccount?: (accountId: string) => void;
+  /** Tighter mode row for split (filter lives in pane chrome). */
+  dense?: boolean;
 };
 
 /** Insights body: mode picker + charts (no app header / period strip). */
@@ -71,6 +73,7 @@ export function InsightsPane({
   onMaximize,
   onOpenCategory,
   onOpenAccount,
+  dense = false,
 }: Props) {
   const router = useRouter();
   const anchorDate = usePeriodStore((s) => s.anchorDate);
@@ -194,19 +197,25 @@ export function InsightsPane({
 
   return (
     <View style={styles.root}>
-      <View style={styles.toolbar}>
+      <View style={[styles.toolbar, dense && styles.toolbarDense]}>
         <Pressable
           onPress={() => setModeOpen(true)}
-          style={[styles.modeBtn, webClickable]}
+          style={[styles.modeBtn, dense && styles.modeBtnDense, webClickable]}
         >
-          <Text style={styles.modeLabel}>{MODE_LABELS[mode]}</Text>
-          <Ionicons name="chevron-down" size={18} color={colors.accent} />
+          <Text style={[styles.modeLabel, dense && styles.modeLabelDense]}>
+            {MODE_LABELS[mode]}
+          </Text>
+          <Ionicons
+            name="chevron-down"
+            size={dense ? 16 : 18}
+            color={colors.accent}
+          />
         </Pressable>
         {showDisplayOptions ? (
           <Pressable
             onPress={() => setDisplayOpen(true)}
             hitSlop={8}
-            style={[styles.filterBtn, webClickable]}
+            style={[styles.filterBtn, dense && styles.filterBtnDense, webClickable]}
             accessibilityLabel="Display options"
           >
             <Ionicons name="options-outline" size={20} color={colors.accent} />
@@ -359,6 +368,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 4,
   },
+  toolbarDense: {
+    marginHorizontal: 12,
+    marginTop: 2,
+    marginBottom: 2,
+    gap: 6,
+  },
   modeBtn: {
     flex: 1,
     borderWidth: 1,
@@ -371,11 +386,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     backgroundColor: colors.surface,
   },
+  modeBtnDense: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
   modeLabel: {
     color: colors.accent,
     fontWeight: "700",
     fontSize: 13,
     letterSpacing: 0.4,
+  },
+  modeLabelDense: {
+    fontSize: 12,
   },
   filterBtn: {
     width: 44,
@@ -386,6 +408,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.surface,
+  },
+  filterBtnDense: {
+    width: 36,
+    height: 36,
   },
   content: {
     paddingHorizontal: 16,

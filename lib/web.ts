@@ -22,3 +22,8 @@ export const webFontBody =
 
 export const webFontDisplay =
   Platform.OS === "web" ? ("Fraunces, Georgia, serif" as const) : undefined;
+
+/** Native HTML tooltip on web (`title` attribute). No-op on native. */
+export function webTitle(label: string): { title?: string } {
+  return Platform.OS === "web" ? { title: label } : {};
+}
