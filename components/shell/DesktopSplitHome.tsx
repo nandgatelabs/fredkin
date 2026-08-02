@@ -8,7 +8,7 @@ import { colors } from "@/theme";
 
 /**
  * Web desktop split: Events | Insights.
- * Add lives in the bottom tab bar (same as full-screen modes).
+ * Primary nav (Events · + · Insights · Split) lives in the header.
  */
 export function DesktopSplitHome() {
   return (

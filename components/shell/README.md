@@ -7,8 +7,8 @@ UI chrome diverges via Metro platform extensions:
 | File | Native | Web |
 |------|--------|-----|
 | `ShellFrame` | Full bleed | Full-bleed viewport |
-| `AppHeader` | Fredkin · search | Fredkin · search · **Split** · **More** |
-| `ShellTabBar` | Events · `+` · Insights | Same chrome; selection follows desktop view |
+| `AppHeader` | Fredkin · search | Fredkin · search · **Events · + · Insights** · Split · More |
+| `ShellTabBar` | Events · `+` · Insights | Hidden (`null`) — nav is in the header |
 | Home (`index`) | Events tab | **Split** (default) or full Events |
 | Insights (`analysis`) | Insights tab | Full Insights |
 | `MoreEdge` | Right-edge tab | No-op (More is in the header) |
@@ -18,9 +18,9 @@ UI chrome diverges via Metro platform extensions:
 
 - Preference persisted in `localStorage` (`fredkin.desktopView`)
 - Below `layout.splitMinWidth` (900px), split falls back to full Events (preference kept)
-- Header **Split** → side-by-side Events | Insights (hidden when too narrow)
-- Bottom **Events** / **Insights** → that pane full-screen  
-- Tap the active full-screen tab again → back to split (when wide enough)  
+- Header **Events** / **Insights** → that pane full-screen  
+- Header **Split** → side-by-side (hidden when too narrow)  
+- Activate the current full-screen nav item again → back to split (when wide enough)  
 
 
 Shared panes: `EventsPane`, `InsightsPane`. Full screens: `EventsHome`, `InsightsHome`.
