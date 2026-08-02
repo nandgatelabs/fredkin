@@ -31,7 +31,7 @@ Persistent chrome on main tabs. **Native and web share one repo/core; shells div
 
 - **Native top:** **Fredkin** · oval search · right-edge More tab  
 - **Native bottom:** Events · in-bar `+` · Insights  
-- **Web desktop:** full-bleed shell + same bottom nav. Default **Split** (Events | Insights). Header **Split** control returns to side-by-side; **Events** / **Insights** tabs open that pane full-screen (tap again for split). Header **More**.  
+- **Web desktop:** full-bleed shell, no bottom tab bar. Header: **Fredkin** · search · period (split) · pane icons (Events / Insights / Wallets / Types) · **+** · Split · shortcuts · **More** (App only). Default **Split** with any left|right pair; details stay in-pane. Below ~900px, split falls back to single.  
 - **More drawer:** Manage (Wallets, Event Type) + App (Settings, Data, Support, Reset, Export Logs)
 
 Attribution line: **Fredkin by NandGateLabs**.

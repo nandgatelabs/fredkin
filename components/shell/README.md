@@ -7,20 +7,21 @@ UI chrome diverges via Metro platform extensions:
 | File | Native | Web |
 |------|--------|-----|
 | `ShellFrame` | Full bleed | Full-bleed viewport |
-| `AppHeader` | Fredkin · search | Fredkin · search · **Split** · **More** |
-| `ShellTabBar` | Events · `+` · Insights | Same chrome; selection follows desktop view |
-| Home (`index`) | Events tab | **Split** (default) or full Events |
-| Insights (`analysis`) | Insights tab | Full Insights |
-| `MoreEdge` | Right-edge tab | No-op (More is in the header) |
-| `MorePaneHost` | Shared drawer host (both) | Shared drawer host (both) |
+| `AppHeader` | Fredkin · search | Fredkin · search · period · display options · pane icons · + · Split · ? · More |
+| `ShellTabBar` / tabs `_layout` | Events · `+` · Insights | Hidden — nav is in the header |
+| Home (`index`) | Events tab | `DesktopShell` (single or split) |
+| More | Manage + App | App only (Wallets / Types are header panes) |
 
-**Web layout modes** (`store/desktopView.ts`): `split` (default) · `events` · `insights`
+**Web layout** (`store/desktopView.ts`):
 
-- Header **Split** → side-by-side Events | Insights  
-- Bottom **Events** / **Insights** → that pane full-screen  
-- Tap the active full-screen tab again → back to split  
+- Panes: `events` · `insights` · `wallets` · `categories`
+- Modes: `single` | `split` (any left|right pair)
+- Preference persisted in `localStorage` (`fredkin.desktopShell`)
+- Below `layout.splitMinWidth` (900px), split falls back to single
+- In split: header period chip; each column has picker + maximize; details stay in-pane
+- Keyboard help: header `?` or `?` key
 
-Shared panes: `EventsPane`, `InsightsPane`. Full screens: `EventsHome`, `InsightsHome`.
+Shared panes: `EventsPane`, `InsightsPane`, `WalletsPane`, `CategoriesPane`.
 
 Prefer `.web.tsx` / default native files for structural differences.
 Use `Platform.OS` only for tiny style tweaks.

@@ -1,11 +1,18 @@
 import { useCallback } from "react";
 import { usePathname, useRouter } from "expo-router";
 
+import { useCanSplit } from "@/hooks/useViewportWidth";
 import { useKeydown } from "@/hooks/useKeydown";
+import { useDesktopViewStore, type PaneId } from "@/store/desktopView";
 import { usePeriodStore } from "@/store/period";
+import { useShortcutsHelpStore } from "@/store/shortcutsHelp";
 
-/** 1–2 = bottom tabs; 3–4 = More pane destinations (still keyboard-reachable). */
-const TAB_ROUTES = ["/", "/analysis", "/accounts", "/categories"] as const;
+const PANE_BY_DIGIT: Record<number, PaneId> = {
+  1: "events",
+  2: "insights",
+  3: "wallets",
+  4: "categories",
+};
 
 function shiftMonthIso(iso: string, delta: number) {
   const [y, m] = iso.split("-").map(Number);
@@ -15,9 +22,21 @@ function shiftMonthIso(iso: string, delta: number) {
   return `${yy}-${mm}-01`;
 }
 
+function isEditorRoute(pathname: string) {
+  return (
+    pathname.startsWith("/record") ||
+    pathname.startsWith("/search") ||
+    pathname.startsWith("/import") ||
+    pathname.startsWith("/export") ||
+    pathname.startsWith("/backup") ||
+    pathname.startsWith("/reset") ||
+    pathname.startsWith("/preferences")
+  );
+}
+
 /**
- * Laptop keyboard shortcuts for main tabs (web only via useKeydown).
- * / search · n new record · ← → period · 1–4 tabs (Events, Insights, Wallets, Event Type)
+ * Laptop keyboard shortcuts (web only via useKeydown).
+ * ⌘/Ctrl+K or / search · ? help · n new · s split · ← → period · 1–4 panes
  */
 export function WebAppShortcuts() {
   const router = useRouter();
@@ -25,29 +44,37 @@ export function WebAppShortcuts() {
   const shiftPeriod = usePeriodStore((s) => s.shiftPeriod);
   const setAnchorDate = usePeriodStore((s) => s.setAnchorDate);
   const anchorDate = usePeriodStore((s) => s.anchorDate);
+  const mode = useDesktopViewStore((s) => s.mode);
+  const openPane = useDesktopViewStore((s) => s.openPane);
+  const enterSplit = useDesktopViewStore((s) => s.enterSplit);
+  const setMode = useDesktopViewStore((s) => s.setMode);
+  const canSplit = useCanSplit();
+  const openHelp = useShortcutsHelpStore((s) => s.openHelp);
 
   useKeydown(
     true,
     useCallback(
       (event) => {
-        if (event.metaKey || event.ctrlKey || event.altKey) return;
+        const mod = event.metaKey || event.ctrlKey;
 
-        // Don't steal keys on modal/editor routes.
-        if (
-          pathname.startsWith("/record") ||
-          pathname.startsWith("/search") ||
-          pathname.startsWith("/import") ||
-          pathname.startsWith("/export") ||
-          pathname.startsWith("/backup") ||
-          pathname.startsWith("/reset") ||
-          pathname.startsWith("/preferences")
-        ) {
+        if (mod && (event.key === "k" || event.key === "K")) {
+          event.preventDefault();
+          router.push("/search");
           return;
         }
 
-        if (event.key === "/" || event.key === "?") {
+        if (event.metaKey || event.ctrlKey || event.altKey) return;
+        if (isEditorRoute(pathname)) return;
+
+        if (event.key === "/") {
           event.preventDefault();
           router.push("/search");
+          return;
+        }
+
+        if (event.key === "?") {
+          event.preventDefault();
+          openHelp();
           return;
         }
 
@@ -57,16 +84,25 @@ export function WebAppShortcuts() {
           return;
         }
 
+        if ((event.key === "s" || event.key === "S") && canSplit) {
+          event.preventDefault();
+          if (mode === "split") setMode("single");
+          else enterSplit();
+          router.navigate("/");
+          return;
+        }
+
         if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
           const delta = event.key === "ArrowLeft" ? -1 : 1;
           event.preventDefault();
-          // Budgets is always month-scoped.
           if (pathname.includes("budgets")) {
             setAnchorDate(shiftMonthIso(anchorDate, delta));
           } else if (
             pathname === "/" ||
             pathname.includes("analysis") ||
-            pathname.includes("index")
+            pathname.includes("index") ||
+            pathname.includes("accounts") ||
+            pathname.includes("categories")
           ) {
             shiftPeriod(delta);
           }
@@ -74,12 +110,26 @@ export function WebAppShortcuts() {
         }
 
         const digit = Number(event.key);
-        if (digit >= 1 && digit <= TAB_ROUTES.length) {
+        const pane = PANE_BY_DIGIT[digit];
+        if (pane) {
           event.preventDefault();
-          router.push(TAB_ROUTES[digit - 1] as never);
+          openPane(pane);
+          router.navigate("/");
         }
       },
-      [anchorDate, pathname, router, setAnchorDate, shiftPeriod],
+      [
+        anchorDate,
+        canSplit,
+        enterSplit,
+        mode,
+        openHelp,
+        openPane,
+        pathname,
+        router,
+        setAnchorDate,
+        setMode,
+        shiftPeriod,
+      ],
     ),
     { ignoreWhenTyping: true },
   );

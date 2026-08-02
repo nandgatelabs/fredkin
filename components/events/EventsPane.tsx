@@ -31,10 +31,24 @@ import { colors } from "@/theme";
 type Props = {
   /** Extra bottom padding (e.g. native tab bar clearance). */
   listBottomPad?: number;
+  /** When false, period chevrons hide (shared header chip owns nav). */
+  showPeriodNav?: boolean;
+  /** When false, hide period label (split uses header chip). */
+  showPeriodLabel?: boolean;
+  /** When false, filter control is owned elsewhere (e.g. web header). */
+  showDisplayOptions?: boolean;
+  /** Expand Events to full screen (web split). */
+  onMaximize?: () => void;
 };
 
 /** Events list + period strip (no app header / atmosphere). */
-export function EventsPane({ listBottomPad = 24 }: Props) {
+export function EventsPane({
+  listBottomPad = 24,
+  showPeriodNav = true,
+  showPeriodLabel = true,
+  showDisplayOptions = true,
+  onMaximize,
+}: Props) {
   const router = useRouter();
   const anchorDate = usePeriodStore((s) => s.anchorDate);
   const viewMode = useSettingsStore((s) => s.viewMode);
@@ -88,7 +102,12 @@ export function EventsPane({ listBottomPad = 24 }: Props) {
         expense={expense}
         income={income}
         carryAmount={carryAmount}
-        onFilterPress={() => setDisplayOpen(true)}
+        showPeriodNav={showPeriodNav}
+        showPeriodLabel={showPeriodLabel}
+        onMaximize={onMaximize}
+        onFilterPress={
+          showDisplayOptions ? () => setDisplayOpen(true) : undefined
+        }
       />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -118,13 +137,15 @@ export function EventsPane({ listBottomPad = 24 }: Props) {
         />
       )}
 
-      <DisplayOptionsModal
-        visible={displayOpen}
-        onClose={() => {
-          setDisplayOpen(false);
-          void reload();
-        }}
-      />
+      {showDisplayOptions ? (
+        <DisplayOptionsModal
+          visible={displayOpen}
+          onClose={() => {
+            setDisplayOpen(false);
+            void reload();
+          }}
+        />
+      ) : null}
 
       <RecordDetailModal
         record={selected}

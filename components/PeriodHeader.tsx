@@ -15,6 +15,12 @@ type Props = {
   income?: number;
   /** Extra amount added to Net (carry-over). */
   carryAmount?: number;
+  /** When false, period chevrons hide (nav lives elsewhere, e.g. header chip). */
+  showPeriodNav?: boolean;
+  /** When false, hide the period label row (summary / filter can remain). */
+  showPeriodLabel?: boolean;
+  /** Expand this pane to full screen (web split). */
+  onMaximize?: () => void;
 };
 
 export function PeriodHeader({
@@ -23,6 +29,9 @@ export function PeriodHeader({
   expense = 0,
   income = 0,
   carryAmount = 0,
+  showPeriodNav = true,
+  showPeriodLabel = true,
+  onMaximize,
 }: Props) {
   const anchorDate = usePeriodStore((s) => s.anchorDate);
   const shiftPeriod = usePeriodStore((s) => s.shiftPeriod);
@@ -32,48 +41,77 @@ export function PeriodHeader({
   const total = income - expense + carryAmount;
   const label = formatPeriodLabel(anchorDate, viewMode);
 
+  const showPeriodRow = showPeriodLabel || onFilterPress != null || onMaximize != null;
+
   return (
     <View style={styles.wrap}>
-      <View style={styles.periodRow}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Previous period"
-          onPress={() => shiftPeriod(-1)}
-          hitSlop={10}
-          {...webFocusableProps}
-          style={[styles.chevron, webClickable]}
-        >
-          <Ionicons name="chevron-back" size={20} color={colors.accent} />
-        </Pressable>
+      {showPeriodRow ? (
+        <View style={styles.periodRow}>
+          {showPeriodLabel && showPeriodNav ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Previous period"
+              onPress={() => shiftPeriod(-1)}
+              hitSlop={10}
+              {...webFocusableProps}
+              style={[styles.chevron, webClickable]}
+            >
+              <Ionicons name="chevron-back" size={20} color={colors.accent} />
+            </Pressable>
+          ) : showPeriodLabel ? (
+            <View style={styles.chevronSpacer} />
+          ) : null}
 
-        <Text style={styles.periodLabel} accessibilityRole="header">
-          {label}
-        </Text>
+          {showPeriodLabel ? (
+            <Text style={styles.periodLabel} accessibilityRole="header">
+              {label}
+            </Text>
+          ) : (
+            <View style={{ flex: 1 }} />
+          )}
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Next period"
-          onPress={() => shiftPeriod(1)}
-          hitSlop={10}
-          {...webFocusableProps}
-          style={[styles.chevron, webClickable]}
-        >
-          <Ionicons name="chevron-forward" size={20} color={colors.accent} />
-        </Pressable>
+          {showPeriodLabel && showPeriodNav ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Next period"
+              onPress={() => shiftPeriod(1)}
+              hitSlop={10}
+              {...webFocusableProps}
+              style={[styles.chevron, webClickable]}
+            >
+              <Ionicons name="chevron-forward" size={20} color={colors.accent} />
+            </Pressable>
+          ) : showPeriodLabel ? (
+            <View style={styles.chevronSpacer} />
+          ) : null}
 
-        {onFilterPress ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Display options"
-            onPress={onFilterPress}
-            hitSlop={10}
-            {...webFocusableProps}
-            style={[styles.filter, webClickable]}
-          >
-            <Ionicons name="options-outline" size={18} color={colors.accent} />
-          </Pressable>
-        ) : null}
-      </View>
+          {onFilterPress ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Display options"
+              onPress={onFilterPress}
+              hitSlop={10}
+              {...webFocusableProps}
+              style={[styles.filter, webClickable]}
+            >
+              <Ionicons name="options-outline" size={18} color={colors.accent} />
+            </Pressable>
+          ) : null}
+
+          {onMaximize ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Expand Events to full screen"
+              onPress={onMaximize}
+              hitSlop={10}
+              {...webFocusableProps}
+              style={[styles.filter, webClickable]}
+            >
+              <Ionicons name="expand-outline" size={18} color={colors.accent} />
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
 
       {showSummary && showTotal ? (
         <View style={styles.summaryRow}>
@@ -126,6 +164,9 @@ const styles = StyleSheet.create({
   },
   chevron: {
     padding: 4,
+  },
+  chevronSpacer: {
+    width: 28,
   },
   periodLabel: {
     flex: 1,

@@ -22,6 +22,7 @@ import { FlowCalendar } from "@/components/analysis/FlowCalendar";
 import { FlowLineChart } from "@/components/analysis/FlowLineChart";
 import { ActionMenu } from "@/components/ActionMenu";
 import { DisplayOptionsModal } from "@/components/DisplayOptionsModal";
+import { EmptyTab } from "@/components/EmptyTab";
 import {
   getAccountPeriodBreakdown,
   getCategoryBreakdown,
@@ -55,12 +56,24 @@ type Props = {
   /** Show display-options entry (native Insights has PeriodHeader filter instead). */
   showDisplayOptions?: boolean;
   contentBottomPad?: number;
+  /** Expand Insights to full screen (web split). */
+  onMaximize?: () => void;
+  /** When set, category opens in-pane instead of stacking a full route. */
+  onOpenCategory?: (categoryId: string) => void;
+  /** When set, wallet opens in-pane instead of stacking a full route. */
+  onOpenAccount?: (accountId: string) => void;
+  /** Tighter mode row for split (filter lives in pane chrome). */
+  dense?: boolean;
 };
 
 /** Insights body: mode picker + charts (no app header / period strip). */
 export function InsightsPane({
   showDisplayOptions = false,
   contentBottomPad = 40,
+  onMaximize,
+  onOpenCategory,
+  onOpenAccount,
+  dense = false,
 }: Props) {
   const router = useRouter();
   const anchorDate = usePeriodStore((s) => s.anchorDate);
@@ -129,12 +142,45 @@ export function InsightsPane({
   const tone: "expense" | "income" =
     mode === "income_overview" || mode === "income_flow" ? "income" : "expense";
 
+  const isEmpty =
+    mode === "expense_overview" || mode === "income_overview"
+      ? slices.length === 0
+      : mode === "expense_flow" || mode === "income_flow"
+        ? !days.some((d) => d.amount > 0)
+        : accounts.length === 0;
+
+  const emptyCopy =
+    tone === "income"
+      ? {
+          title: "No income yet",
+          subtitle: "Add income events for this period to see Insights.",
+        }
+      : mode === "account"
+        ? {
+            title: "No wallet activity",
+            subtitle: "Add events for this period to see Insights.",
+          }
+        : {
+            title: "No spend yet",
+            subtitle: "Add events for this period to see Insights.",
+          };
+
   const donutSegments = slices.map((s, i) => ({
     amount: s.amount,
     color: donutColor(i),
     name: s.name,
     percent: s.percent,
   }));
+
+  function openCategory(categoryId: string) {
+    if (onOpenCategory) onOpenCategory(categoryId);
+    else router.push(`/category/${categoryId}` as never);
+  }
+
+  function openAccount(accountId: string) {
+    if (onOpenAccount) onOpenAccount(accountId);
+    else router.push(`/account/${accountId}` as never);
+  }
 
   function openCategoryOrSelect(index: number | null) {
     if (index == null) {
@@ -143,7 +189,7 @@ export function InsightsPane({
     }
     const slice = slices[index];
     if (slice?.categoryId) {
-      router.push(`/category/${slice.categoryId}` as never);
+      openCategory(slice.categoryId);
       return;
     }
     setSelectedSlice(selectedSlice === index ? null : index);
@@ -151,22 +197,38 @@ export function InsightsPane({
 
   return (
     <View style={styles.root}>
-      <View style={styles.toolbar}>
+      <View style={[styles.toolbar, dense && styles.toolbarDense]}>
         <Pressable
           onPress={() => setModeOpen(true)}
-          style={[styles.modeBtn, webClickable]}
+          style={[styles.modeBtn, dense && styles.modeBtnDense, webClickable]}
         >
-          <Text style={styles.modeLabel}>{MODE_LABELS[mode]}</Text>
-          <Ionicons name="chevron-down" size={18} color={colors.accent} />
+          <Text style={[styles.modeLabel, dense && styles.modeLabelDense]}>
+            {MODE_LABELS[mode]}
+          </Text>
+          <Ionicons
+            name="chevron-down"
+            size={dense ? 16 : 18}
+            color={colors.accent}
+          />
         </Pressable>
         {showDisplayOptions ? (
           <Pressable
             onPress={() => setDisplayOpen(true)}
             hitSlop={8}
-            style={[styles.filterBtn, webClickable]}
+            style={[styles.filterBtn, dense && styles.filterBtnDense, webClickable]}
             accessibilityLabel="Display options"
           >
             <Ionicons name="options-outline" size={20} color={colors.accent} />
+          </Pressable>
+        ) : null}
+        {onMaximize ? (
+          <Pressable
+            onPress={onMaximize}
+            hitSlop={8}
+            style={[styles.filterBtn, webClickable]}
+            accessibilityLabel="Expand Insights to full screen"
+          >
+            <Ionicons name="expand-outline" size={20} color={colors.accent} />
           </Pressable>
         ) : null}
       </View>
@@ -175,6 +237,8 @@ export function InsightsPane({
 
       {loading ? (
         <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
+      ) : isEmpty ? (
+        <EmptyTab title={emptyCopy.title} subtitle={emptyCopy.subtitle} />
       ) : (
         <ScrollView
           ref={scrollRef}
@@ -205,9 +269,7 @@ export function InsightsPane({
                   tone={tone}
                   selectedIndex={selectedSlice}
                   onSelect={openCategoryOrSelect}
-                  onOpenCategory={(categoryId) =>
-                    router.push(`/category/${categoryId}` as never)
-                  }
+                  onOpenCategory={openCategory}
                   onSelectedLayout={(y) => {
                     scrollRef.current?.scrollTo({
                       y: Math.max(0, listOffsetRef.current + y - 24),
@@ -258,7 +320,7 @@ export function InsightsPane({
                 accounts={accounts}
                 selectedId={selectedAccount}
                 onSelect={(id) => {
-                  if (id) router.push(`/account/${id}` as never);
+                  if (id) openAccount(id);
                   else setSelectedAccount(null);
                 }}
               />
@@ -266,7 +328,7 @@ export function InsightsPane({
                 accounts={accounts}
                 selectedId={selectedAccount}
                 onSelect={(id) => {
-                  if (id) router.push(`/account/${id}` as never);
+                  if (id) openAccount(id);
                   else setSelectedAccount(null);
                 }}
               />
@@ -306,6 +368,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 4,
   },
+  toolbarDense: {
+    marginHorizontal: 12,
+    marginTop: 2,
+    marginBottom: 2,
+    gap: 6,
+  },
   modeBtn: {
     flex: 1,
     borderWidth: 1,
@@ -318,11 +386,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     backgroundColor: colors.surface,
   },
+  modeBtnDense: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
   modeLabel: {
     color: colors.accent,
     fontWeight: "700",
     fontSize: 13,
     letterSpacing: 0.4,
+  },
+  modeLabelDense: {
+    fontSize: 12,
   },
   filterBtn: {
     width: 44,
@@ -333,6 +408,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.surface,
+  },
+  filterBtnDense: {
+    width: 36,
+    height: 36,
   },
   content: {
     paddingHorizontal: 16,
