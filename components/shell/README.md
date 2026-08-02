@@ -7,7 +7,7 @@ UI chrome diverges via Metro platform extensions:
 | File | Native | Web |
 |------|--------|-----|
 | `ShellFrame` | Full bleed | Full-bleed viewport |
-| `AppHeader` | Fredkin · search | Fredkin · search · period · pane icons · + · Split · ? · More |
+| `AppHeader` | Fredkin · search | Fredkin · search · period · display options · pane icons · + · Split · ? · More |
 | `ShellTabBar` / tabs `_layout` | Events · `+` · Insights | Hidden — nav is in the header |
 | Home (`index`) | Events tab | `DesktopShell` (single or split) |
 | More | Manage + App | App only (Wallets / Types are header panes) |

@@ -35,6 +35,8 @@ type Props = {
   showPeriodNav?: boolean;
   /** When false, hide period label (split uses header chip). */
   showPeriodLabel?: boolean;
+  /** When false, filter control is owned elsewhere (e.g. web header). */
+  showDisplayOptions?: boolean;
   /** Expand Events to full screen (web split). */
   onMaximize?: () => void;
 };
@@ -44,6 +46,7 @@ export function EventsPane({
   listBottomPad = 24,
   showPeriodNav = true,
   showPeriodLabel = true,
+  showDisplayOptions = true,
   onMaximize,
 }: Props) {
   const router = useRouter();
@@ -102,7 +105,9 @@ export function EventsPane({
         showPeriodNav={showPeriodNav}
         showPeriodLabel={showPeriodLabel}
         onMaximize={onMaximize}
-        onFilterPress={() => setDisplayOpen(true)}
+        onFilterPress={
+          showDisplayOptions ? () => setDisplayOpen(true) : undefined
+        }
       />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -132,13 +137,15 @@ export function EventsPane({
         />
       )}
 
-      <DisplayOptionsModal
-        visible={displayOpen}
-        onClose={() => {
-          setDisplayOpen(false);
-          void reload();
-        }}
-      />
+      {showDisplayOptions ? (
+        <DisplayOptionsModal
+          visible={displayOpen}
+          onClose={() => {
+            setDisplayOpen(false);
+            void reload();
+          }}
+        />
+      ) : null}
 
       <RecordDetailModal
         record={selected}

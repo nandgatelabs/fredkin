@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
 
+import { DisplayOptionsModal } from "@/components/DisplayOptionsModal";
 import { GlassSurface } from "@/components/GlassSurface";
 import { HeaderPeriodChip } from "@/components/shell/HeaderPeriodChip";
 import { KeyboardShortcutsModal } from "@/components/shell/KeyboardShortcutsModal";
@@ -49,6 +51,7 @@ export function AppHeader() {
   const shortcutsOpen = useShortcutsHelpStore((s) => s.open);
   const openHelp = useShortcutsHelpStore((s) => s.openHelp);
   const closeHelp = useShortcutsHelpStore((s) => s.closeHelp);
+  const [displayOpen, setDisplayOpen] = useState(false);
 
   const splitActive = layoutState.mode === "split";
   const activePanes =
@@ -85,7 +88,23 @@ export function AppHeader() {
       </View>
 
       <View style={styles.right}>
-        {splitActive ? <HeaderPeriodChip /> : null}
+        <HeaderPeriodChip />
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Display options"
+          onPress={() => setDisplayOpen(true)}
+          hitSlop={8}
+          {...webFocusableProps}
+          {...webTitle("Display options")}
+          style={({ pressed }) => [
+            styles.toolBtn,
+            webClickable,
+            pressed && styles.toolBtnPressed,
+          ]}
+        >
+          <Ionicons name="options-outline" size={18} color={colors.tabInactive} />
+        </Pressable>
 
         <View style={styles.navCluster} accessibilityRole="toolbar">
           {ALL_PANES.map((pane) => {
@@ -206,6 +225,10 @@ export function AppHeader() {
       </View>
 
       <KeyboardShortcutsModal visible={shortcutsOpen} onClose={closeHelp} />
+      <DisplayOptionsModal
+        visible={displayOpen}
+        onClose={() => setDisplayOpen(false)}
+      />
     </GlassSurface>
   );
 }

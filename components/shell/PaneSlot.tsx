@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ActionMenu } from "@/components/ActionMenu";
-import { DisplayOptionsModal } from "@/components/DisplayOptionsModal";
 import { AccountDetailPane } from "@/components/account/AccountDetailPane";
 import { CategoriesPane } from "@/components/categories/CategoriesPane";
 import { CategoryDetailPane } from "@/components/category/CategoryDetailPane";
@@ -35,6 +34,7 @@ type Props = {
 
 /**
  * One desktop column: chrome (picker + maximize) + pane body + in-pane detail stack.
+ * Display options live in the web header (not per-pane).
  */
 export function PaneSlot({
   paneId,
@@ -45,9 +45,7 @@ export function PaneSlot({
   splitChrome = false,
 }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [displayOpen, setDisplayOpen] = useState(false);
   const [detail, setDetail] = useState<Detail>(null);
-  const [insightsEpoch, setInsightsEpoch] = useState(0);
 
   useEffect(() => {
     setDetail(null);
@@ -56,7 +54,6 @@ export function PaneSlot({
   const goCategory = (id: string) => setDetail({ kind: "category", id });
   const goAccount = (id: string) => setDetail({ kind: "account", id });
   const showChrome = splitChrome || onMaximize != null;
-  const insightsInSplit = splitChrome && paneId === "insights";
 
   return (
     <View
@@ -82,19 +79,6 @@ export function PaneSlot({
             <Text style={styles.pickerLabel}>{PANE_LABELS[paneId]}</Text>
             <Ionicons name="chevron-down" size={16} color={colors.accent} />
           </Pressable>
-          {insightsInSplit ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Display options"
-              onPress={() => setDisplayOpen(true)}
-              hitSlop={8}
-              {...webFocusableProps}
-              {...webTitle("Display options")}
-              style={[styles.iconBtn, webClickable]}
-            >
-              <Ionicons name="options-outline" size={18} color={colors.accent} />
-            </Pressable>
-          ) : null}
           {onMaximize ? (
             <Pressable
               accessibilityRole="button"
@@ -129,12 +113,12 @@ export function PaneSlot({
             listBottomPad={24}
             showPeriodNav={!splitChrome}
             showPeriodLabel={!splitChrome}
+            showDisplayOptions={false}
           />
         ) : paneId === "insights" ? (
           <InsightsPane
-            key={insightsEpoch}
-            showDisplayOptions={!insightsInSplit}
-            dense={insightsInSplit}
+            showDisplayOptions={false}
+            dense={splitChrome}
             contentBottomPad={40}
             onOpenCategory={goCategory}
             onOpenAccount={goAccount}
@@ -154,14 +138,6 @@ export function PaneSlot({
           label: PANE_LABELS[id],
           onPress: () => onSelectPane(id),
         }))}
-      />
-
-      <DisplayOptionsModal
-        visible={displayOpen}
-        onClose={() => {
-          setDisplayOpen(false);
-          setInsightsEpoch((n) => n + 1);
-        }}
       />
     </View>
   );
