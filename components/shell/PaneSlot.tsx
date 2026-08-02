@@ -111,8 +111,8 @@ export function PaneSlot({
         ) : paneId === "events" ? (
           <EventsPane
             listBottomPad={24}
-            showPeriodNav={!splitChrome}
-            showPeriodLabel={!splitChrome}
+            showPeriodNav={false}
+            showPeriodLabel={false}
             showDisplayOptions={false}
           />
         ) : paneId === "insights" ? (
