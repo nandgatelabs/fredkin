@@ -1,56 +1,44 @@
-import { useState } from "react";
 import { Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname } from "expo-router";
 
-import { MorePane } from "@/components/MorePane";
+import { isMorePath } from "@/components/shell/morePaths";
 import { webClickable, webFocusableProps } from "@/lib/web";
+import { useMorePaneStore } from "@/store/morePane";
 import { colors } from "@/theme";
 
-const MORE_PATHS = [
-  "/accounts",
-  "/categories",
-  "/budgets",
-  "/preferences",
-  "/data",
-  "/help",
-  "/reset",
-];
-
 /**
- * Right-edge vertical tab (edge-panel pattern) that opens the More drawer.
- * Mounted at tabs layout root so the modal sits above the tab bar.
+ * Native right-edge tab that opens More.
+ * Web uses `MoreEdge.web.tsx` (header control instead).
  */
 export function MoreEdge() {
-  const [open, setOpen] = useState(false);
+  const open = useMorePaneStore((s) => s.open);
+  const openMore = useMorePaneStore((s) => s.openMore);
   const pathname = usePathname();
-  const active = MORE_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  const active = isMorePath(pathname);
+
+  if (open) return null;
 
   return (
-    <>
-      {!open ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Open more"
-          accessibilityState={{ selected: active }}
-          onPress={() => setOpen(true)}
-          {...webFocusableProps}
-          style={({ pressed }) => [
-            styles.tab,
-            webClickable,
-            active && styles.tabActive,
-            pressed && styles.tabPressed,
-          ]}
-        >
-          <Ionicons
-            name="chevron-back"
-            size={16}
-            color={active ? colors.accent : colors.tabInactive}
-          />
-        </Pressable>
-      ) : null}
-      <MorePane visible={open} onClose={() => setOpen(false)} />
-    </>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Open more"
+      accessibilityState={{ selected: active }}
+      onPress={openMore}
+      {...webFocusableProps}
+      style={({ pressed }) => [
+        styles.tab,
+        webClickable,
+        active && styles.tabActive,
+        pressed && styles.tabPressed,
+      ]}
+    >
+      <Ionicons
+        name="chevron-back"
+        size={16}
+        color={active ? colors.accent : colors.tabInactive}
+      />
+    </Pressable>
   );
 }
 

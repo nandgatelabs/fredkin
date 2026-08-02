@@ -27,21 +27,12 @@ SQLite / CSV on-disk TYPE strings stay `expense` / `income` for compatibility; U
 
 ## 1. App shell
 
-Persistent chrome on main tabs:
+Persistent chrome on main tabs. **Native and web share one repo/core; shells diverge via `.web.tsx` files** (`components/shell/README.md`).
 
-- **Top bar:** hamburger · **Fredkin** wordmark · search
-- **Bottom nav:** 4 tabs (active = gold highlight)
-- **FAB:** dark circle, gold `+` → add event
-
-### Drawer
-
-| Item | Destination |
-|------|-------------|
-| Settings | Preferences screen (title: Settings) |
-| Data | Hub → Export, Import, Backup, Restore |
-| Support | Help / feedback links |
-| Reset | Wipe options |
-| Export Logs | Local debug log file |
+- **Native top:** **Fredkin** · oval search · right-edge More tab  
+- **Native bottom:** Events · in-bar `+` · Insights  
+- **Web desktop:** full-bleed shell + same bottom nav. Default **Split** (Events | Insights). Header **Split** control returns to side-by-side; **Events** / **Insights** tabs open that pane full-screen (tap again for split). Header **More**.  
+- **More drawer:** Manage (Wallets, Event Type) + App (Settings, Data, Support, Reset, Export Logs)
 
 Attribution line: **Fredkin by NandGateLabs**.
 

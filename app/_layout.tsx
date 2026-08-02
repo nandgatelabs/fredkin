@@ -5,6 +5,8 @@ import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { PasscodeGate } from "@/components/PasscodeGate";
+import { MorePaneHost } from "@/components/shell/MorePaneHost";
+import { ShellFrame } from "@/components/shell/ShellFrame";
 import { getDb } from "@/db/client";
 import { log } from "@/lib/logger";
 import { maybeFireDailyRemind } from "@/lib/remind";
@@ -67,62 +69,66 @@ export default function RootLayout() {
   // expo-router onUnhandledAction crashes after theme reload).
   return (
     <GestureHandlerRootView style={styles.root}>
-      <StatusBar style={statusStyle} />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
-          animation: "slide_from_right",
-        }}
-      >
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="search" options={{ animation: "fade" }} />
-        <Stack.Screen name="import-csv" options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="export-csv" options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="preferences" options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="data" options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="backup" options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="help" options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="about-doc" options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="reset" options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="account/[id]" options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="category/[id]" options={{ animation: "slide_from_right" }} />
-        <Stack.Screen
-          name="record/new"
-          options={{
-            // Web: overlay dialog (transparent). Native: full-screen sheet.
-            presentation: Platform.OS === "web" ? "transparentModal" : "modal",
-            animation: Platform.OS === "web" ? "fade" : "slide_from_bottom",
-            contentStyle:
-              Platform.OS === "web"
-                ? { backgroundColor: "transparent" }
-                : { backgroundColor: colors.background },
+      <ShellFrame>
+        <StatusBar style={statusStyle} />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.background },
+            animation: "slide_from_right",
           }}
-        />
-      </Stack>
+        >
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="search" options={{ animation: "fade" }} />
+          <Stack.Screen name="import-csv" options={{ animation: "slide_from_right" }} />
+          <Stack.Screen name="export-csv" options={{ animation: "slide_from_right" }} />
+          <Stack.Screen name="preferences" options={{ animation: "slide_from_right" }} />
+          <Stack.Screen name="data" options={{ animation: "slide_from_right" }} />
+          <Stack.Screen name="backup" options={{ animation: "slide_from_right" }} />
+          <Stack.Screen name="help" options={{ animation: "slide_from_right" }} />
+          <Stack.Screen name="about-doc" options={{ animation: "slide_from_right" }} />
+          <Stack.Screen name="reset" options={{ animation: "slide_from_right" }} />
+          <Stack.Screen name="account/[id]" options={{ animation: "slide_from_right" }} />
+          <Stack.Screen name="category/[id]" options={{ animation: "slide_from_right" }} />
+          <Stack.Screen
+            name="record/new"
+            options={{
+              // Web: overlay dialog (transparent). Native: full-screen sheet.
+              presentation: Platform.OS === "web" ? "transparentModal" : "modal",
+              animation: Platform.OS === "web" ? "fade" : "slide_from_bottom",
+              contentStyle:
+                Platform.OS === "web"
+                  ? { backgroundColor: "transparent" }
+                  : { backgroundColor: colors.background },
+            }}
+          />
+        </Stack>
 
-      {!ready ? (
-        <View style={[styles.overlay, styles.overlayCentered]} pointerEvents="auto">
-          <ActivityIndicator color={colors.accent} size="large" />
-          {bootError ? (
-            <>
-              <Text style={styles.errorTitle}>Could not start local database</Text>
-              <Text style={styles.errorBody}>{bootError}</Text>
-              <Text style={styles.errorHint}>
-                On web: close every other tab on localhost:8081 (SQLite OPFS allows
-                only one tab), then hard-refresh. Prefer a normal Chrome/Edge window
-                (not private/incognito).
-              </Text>
-            </>
-          ) : null}
-        </View>
-      ) : null}
+        <MorePaneHost />
 
-      {locked ? (
-        <View style={styles.overlay} pointerEvents="auto">
-          <PasscodeGate onUnlocked={() => setSessionUnlocked(true)} />
-        </View>
-      ) : null}
+        {!ready ? (
+          <View style={[styles.overlay, styles.overlayCentered]} pointerEvents="auto">
+            <ActivityIndicator color={colors.accent} size="large" />
+            {bootError ? (
+              <>
+                <Text style={styles.errorTitle}>Could not start local database</Text>
+                <Text style={styles.errorBody}>{bootError}</Text>
+                <Text style={styles.errorHint}>
+                  On web: close every other tab on localhost:8081 (SQLite OPFS allows
+                  only one tab), then hard-refresh. Prefer a normal Chrome/Edge window
+                  (not private/incognito).
+                </Text>
+              </>
+            ) : null}
+          </View>
+        ) : null}
+
+        {locked ? (
+          <View style={styles.overlay} pointerEvents="auto">
+            <PasscodeGate onUnlocked={() => setSessionUnlocked(true)} />
+          </View>
+        ) : null}
+      </ShellFrame>
     </GestureHandlerRootView>
   );
 }
