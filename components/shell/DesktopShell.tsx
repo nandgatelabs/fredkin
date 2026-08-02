@@ -1,12 +1,11 @@
 import { useCallback, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { useRouter } from "expo-router";
 
 import { AppHeader } from "@/components/AppHeader";
 import { GlassAtmosphere } from "@/components/GlassAtmosphere";
-import { EventsPane } from "@/components/events/EventsPane";
-import { InsightsPane } from "@/components/insights/InsightsPane";
+import { PaneSlot } from "@/components/shell/PaneSlot";
 import { SplitDivider } from "@/components/shell/SplitDivider";
+import { useEffectiveDesktopLayout } from "@/hooks/useEffectiveDesktopView";
 import { useDesktopViewStore } from "@/store/desktopView";
 import { colors } from "@/theme";
 
@@ -34,13 +33,14 @@ function persistRatio(ratio: number) {
   }
 }
 
-/**
- * Web desktop split: Events | Insights.
- * Primary nav lives in the header; period chip syncs both panes.
- */
-export function DesktopSplitHome() {
-  const router = useRouter();
-  const setView = useDesktopViewStore((s) => s.setView);
+/** Web desktop home: single pane or any left|right pair. */
+export function DesktopShell() {
+  const layout = useEffectiveDesktopLayout();
+  const setLeft = useDesktopViewStore((s) => s.setLeft);
+  const setRight = useDesktopViewStore((s) => s.setRight);
+  const setActiveSide = useDesktopViewStore((s) => s.setActiveSide);
+  const maximize = useDesktopViewStore((s) => s.maximize);
+
   const [leftRatio, setLeftRatio] = useState(readRatio);
   const splitRef = useRef<View>(null);
   const splitLeftRef = useRef(0);
@@ -48,7 +48,9 @@ export function DesktopSplitHome() {
 
   const measureSplit = useCallback(() => {
     const node = splitRef.current as unknown as {
-      measureInWindow?: (cb: (x: number, y: number, w: number, h: number) => void) => void;
+      measureInWindow?: (
+        cb: (x: number, y: number, w: number, h: number) => void,
+      ) => void;
     } | null;
     node?.measureInWindow?.((x, _y, w) => {
       splitLeftRef.current = x;
@@ -60,8 +62,7 @@ export function DesktopSplitHome() {
     const width = splitWidthRef.current;
     if (width <= 0) return;
     const next = (clientX - splitLeftRef.current) / width;
-    const clamped = Math.min(MAX_RATIO, Math.max(MIN_RATIO, next));
-    setLeftRatio(clamped);
+    setLeftRatio(Math.min(MAX_RATIO, Math.max(MIN_RATIO, next)));
   }, []);
 
   const onDragEnd = useCallback(() => {
@@ -75,30 +76,39 @@ export function DesktopSplitHome() {
     <View style={styles.root}>
       <GlassAtmosphere />
       <AppHeader />
-      <View
-        ref={splitRef}
-        style={styles.split}
-        onLayout={measureSplit}
-      >
-        <View style={[styles.pane, { flexGrow: leftRatio, flexBasis: 0 }]}>
-          <EventsPane
-            listBottomPad={24}
-            showPeriodNav={false}
-            onMaximize={() => setView("events")}
-          />
+      {layout.mode === "split" ? (
+        <View ref={splitRef} style={styles.split} onLayout={measureSplit}>
+          <View style={[styles.pane, { flexGrow: leftRatio, flexBasis: 0 }]}>
+            <PaneSlot
+              paneId={layout.left}
+              active={layout.activeSide === "left"}
+              splitChrome
+              onFocus={() => setActiveSide("left")}
+              onSelectPane={setLeft}
+              onMaximize={() => maximize("left")}
+            />
+          </View>
+          <SplitDivider onDrag={onDrag} onDragEnd={onDragEnd} />
+          <View
+            style={[styles.pane, { flexGrow: 1 - leftRatio, flexBasis: 0 }]}
+          >
+            <PaneSlot
+              paneId={layout.right}
+              active={layout.activeSide === "right"}
+              splitChrome
+              onFocus={() => setActiveSide("right")}
+              onSelectPane={setRight}
+              onMaximize={() => maximize("right")}
+            />
+          </View>
         </View>
-        <SplitDivider onDrag={onDrag} onDragEnd={onDragEnd} />
-        <View style={[styles.pane, { flexGrow: 1 - leftRatio, flexBasis: 0 }]}>
-          <InsightsPane
-            showDisplayOptions
-            contentBottomPad={40}
-            onMaximize={() => {
-              setView("insights");
-              router.navigate("/analysis");
-            }}
-          />
-        </View>
-      </View>
+      ) : (
+        <PaneSlot
+          paneId={layout.pane}
+          onSelectPane={setLeft}
+          splitChrome={false}
+        />
+      )}
     </View>
   );
 }
@@ -112,6 +122,9 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     minHeight: 0,
+    paddingHorizontal: 8,
+    paddingBottom: 8,
+    gap: 0,
   },
   pane: {
     flexShrink: 1,

@@ -5,17 +5,30 @@ import { usePathname, useRouter } from "expo-router";
 
 import { GlassSurface } from "@/components/GlassSurface";
 import { HeaderPeriodChip } from "@/components/shell/HeaderPeriodChip";
+import { KeyboardShortcutsModal } from "@/components/shell/KeyboardShortcutsModal";
 import { isMorePath } from "@/components/shell/morePaths";
-import { useEffectiveDesktopView } from "@/hooks/useEffectiveDesktopView";
+import { useEffectiveDesktopLayout } from "@/hooks/useEffectiveDesktopView";
 import { useCanSplit } from "@/hooks/useViewportWidth";
 import { webClickable, webFocusableProps, webFontDisplay } from "@/lib/web";
-import { useDesktopViewStore } from "@/store/desktopView";
+import {
+  ALL_PANES,
+  PANE_LABELS,
+  useDesktopViewStore,
+  type PaneId,
+} from "@/store/desktopView";
 import { useMorePaneStore } from "@/store/morePane";
+import { useShortcutsHelpStore } from "@/store/shortcutsHelp";
 import { colors, layout } from "@/theme";
 
+const PANE_ICONS: Record<PaneId, keyof typeof Ionicons.glyphMap> = {
+  events: "receipt-outline",
+  insights: "pie-chart-outline",
+  wallets: "wallet-outline",
+  categories: "pricetag-outline",
+};
+
 /**
- * Web header: Fredkin · search · period (split) · Events/+ /Insights · Split · More.
- * Replaces the mobile bottom tab bar on desktop.
+ * Web header: brand · search · period · pane icons · + · Split · ? · More.
  */
 export function AppHeader() {
   const insets = useSafeAreaInsets();
@@ -23,39 +36,20 @@ export function AppHeader() {
   const pathname = usePathname();
   const openMore = useMorePaneStore((s) => s.openMore);
   const moreActive = isMorePath(pathname);
-  const preferred = useDesktopViewStore((s) => s.view);
-  const setView = useDesktopViewStore((s) => s.setView);
-  const view = useEffectiveDesktopView();
+  const layoutState = useEffectiveDesktopLayout();
+  const openPane = useDesktopViewStore((s) => s.openPane);
+  const enterSplit = useDesktopViewStore((s) => s.enterSplit);
+  const setMode = useDesktopViewStore((s) => s.setMode);
   const canSplit = useCanSplit();
+  const shortcutsOpen = useShortcutsHelpStore((s) => s.open);
+  const openHelp = useShortcutsHelpStore((s) => s.openHelp);
+  const closeHelp = useShortcutsHelpStore((s) => s.closeHelp);
 
-  const splitActive = view === "split";
-  const eventsActive = view === "events";
-  const insightsActive = view === "insights";
-
-  function goEvents() {
-    if (preferred === "events" && canSplit) {
-      setView("split");
-      router.navigate("/");
-      return;
-    }
-    setView("events");
-    router.navigate("/");
-  }
-
-  function goInsights() {
-    if (preferred === "insights" && canSplit) {
-      setView("split");
-      router.navigate("/");
-      return;
-    }
-    setView("insights");
-    router.navigate("/analysis");
-  }
-
-  function goSplit() {
-    setView("split");
-    router.navigate("/");
-  }
+  const splitActive = layoutState.mode === "split";
+  const activePanes =
+    layoutState.mode === "split"
+      ? new Set<PaneId>([layoutState.left, layoutState.right])
+      : new Set<PaneId>([layoutState.pane]);
 
   return (
     <GlassSurface style={[styles.wrap, { paddingTop: insets.top + 8 }]}>
@@ -85,32 +79,34 @@ export function AppHeader() {
       {splitActive ? <HeaderPeriodChip /> : null}
 
       <View style={styles.navCluster} accessibilityRole="toolbar">
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={
-            eventsActive && canSplit
-              ? "Events, activate again for split view"
-              : "Events"
-          }
-          accessibilityState={{ selected: eventsActive }}
-          onPress={goEvents}
-          {...webFocusableProps}
-          style={({ pressed }) => [
-            styles.navItem,
-            webClickable,
-            eventsActive && styles.navItemActive,
-            pressed && styles.navItemPressed,
-          ]}
-        >
-          <Ionicons
-            name="receipt-outline"
-            size={18}
-            color={eventsActive ? colors.accent : colors.tabInactive}
-          />
-          <Text style={[styles.navLabel, eventsActive && styles.navLabelActive]}>
-            Events
-          </Text>
-        </Pressable>
+        {ALL_PANES.map((pane) => {
+          const selected = activePanes.has(pane);
+          return (
+            <Pressable
+              key={pane}
+              accessibilityRole="button"
+              accessibilityLabel={PANE_LABELS[pane]}
+              accessibilityState={{ selected }}
+              onPress={() => {
+                openPane(pane);
+                router.navigate("/");
+              }}
+              {...webFocusableProps}
+              style={({ pressed }) => [
+                styles.navIcon,
+                webClickable,
+                selected && styles.navIconActive,
+                pressed && styles.navIconPressed,
+              ]}
+            >
+              <Ionicons
+                name={PANE_ICONS[pane]}
+                size={18}
+                color={selected ? colors.accent : colors.tabInactive}
+              />
+            </Pressable>
+          );
+        })}
 
         <Pressable
           accessibilityRole="button"
@@ -125,35 +121,6 @@ export function AppHeader() {
         >
           <Ionicons name="add" size={20} color={colors.onAccent} />
         </Pressable>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={
-            insightsActive && canSplit
-              ? "Insights, activate again for split view"
-              : "Insights"
-          }
-          accessibilityState={{ selected: insightsActive }}
-          onPress={goInsights}
-          {...webFocusableProps}
-          style={({ pressed }) => [
-            styles.navItem,
-            webClickable,
-            insightsActive && styles.navItemActive,
-            pressed && styles.navItemPressed,
-          ]}
-        >
-          <Ionicons
-            name="pie-chart-outline"
-            size={18}
-            color={insightsActive ? colors.accent : colors.tabInactive}
-          />
-          <Text
-            style={[styles.navLabel, insightsActive && styles.navLabelActive]}
-          >
-            Insights
-          </Text>
-        </Pressable>
       </View>
 
       {canSplit ? (
@@ -161,14 +128,18 @@ export function AppHeader() {
           accessibilityRole="button"
           accessibilityLabel="Split view"
           accessibilityState={{ selected: splitActive }}
-          onPress={goSplit}
-          hitSlop={10}
+          onPress={() => {
+            if (splitActive) setMode("single");
+            else enterSplit();
+            router.navigate("/");
+          }}
+          hitSlop={8}
           {...webFocusableProps}
           style={({ pressed }) => [
-            styles.splitBtn,
+            styles.toolBtn,
             webClickable,
-            splitActive && styles.splitBtnActive,
-            pressed && styles.splitBtnPressed,
+            splitActive && styles.toolBtnActive,
+            pressed && styles.toolBtnPressed,
           ]}
         >
           <Ionicons
@@ -176,26 +147,40 @@ export function AppHeader() {
             size={18}
             color={splitActive ? colors.accent : colors.tabInactive}
           />
-          <Text
-            style={[styles.splitLabel, splitActive && styles.splitLabelActive]}
-          >
-            Split
-          </Text>
         </Pressable>
       ) : null}
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Keyboard shortcuts"
+        onPress={openHelp}
+        hitSlop={8}
+        {...webFocusableProps}
+        style={({ pressed }) => [
+          styles.toolBtn,
+          webClickable,
+          pressed && styles.toolBtnPressed,
+        ]}
+      >
+        <Ionicons
+          name="help-circle-outline"
+          size={18}
+          color={colors.tabInactive}
+        />
+      </Pressable>
 
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Open more"
         accessibilityState={{ selected: moreActive }}
         onPress={openMore}
-        hitSlop={10}
+        hitSlop={8}
         {...webFocusableProps}
         style={({ pressed }) => [
-          styles.moreBtn,
+          styles.toolBtn,
           webClickable,
-          moreActive && styles.moreBtnActive,
-          pressed && styles.moreBtnPressed,
+          moreActive && styles.toolBtnActive,
+          pressed && styles.toolBtnPressed,
         ]}
       >
         <Ionicons
@@ -203,27 +188,26 @@ export function AppHeader() {
           size={20}
           color={moreActive ? colors.accent : colors.tabInactive}
         />
-        <Text style={[styles.moreLabel, moreActive && styles.moreLabelActive]}>
-          More
-        </Text>
       </Pressable>
+
+      <KeyboardShortcutsModal visible={shortcutsOpen} onClose={closeHelp} />
     </GlassSurface>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingBottom: 10,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
   },
   logo: {
     color: colors.accent,
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "600",
     fontStyle: "italic",
     letterSpacing: 0.4,
@@ -238,21 +222,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    minHeight: 36,
+    minHeight: 34,
     maxWidth: layout.searchMaxWidth,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     borderRadius: 999,
     borderWidth: 1.5,
     borderColor: colors.accent,
     backgroundColor: colors.inputBg,
   },
-  searchPressed: {
-    opacity: 0.88,
-  },
+  searchPressed: { opacity: 0.88 },
   searchPlaceholder: {
     flexShrink: 1,
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: 13,
   },
   navCluster: {
     flexDirection: "row",
@@ -265,32 +247,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     flexShrink: 0,
   },
-  navItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
+  navIcon: {
+    width: 34,
+    height: 34,
     borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  navItemActive: {
-    backgroundColor: colors.accentSoft,
-  },
-  navItemPressed: {
-    backgroundColor: colors.accentSoft,
-  },
-  navLabel: {
-    color: colors.tabInactive,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  navLabelActive: {
-    color: colors.accent,
-  },
+  navIconActive: { backgroundColor: colors.accentSoft },
+  navIconPressed: { backgroundColor: colors.accentSoft },
   addBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.accent,
@@ -300,50 +269,14 @@ const styles = StyleSheet.create({
     opacity: 0.88,
     transform: [{ scale: 0.96 }],
   },
-  splitBtn: {
-    flexDirection: "row",
+  toolBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 9,
     alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 10,
+    justifyContent: "center",
     flexShrink: 0,
   },
-  splitBtnActive: {
-    backgroundColor: colors.accentSoft,
-  },
-  splitBtnPressed: {
-    backgroundColor: colors.accentSoft,
-  },
-  splitLabel: {
-    color: colors.tabInactive,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  splitLabelActive: {
-    color: colors.accent,
-  },
-  moreBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 10,
-    flexShrink: 0,
-  },
-  moreBtnActive: {
-    backgroundColor: colors.accentSoft,
-  },
-  moreBtnPressed: {
-    backgroundColor: colors.accentSoft,
-  },
-  moreLabel: {
-    color: colors.tabInactive,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  moreLabelActive: {
-    color: colors.accent,
-  },
+  toolBtnActive: { backgroundColor: colors.accentSoft },
+  toolBtnPressed: { backgroundColor: colors.accentSoft },
 });

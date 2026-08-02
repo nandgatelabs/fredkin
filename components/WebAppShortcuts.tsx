@@ -3,11 +3,16 @@ import { usePathname, useRouter } from "expo-router";
 
 import { useCanSplit } from "@/hooks/useViewportWidth";
 import { useKeydown } from "@/hooks/useKeydown";
-import { useDesktopViewStore } from "@/store/desktopView";
+import { useDesktopViewStore, type PaneId } from "@/store/desktopView";
 import { usePeriodStore } from "@/store/period";
+import { useShortcutsHelpStore } from "@/store/shortcutsHelp";
 
-/** 1–2 = main panes; 3–4 = More destinations (still keyboard-reachable). */
-const TAB_ROUTES = ["/", "/analysis", "/accounts", "/categories"] as const;
+const PANE_BY_DIGIT: Record<number, PaneId> = {
+  1: "events",
+  2: "insights",
+  3: "wallets",
+  4: "categories",
+};
 
 function shiftMonthIso(iso: string, delta: number) {
   const [y, m] = iso.split("-").map(Number);
@@ -31,7 +36,7 @@ function isEditorRoute(pathname: string) {
 
 /**
  * Laptop keyboard shortcuts (web only via useKeydown).
- * ⌘/Ctrl+K or / search · n new · s toggle split · ← → period · 1–4 destinations
+ * ⌘/Ctrl+K or / search · ? help · n new · s split · ← → period · 1–4 panes
  */
 export function WebAppShortcuts() {
   const router = useRouter();
@@ -39,9 +44,12 @@ export function WebAppShortcuts() {
   const shiftPeriod = usePeriodStore((s) => s.shiftPeriod);
   const setAnchorDate = usePeriodStore((s) => s.setAnchorDate);
   const anchorDate = usePeriodStore((s) => s.anchorDate);
-  const view = useDesktopViewStore((s) => s.view);
-  const setView = useDesktopViewStore((s) => s.setView);
+  const mode = useDesktopViewStore((s) => s.mode);
+  const openPane = useDesktopViewStore((s) => s.openPane);
+  const enterSplit = useDesktopViewStore((s) => s.enterSplit);
+  const setMode = useDesktopViewStore((s) => s.setMode);
   const canSplit = useCanSplit();
+  const openHelp = useShortcutsHelpStore((s) => s.openHelp);
 
   useKeydown(
     true,
@@ -58,9 +66,15 @@ export function WebAppShortcuts() {
         if (event.metaKey || event.ctrlKey || event.altKey) return;
         if (isEditorRoute(pathname)) return;
 
-        if (event.key === "/" || event.key === "?") {
+        if (event.key === "/") {
           event.preventDefault();
           router.push("/search");
+          return;
+        }
+
+        if (event.key === "?") {
+          event.preventDefault();
+          openHelp();
           return;
         }
 
@@ -72,11 +86,8 @@ export function WebAppShortcuts() {
 
         if ((event.key === "s" || event.key === "S") && canSplit) {
           event.preventDefault();
-          if (view === "split") {
-            setView("events");
-          } else {
-            setView("split");
-          }
+          if (mode === "split") setMode("single");
+          else enterSplit();
           router.navigate("/");
           return;
         }
@@ -89,7 +100,9 @@ export function WebAppShortcuts() {
           } else if (
             pathname === "/" ||
             pathname.includes("analysis") ||
-            pathname.includes("index")
+            pathname.includes("index") ||
+            pathname.includes("accounts") ||
+            pathname.includes("categories")
           ) {
             shiftPeriod(delta);
           }
@@ -97,22 +110,25 @@ export function WebAppShortcuts() {
         }
 
         const digit = Number(event.key);
-        if (digit >= 1 && digit <= TAB_ROUTES.length) {
+        const pane = PANE_BY_DIGIT[digit];
+        if (pane) {
           event.preventDefault();
-          if (digit === 1) setView("events");
-          if (digit === 2) setView("insights");
-          router.push(TAB_ROUTES[digit - 1] as never);
+          openPane(pane);
+          router.navigate("/");
         }
       },
       [
         anchorDate,
         canSplit,
+        enterSplit,
+        mode,
+        openHelp,
+        openPane,
         pathname,
         router,
         setAnchorDate,
-        setView,
+        setMode,
         shiftPeriod,
-        view,
       ],
     ),
     { ignoreWhenTyping: true },

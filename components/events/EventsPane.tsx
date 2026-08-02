@@ -33,6 +33,8 @@ type Props = {
   listBottomPad?: number;
   /** When false, period chevrons hide (shared header chip owns nav). */
   showPeriodNav?: boolean;
+  /** When false, hide period label (split uses header chip). */
+  showPeriodLabel?: boolean;
   /** Expand Events to full screen (web split). */
   onMaximize?: () => void;
 };
@@ -41,6 +43,7 @@ type Props = {
 export function EventsPane({
   listBottomPad = 24,
   showPeriodNav = true,
+  showPeriodLabel = true,
   onMaximize,
 }: Props) {
   const router = useRouter();
@@ -97,6 +100,7 @@ export function EventsPane({
         income={income}
         carryAmount={carryAmount}
         showPeriodNav={showPeriodNav}
+        showPeriodLabel={showPeriodLabel}
         onMaximize={onMaximize}
         onFilterPress={() => setDisplayOpen(true)}
       />

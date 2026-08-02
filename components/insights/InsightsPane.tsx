@@ -58,6 +58,10 @@ type Props = {
   contentBottomPad?: number;
   /** Expand Insights to full screen (web split). */
   onMaximize?: () => void;
+  /** When set, category opens in-pane instead of stacking a full route. */
+  onOpenCategory?: (categoryId: string) => void;
+  /** When set, wallet opens in-pane instead of stacking a full route. */
+  onOpenAccount?: (accountId: string) => void;
 };
 
 /** Insights body: mode picker + charts (no app header / period strip). */
@@ -65,6 +69,8 @@ export function InsightsPane({
   showDisplayOptions = false,
   contentBottomPad = 40,
   onMaximize,
+  onOpenCategory,
+  onOpenAccount,
 }: Props) {
   const router = useRouter();
   const anchorDate = usePeriodStore((s) => s.anchorDate);
@@ -163,6 +169,16 @@ export function InsightsPane({
     percent: s.percent,
   }));
 
+  function openCategory(categoryId: string) {
+    if (onOpenCategory) onOpenCategory(categoryId);
+    else router.push(`/category/${categoryId}` as never);
+  }
+
+  function openAccount(accountId: string) {
+    if (onOpenAccount) onOpenAccount(accountId);
+    else router.push(`/account/${accountId}` as never);
+  }
+
   function openCategoryOrSelect(index: number | null) {
     if (index == null) {
       setSelectedSlice(null);
@@ -170,7 +186,7 @@ export function InsightsPane({
     }
     const slice = slices[index];
     if (slice?.categoryId) {
-      router.push(`/category/${slice.categoryId}` as never);
+      openCategory(slice.categoryId);
       return;
     }
     setSelectedSlice(selectedSlice === index ? null : index);
@@ -244,9 +260,7 @@ export function InsightsPane({
                   tone={tone}
                   selectedIndex={selectedSlice}
                   onSelect={openCategoryOrSelect}
-                  onOpenCategory={(categoryId) =>
-                    router.push(`/category/${categoryId}` as never)
-                  }
+                  onOpenCategory={openCategory}
                   onSelectedLayout={(y) => {
                     scrollRef.current?.scrollTo({
                       y: Math.max(0, listOffsetRef.current + y - 24),
@@ -297,7 +311,7 @@ export function InsightsPane({
                 accounts={accounts}
                 selectedId={selectedAccount}
                 onSelect={(id) => {
-                  if (id) router.push(`/account/${id}` as never);
+                  if (id) openAccount(id);
                   else setSelectedAccount(null);
                 }}
               />
@@ -305,7 +319,7 @@ export function InsightsPane({
                 accounts={accounts}
                 selectedId={selectedAccount}
                 onSelect={(id) => {
-                  if (id) router.push(`/account/${id}` as never);
+                  if (id) openAccount(id);
                   else setSelectedAccount(null);
                 }}
               />

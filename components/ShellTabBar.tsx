@@ -24,10 +24,13 @@ export function ShellTabBar({ state, navigation }: ShellTabBarProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
+  // Belt-and-suspenders: web uses header nav (`_layout.web` / ShellTabBar.web).
+  if (Platform.OS === "web") return null;
+
   const activeName = state.routes[state.index]?.name ?? "index";
 
-  const padBottom = Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
-  const barHeight = Platform.OS === "web" ? 72 : 56 + Math.max(insets.bottom, 8);
+  const padBottom = Math.max(insets.bottom, 8);
+  const barHeight = 56 + Math.max(insets.bottom, 8);
 
   return (
     <GlassSurface

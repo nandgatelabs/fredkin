@@ -3,13 +3,12 @@ import { Redirect, useFocusEffect } from "expo-router";
 
 import { useDesktopViewStore } from "@/store/desktopView";
 
-/** Deep link / tab: open Insights in the desktop shell. */
-export default function AnalysisScreenWeb() {
+export default function AccountsScreenWeb() {
   const openPane = useDesktopViewStore((s) => s.openPane);
 
   useFocusEffect(
     useCallback(() => {
-      openPane("insights");
+      openPane("wallets");
     }, [openPane]),
   );
 

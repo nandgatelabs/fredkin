@@ -54,6 +54,9 @@ const MANAGE: NavItem[] = [
   },
 ];
 
+/** On web, Wallets / Event Type live in the header pane switcher. */
+const MANAGE_ITEMS = Platform.OS === "web" ? [] : MANAGE;
+
 const APP: NavItem[] = [
   { label: "Settings", icon: "settings-outline", href: "/preferences" },
   { label: "Data", icon: "folder-outline", href: "/data" },
@@ -166,16 +169,27 @@ export function MorePane({ visible, onClose }: Props) {
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
               >
-                <Text style={styles.section}>Manage</Text>
-                {MANAGE.map((item) => (
-                  <MoreRow
-                    key={item.href}
-                    item={item}
-                    onPress={() => go(item.href)}
-                  />
-                ))}
+                {MANAGE_ITEMS.length > 0 ? (
+                  <>
+                    <Text style={styles.section}>Manage</Text>
+                    {MANAGE_ITEMS.map((item) => (
+                      <MoreRow
+                        key={item.href}
+                        item={item}
+                        onPress={() => go(item.href)}
+                      />
+                    ))}
+                  </>
+                ) : null}
 
-                <Text style={[styles.section, styles.sectionSpaced]}>App</Text>
+                <Text
+                  style={[
+                    styles.section,
+                    MANAGE_ITEMS.length > 0 && styles.sectionSpaced,
+                  ]}
+                >
+                  App
+                </Text>
                 {APP.map((item) => (
                   <MoreRow
                     key={item.href}
