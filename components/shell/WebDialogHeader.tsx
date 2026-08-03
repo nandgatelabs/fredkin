@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 import { useKeydown } from "@/hooks/useKeydown";
@@ -11,6 +12,7 @@ import {
   webDialogCloseLabel,
 } from "@/lib/webDialog";
 import { webClickable, webFocusableProps } from "@/lib/web";
+import { useMorePaneStore } from "@/store/morePane";
 import { colors } from "@/theme";
 
 type Props = {
@@ -20,15 +22,15 @@ type Props = {
   saveBusy?: boolean;
   saveLabel?: string;
   /**
-   * Web: Esc triggers Back (not Close). Set false while a nested sheet/modal
+   * Esc triggers Back (not Close). Set false while a nested sheet/modal
    * owns Escape, or while a destructive action is busy.
    */
   escapeBack?: boolean;
 };
 
 /**
- * Dialog chrome: native keeps Close[/Save]; web gets Back + Close[+ Save].
- * Escape on web always follows Back.
+ * Dialog chrome: Back + Close[+ Save].
+ * Native uses chevron / close icons; web keeps text labels.
  */
 export function WebDialogHeader({
   title,
@@ -38,86 +40,66 @@ export function WebDialogHeader({
   escapeBack = true,
 }: Props) {
   const router = useRouter();
+  const isWeb = Platform.OS === "web";
+
+  const onBack = useCallback(() => {
+    log.debug("ui dialog back", { title, platform: Platform.OS });
+    dismissWebDialog(router);
+  }, [router, title]);
+
+  const onClose = useCallback(() => {
+    log.debug("ui dialog close", { title, platform: Platform.OS });
+    useMorePaneStore.getState().clearReturnToMore();
+    closeWebDialog(router);
+  }, [router, title]);
 
   useKeydown(
-    Platform.OS === "web" && escapeBack,
+    isWeb && escapeBack,
     useCallback(
       (event) => {
         if (event.key !== "Escape") return;
         event.preventDefault();
-        // Stop More (still mounted under this dialog) from also handling Esc as Close.
         event.stopImmediatePropagation();
-        dismissWebDialog(router);
+        onBack();
       },
-      [router],
+      [onBack],
     ),
     { capture: true },
   );
-
-  if (Platform.OS !== "web") {
-    return (
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Close"
-          onPress={() => {
-            log.debug("ui dialog close", { title });
-            router.back();
-          }}
-          hitSlop={10}
-          style={webClickable}
-          {...webFocusableProps}
-        >
-          <Text style={styles.side}>{webDialogCloseLabel}</Text>
-        </Pressable>
-        <Text style={styles.title}>{title}</Text>
-        {onSave ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Save"
-            onPress={() => {
-              log.debug("ui dialog save", { title });
-              onSave();
-            }}
-            hitSlop={10}
-            disabled={saveBusy}
-            style={webClickable}
-            {...webFocusableProps}
-          >
-            <Text style={[styles.side, styles.sideEnd, saveBusy && styles.busy]}>
-              {saveBusy ? "…" : saveLabel}
-            </Text>
-          </Pressable>
-        ) : (
-          <View style={styles.sideSpacer} />
-        )}
-      </View>
-    );
-  }
 
   return (
     <View style={styles.header}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Back"
-        onPress={() => dismissWebDialog(router)}
+        onPress={onBack}
         hitSlop={10}
-        style={webClickable}
+        style={[styles.sideHit, webClickable]}
         {...webFocusableProps}
       >
-        <Text style={styles.side}>{webDialogBackLabel}</Text>
+        {isWeb ? (
+          <Text style={styles.side}>{webDialogBackLabel}</Text>
+        ) : (
+          <Ionicons name="chevron-back" size={24} color={colors.accent} />
+        )}
       </Pressable>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.title} numberOfLines={1}>
+        {title}
+      </Text>
       <View style={styles.right}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Close"
-          onPress={() => closeWebDialog(router)}
+          onPress={onClose}
           hitSlop={10}
-          style={webClickable}
+          style={[styles.sideHit, webClickable]}
           {...webFocusableProps}
         >
-          <Text style={[styles.side, styles.sideEnd]}>{webDialogCloseLabel}</Text>
+          {isWeb ? (
+            <Text style={[styles.side, styles.sideEnd]}>{webDialogCloseLabel}</Text>
+          ) : (
+            <Ionicons name="close" size={24} color={colors.accent} />
+          )}
         </Pressable>
         {onSave ? (
           <Pressable
@@ -132,7 +114,14 @@ export function WebDialogHeader({
             style={webClickable}
             {...webFocusableProps}
           >
-            <Text style={[styles.side, styles.sideEnd, styles.save, saveBusy && styles.busy]}>
+            <Text
+              style={[
+                styles.side,
+                styles.sideEnd,
+                styles.save,
+                saveBusy && styles.busy,
+              ]}
+            >
               {saveBusy ? "…" : saveLabel}
             </Text>
           </Pressable>
@@ -156,6 +145,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     flexShrink: 1,
     textAlign: "center",
+    flex: 1,
+  },
+  sideHit: {
+    minWidth: 36,
+    minHeight: 36,
+    alignItems: "center",
+    justifyContent: "center",
   },
   side: {
     color: colors.accent,
@@ -165,14 +161,11 @@ const styles = StyleSheet.create({
   sideEnd: {
     textAlign: "right",
   },
-  sideSpacer: {
-    width: 72,
-  },
   right: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    minWidth: 72,
+    gap: 8,
+    minWidth: 36,
     justifyContent: "flex-end",
   },
   save: {

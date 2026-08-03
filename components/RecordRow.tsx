@@ -1,5 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useRef } from "react";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Swipeable } from "react-native-gesture-handler";
 
 import type { RecordListItem } from "@/db/records";
 import { formatMoney } from "@/lib/money";
@@ -16,10 +18,13 @@ import { colors } from "@/theme";
 type Props = {
   item: RecordListItem;
   onPress: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 };
 
-export function RecordRow({ item, onPress }: Props) {
+export function RecordRow({ item, onPress, onEdit, onDelete }: Props) {
   const notesInList = useSettingsStore((s) => s.notesInList);
+  const swipeRef = useRef<Swipeable>(null);
   const title = recordTitle(item);
   const amount = signedDisplayAmount(item);
   const amountColor =
@@ -39,7 +44,7 @@ export function RecordRow({ item, onPress }: Props) {
       ? "swap-horizontal"
       : categoryIcon(item.category_icon_key ?? "pricetag");
 
-  return (
+  const row = (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={title}
@@ -77,6 +82,67 @@ export function RecordRow({ item, onPress }: Props) {
       </Text>
     </Pressable>
   );
+
+  if (Platform.OS === "web" || (!onEdit && !onDelete)) {
+    return row;
+  }
+
+  return (
+    <Swipeable
+      ref={swipeRef}
+      friction={2}
+      overshootLeft={false}
+      overshootRight={false}
+      leftThreshold={40}
+      rightThreshold={40}
+      renderLeftActions={
+        onEdit
+          ? () => (
+              <View style={styles.leftWrap}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Edit event"
+                  onPress={() => {
+                    swipeRef.current?.close();
+                    onEdit();
+                  }}
+                  style={[styles.actionBtn, styles.editBtn]}
+                >
+                  <Ionicons name="pencil" size={18} color={colors.accent} />
+                  <Text style={[styles.actionLabel, { color: colors.accent }]}>
+                    Edit
+                  </Text>
+                </Pressable>
+              </View>
+            )
+          : undefined
+      }
+      renderRightActions={
+        onDelete
+          ? () => (
+              <View style={styles.rightWrap}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Delete event"
+                  onPress={() => {
+                    swipeRef.current?.close();
+                    onDelete();
+                  }}
+                  style={[styles.actionBtn, styles.deleteBtn]}
+                >
+                  <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                  <Text style={[styles.actionLabel, { color: colors.danger }]}>
+                    Delete
+                  </Text>
+                </Pressable>
+              </View>
+            )
+          : undefined
+      }
+    >
+      {row}
+    </Swipeable>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -86,6 +152,8 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 10,
     paddingHorizontal: 16,
+    // Transparent so Glass Mist / atmosphere shows through (no solid slab).
+    backgroundColor: "transparent",
   },
   pressed: {
     backgroundColor: colors.accentSoft,
@@ -121,5 +189,36 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     marginLeft: 8,
+  },
+  leftWrap: {
+    justifyContent: "center",
+    paddingLeft: 12,
+    paddingVertical: 4,
+  },
+  rightWrap: {
+    justifyContent: "center",
+    paddingRight: 12,
+    paddingVertical: 4,
+  },
+  actionBtn: {
+    width: 72,
+    minHeight: 52,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  editBtn: {
+    backgroundColor: colors.accentSoft,
+    borderColor: colors.border,
+  },
+  deleteBtn: {
+    backgroundColor: colors.dangerMuted,
+    borderColor: colors.border,
+  },
+  actionLabel: {
+    fontSize: 11,
+    fontWeight: "700",
   },
 });

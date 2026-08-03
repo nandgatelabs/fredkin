@@ -55,16 +55,13 @@ export function dismissWebDialog(router: DialogRouter): void {
 /** Close the whole dialog stack and return to the shell. */
 export function closeWebDialog(router: DialogRouter): void {
   log.debug("dialog close");
-  if (Platform.OS !== "web") {
-    router.back();
-    return;
-  }
   if (typeof router.dismissTo === "function") {
     router.dismissTo("/");
     return;
   }
   if (typeof router.dismissAll === "function") {
     router.dismissAll();
+    return;
   }
   router.navigate("/");
 }

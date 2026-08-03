@@ -1,8 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
-  Platform,
   SectionList,
   StyleSheet,
   Text,
@@ -10,6 +8,7 @@ import {
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 
+import { ConfirmModal } from "@/components/ConfirmModal";
 import { DisplayOptionsModal } from "@/components/DisplayOptionsModal";
 import { EmptyTab } from "@/components/EmptyTab";
 import { PeriodHeader } from "@/components/PeriodHeader";
@@ -62,6 +61,7 @@ export function EventsPane({
   const [error, setError] = useState<string | null>(null);
   const [displayOpen, setDisplayOpen] = useState(false);
   const [selected, setSelected] = useState<RecordListItem | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<RecordListItem | null>(null);
 
   const range = useMemo(
     () => rangeForViewMode(anchorDate, viewMode),
@@ -95,6 +95,27 @@ export function EventsPane({
   );
 
   const sections = useMemo(() => groupRecordsByDate(records), [records]);
+
+  const editRecord = useCallback(
+    (record: RecordListItem) => {
+      setSelected(null);
+      router.push({ pathname: "/record/new", params: { id: record.id } });
+    },
+    [router],
+  );
+
+  const confirmPendingDelete = useCallback(async () => {
+    const record = pendingDelete;
+    setPendingDelete(null);
+    if (!record) return;
+    try {
+      await deleteRecord(record.id);
+      setSelected(null);
+      await reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Delete failed");
+    }
+  }, [pendingDelete, reload]);
 
   return (
     <View style={styles.root}>
@@ -132,7 +153,12 @@ export function EventsPane({
             </View>
           )}
           renderItem={({ item }) => (
-            <RecordRow item={item} onPress={() => setSelected(item)} />
+            <RecordRow
+              item={item}
+              onPress={() => setSelected(item)}
+              onEdit={() => editRecord(item)}
+              onDelete={() => setPendingDelete(item)}
+            />
           )}
         />
       )}
@@ -150,35 +176,22 @@ export function EventsPane({
       <RecordDetailModal
         record={selected}
         onClose={() => setSelected(null)}
-        onEdit={(record) => {
-          setSelected(null);
-          router.push({ pathname: "/record/new", params: { id: record.id } });
-        }}
+        onEdit={editRecord}
         onDelete={(record) => {
-          void (async () => {
-            const ok =
-              Platform.OS === "web"
-                ? window.confirm("Delete this record?")
-                : await new Promise<boolean>((resolve) => {
-                    Alert.alert("Delete record?", "This cannot be undone.", [
-                      { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
-                      {
-                        text: "Delete",
-                        style: "destructive",
-                        onPress: () => resolve(true),
-                      },
-                    ]);
-                  });
-            if (!ok) return;
-            try {
-              await deleteRecord(record.id);
-              setSelected(null);
-              await reload();
-            } catch (e) {
-              setError(e instanceof Error ? e.message : "Delete failed");
-            }
-          })();
+          setSelected(null);
+          setPendingDelete(record);
         }}
+      />
+
+      <ConfirmModal
+        visible={pendingDelete != null}
+        title="Delete record?"
+        message="This cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        destructive
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => void confirmPendingDelete()}
       />
     </View>
   );

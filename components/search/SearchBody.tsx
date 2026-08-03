@@ -12,6 +12,7 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
+import { ConfirmModal } from "@/components/ConfirmModal";
 import { RecordDetailModal } from "@/components/RecordDetailModal";
 import { SearchResultRow } from "@/components/SearchResultRow";
 import {
@@ -37,6 +38,7 @@ export function SearchBody({ onClose, compact = false }: Props) {
   const [results, setResults] = useState<RecordListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<RecordListItem | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<RecordListItem | null>(null);
 
   const leave = useCallback(() => {
     if (selected) setSelected(null);
@@ -114,7 +116,11 @@ export function SearchBody({ onClose, compact = false }: Props) {
           style={webClickable}
           {...webFocusableProps}
         >
-          <Text style={styles.cancel}>Close</Text>
+          {Platform.OS === "web" ? (
+            <Text style={styles.cancel}>Close</Text>
+          ) : (
+            <Ionicons name="close" size={24} color={colors.accent} />
+          )}
         </Pressable>
       </View>
 
@@ -169,10 +175,27 @@ export function SearchBody({ onClose, compact = false }: Props) {
           router.push({ pathname: "/record/new", params: { id: record.id } });
         }}
         onDelete={(record) => {
-          void deleteRecord(record.id).then(() => {
-            setSelected(null);
+          setSelected(null);
+          setPendingDelete(record);
+        }}
+      />
+
+      <ConfirmModal
+        visible={pendingDelete != null}
+        title="Delete record?"
+        message="This cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        destructive
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          void (async () => {
+            const record = pendingDelete;
+            setPendingDelete(null);
+            if (!record) return;
+            await deleteRecord(record.id);
             reload();
-          });
+          })();
         }}
       />
     </View>

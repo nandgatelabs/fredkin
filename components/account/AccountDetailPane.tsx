@@ -11,6 +11,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { ConfirmModal } from "@/components/ConfirmModal";
 import { RecordDetailModal } from "@/components/RecordDetailModal";
 import { RecordRow } from "@/components/RecordRow";
 import {
@@ -59,6 +60,7 @@ export function AccountDetailPane({ id, onClose, embedded = false }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<RecordListItem | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<RecordListItem | null>(null);
 
   const range = useMemo(
     () => rangeForViewMode(anchorDate, viewMode),
@@ -128,13 +130,13 @@ export function AccountDetailPane({ id, onClose, embedded = false }: Props) {
       <View style={styles.header}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Close"
+          accessibilityLabel="Back"
           onPress={onClose}
           hitSlop={10}
           style={webClickable}
           {...webFocusableProps}
         >
-          <Text style={styles.close}>✕</Text>
+          <Ionicons name="chevron-back" size={24} color={colors.accent} />
         </Pressable>
         <View style={styles.headerText}>
           <Text style={styles.title}>Wallet details</Text>
@@ -290,7 +292,15 @@ export function AccountDetailPane({ id, onClose, embedded = false }: Props) {
             <Text style={styles.sectionTitle}>{section.title}</Text>
           )}
           renderItem={({ item }) => (
-            <RecordRow item={item} onPress={() => setSelected(item)} />
+            <RecordRow
+              item={item}
+              onPress={() => setSelected(item)}
+              onEdit={() => {
+                setSelected(null);
+                router.push({ pathname: "/record/new", params: { id: item.id } });
+              }}
+              onDelete={() => setPendingDelete(item)}
+            />
           )}
           ListEmptyComponent={
             !loading ? (
@@ -308,10 +318,27 @@ export function AccountDetailPane({ id, onClose, embedded = false }: Props) {
           router.push({ pathname: "/record/new", params: { id: record.id } });
         }}
         onDelete={(record) => {
-          void deleteRecord(record.id).then(() => {
-            setSelected(null);
+          setSelected(null);
+          setPendingDelete(record);
+        }}
+      />
+
+      <ConfirmModal
+        visible={pendingDelete != null}
+        title="Delete record?"
+        message="This cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        destructive
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          void (async () => {
+            const record = pendingDelete;
+            setPendingDelete(null);
+            if (!record) return;
+            await deleteRecord(record.id);
             void reload();
-          });
+          })();
         }}
       />
     </View>
@@ -355,7 +382,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     gap: 8,
   },
-  close: { color: colors.accent, fontSize: 20, fontWeight: "600", width: 28 },
   headerText: { flex: 1, alignItems: "center" },
   title: { color: colors.accent, fontSize: 18, fontWeight: "700" },
   subtitle: { color: colors.textSecondary, fontSize: 13, marginTop: 2 },
