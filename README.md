@@ -36,7 +36,9 @@ Full detail (`.deb`, AppImage/FUSE notes, persistence): [`docs/DESKTOP.md`](docs
 
 ## Android APK (device test)
 
-Cloud build via EAS (no Android Studio):
+**Live reload (recommended for UI work):** EAS `development` profile → install the APK → `npx expo start` on the same network. See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
+
+**Frozen preview APK** (no Metro):
 
 ```bash
 npx eas-cli@latest login          # once
@@ -44,6 +46,10 @@ npx eas-cli@latest build -p android --profile preview
 ```
 
 Download the `.apk` from the Expo build page and install on your phone. Full steps and troubleshooting: [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
+
+## Demo data
+
+Fictional 3-year ledger for safe demos (no personal data): [`fixtures/demo_ledger_3years.csv`](fixtures/demo_ledger_3years.csv). Import via More → Data → Import. Keep real exports under gitignored `private/`.
 
 ## Docs
 
@@ -76,7 +82,7 @@ Expo · React Native · TypeScript · expo-router · expo-sqlite · Zustand
 
 ## Privacy
 
-Do not commit real ledgers, backups, or personal screenshots. Keep those under the gitignored `private/` folder.
+Do not commit real ledgers, backups, or personal screenshots. Keep those under the gitignored `private/` folder. For demos, use [`fixtures/demo_ledger_3years.csv`](fixtures/demo_ledger_3years.csv).
 
 ## Security
 

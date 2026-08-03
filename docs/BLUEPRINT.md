@@ -29,10 +29,11 @@ SQLite / CSV on-disk TYPE strings stay `expense` / `income` for compatibility; U
 
 Persistent chrome on main tabs. **Native and web share one repo/core; shells diverge via `.web.tsx` files** (`components/shell/README.md`).
 
-- **Native top:** **Fredkin** · oval search · right-edge More tab  
+- **Native top:** **Fredkin** · oval search · header menu · plain right-edge More pill (also swipe-in from the right edge)  
 - **Native bottom:** Events · in-bar `+` · Insights  
-- **Web desktop:** full-bleed shell, no bottom tab bar. Header: **Fredkin** · search · period (split) · pane icons (Events / Insights / Wallets / Types) · **+** · Split · shortcuts · **More** (App only). Default **Split** with any left|right pair; details stay in-pane. Below ~900px, split falls back to single.  
-- **More drawer:** Manage (Wallets, Event Type) + App (Settings, Data, Support, Reset, Export Logs)
+- **Native dismiss:** chevron **Back** when returning to a parent (More stack, wallet/type details); icon **Close** / **Discard** for sheets and modals. Stack screens opened from More (Settings, Data, …) **Back** to the drawer still open.  
+- **Web desktop:** full-bleed shell, no bottom tab bar. Header: **Fredkin** · search · period (split) · pane icons (Events / Insights / Wallets / Types) · **+** · Split · shortcuts · **More** (App only). Default **Split** with any left|right pair; details stay in-pane. Below ~900px, split falls back to single. Web dialogs use text **← BACK** / **✕ CLOSE**.  
+- **More drawer:** Manage (Wallets, Event Type) + App (Settings, Data, Support, Reset, Export Logs). Native panel is edge-flush with a rounded leading edge.
 
 Attribution line: **Fredkin by NandGateLabs**.
 
@@ -58,7 +59,8 @@ Attribution line: **Fredkin by NandGateLabs**.
 - Grouped by date header (`Jul 31, Friday`).
 - Row: category icon · name · account chip · quoted note · signed amount.
 - Transfer: From → To, blue amount, no category.
-- Tap row → edit; FAB → add.
+- Tap row → detail sheet; native swipe **right → Edit**, **left → Delete** (in-app confirm).
+- FAB / tab **+** → add.
 
 ---
 
@@ -73,7 +75,7 @@ Attribution line: **Fredkin by NandGateLabs**.
 
 ## 4. Add / Edit record (composer)
 
-- Header: **CANCEL** | **SAVE**
+- Header: **Discard** | **Save** (sheet / modal; not pull-to-dismiss)
 - Tabs: **INCOME | EXPENSE | TRANSFER**
 - Expense/Income: Account + Category pickers, notes
 - Transfer: From Account + To Account (no category)
@@ -256,14 +258,21 @@ Patterns: period chevrons + filter; category = colored circle + white glyph; acc
 
 ## 12. CSV shape
 
-When importing a local worksheet (kept under gitignored `private/`):
+Columns:
 
 ```
 TIME, TYPE, AMOUNT, CATEGORY, ACCOUNT, NOTES
 ```
 
-TYPE values: `(-) Expense`, `(+) Income`, `(*) Transfer`.  
-Transfers: `ACCOUNT` = `From->To`, category blank.
+TYPE values: `(#) Opening`, `(-) Expense`, `(+) Income`, `(*) Transfer`.  
+Transfers: `ACCOUNT` = `From->To`, category `-`.  
+Openings: `Jan 01, 2000 12:00 AM`, category `-`, note `Opening balance`.
+
+### Demo fixture (safe for screenshots / demos)
+
+Use **`fixtures/demo_ledger_3years.csv`** — fictional ~5.6k-row ledger (Aug 2023 → Jul 2026), generic wallets and notes. Import via **More → Data → Import** (replace or append). Do **not** commit real ledgers; keep those under gitignored `private/`.
+
+Personal worksheets for migration testing stay under `private/` only.
 
 ---
 
@@ -277,7 +286,7 @@ Transfers: `ACCOUNT` = `From->To`, category blank.
 - [ ] Budgets with spent vs limit progress  
 - [ ] Account balances and lifetime expense/income headers  
 - [ ] CSV export + local backup/restore + wipe options  
-- [ ] Optional: import local CSV for migration testing  
+- [ ] Import `fixtures/demo_ledger_3years.csv` for demo / load testing (optional: `private/` CSV for personal migration)  
 
 ---
 

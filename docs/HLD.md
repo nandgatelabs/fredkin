@@ -235,6 +235,8 @@ Columns: `TIME`, `TYPE`, `AMOUNT`, `CATEGORY`, `ACCOUNT`, `NOTES`
 
 Not a full backup (budgets/settings still need `.mbak`). Opening rows make account initial balances round-trip via CSV. Web saves to the browser Downloads folder; native uses the Share sheet. (Optional choose-folder picker is parked — see GitHub issues.)
 
+**Demo data:** [`fixtures/demo_ledger_3years.csv`](../fixtures/demo_ledger_3years.csv) is a fictional ~5.6k-row ledger for demos and import QA. Real user exports live under gitignored `private/` and must never be committed.
+
 ### Backup (`.mbak`)
 
 - Versioned JSON.
@@ -242,6 +244,12 @@ Not a full backup (budgets/settings still need `.mbak`). Opening rows make accou
 - Filename pattern: `fredkin-backup_DD_MM_YY_XXX.mbak`.
 - Same download / Share path as CSV export.
 - Real user exports live under gitignored `private/` and must never be committed.
+
+### Logging
+
+- Ring buffer + console via `lib/logger.ts`.
+- **Verbose (`__DEV__`):** `debug` + `info` to Metro (navigation, UI actions).
+- **Production:** buffer keeps milestones / warn / error for **Export Logs**; Preferences → Record logs toggles non-error persistence.
 
 ---
 

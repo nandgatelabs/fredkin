@@ -80,9 +80,44 @@ After pulling new native-related or JS fixes, **rebuild** the preview APK — an
 
 | Profile | Output | Use |
 |---------|--------|-----|
-| `preview` | **APK** | Sideload / device testing (this section) |
+| `development` | **APK** (dev client) | Live Metro reload on a real device (`expo-dev-client`) |
+| `preview` | **APK** | Sideload / device testing without Metro |
 | `production` | **AAB** | Play Store / internal testing track |
-| `development` | Dev client | Advanced; not needed for normal QA |
+
+### Development build (live reload)
+
+For day-to-day native UI work, prefer a **development client** APK (not Expo Go):
+
+```bash
+npx eas-cli@latest build -p android --profile development
+```
+
+Install the APK, then on the same Wi‑Fi:
+
+```bash
+npx expo start
+```
+
+Open the project in the Fredkin dev client. JS changes hot-reload; native module changes need a new EAS build.
+
+### Logging (dev vs prod)
+
+- **`__DEV__` / verbose:** Metro prints `DEBUG` + `INFO` (nav, taps, dialogs, import/export trail).
+- **Production:** exportable buffer keeps milestones (`INFO`) + `WARN`/`ERROR`; no debug spam. Preferences → **Record logs** controls whether non-error lines are kept for Export Logs.
+- Export: More → **Export Logs**.
+
+### Demo / load test CSV
+
+Safe fictional ledger (no personal data):
+
+[`fixtures/demo_ledger_3years.csv`](../fixtures/demo_ledger_3years.csv) — ~5.6k rows, Aug 2023 → Jul 2026.
+
+1. Launch the app (web or device).
+2. More → **Data** → **Import**.
+3. Choose **Replace** (clean demo) or **Append**.
+4. Pick `fixtures/demo_ledger_3years.csv` (on device: copy the file to the phone first, or share it in).
+
+Real personal exports stay under gitignored `private/` — never commit them.
 
 ### Production AAB (Play Store path)
 
@@ -207,8 +242,10 @@ Public hosting is optional — desktop Electron and EAS Android remain the offli
 ## What “working” looks like (P0+)
 
 - Dark charcoal UI, **Fredkin** header (Fredkin by NandGateLabs)  
-- Tabs: Events, Insights, Wallets, Event Type (Budgets hidden from nav)  
-- Events empty state until data exists; **+** opens the add-event composer
+- Native: Events · `+` · Insights; More via header menu / edge pill  
+- Web: header pane switcher (no bottom tabs)  
+- Events empty until data exists; import `fixtures/demo_ledger_3years.csv` for a full demo ledger  
+- **+** opens the add-event composer (Discard / Save)
 
 ## Agents / PR merges
 

@@ -19,7 +19,7 @@ Do **not** invent paywalls, premium locks, or cloud sync unless a human explicit
 1. **Fully offline** — no required network at runtime.
 2. **No paywall** — all view modes (including 3/6/yearly), themes, passcode, and full icon set are unlocked.
 3. **Stack** — Expo + React Native + TypeScript + expo-sqlite + expo-router + Zustand.
-4. **Personal data** — directory `private/` is gitignored. Never commit it.
+4. **Personal data** — directory `private/` is gitignored. Never commit it. For demos / import QA use [`fixtures/demo_ledger_3years.csv`](fixtures/demo_ledger_3years.csv) only.
 5. **Backup format** — `.mbak` is versioned JSON. CSV is for worksheet export/import only.
 
 ## Implementation order
