@@ -21,10 +21,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { GlassSurface } from "@/components/GlassSurface";
 import { InfoModal } from "@/components/InfoModal";
+import { isMoreStackPath } from "@/components/shell/morePaths";
 import { useKeydown } from "@/hooks/useKeydown";
 import { downloadTextFile } from "@/lib/download";
 import { getLogText, log } from "@/lib/logger";
 import { webClickable, webFocusableProps, webFontDisplay } from "@/lib/web";
+import { useMorePaneStore } from "@/store/morePane";
 import { colors } from "@/theme";
 
 type Props = {
@@ -66,10 +68,13 @@ const APP: NavItem[] = [
 
 const PANEL_W = 280;
 const DISMISS_X = 80;
+/** Soft leading edge only — top/right/bottom stay flush to the screen. */
+const PANEL_RADIUS = 20;
 
 export function MorePane({ visible, onClose }: Props) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const leaveForStack = useMorePaneStore((s) => s.leaveForStack);
   const translateX = useSharedValue(PANEL_W);
   const backdrop = useSharedValue(0);
   const [logStatus, setLogStatus] = useState<string | null>(null);
@@ -80,8 +85,8 @@ export function MorePane({ visible, onClose }: Props) {
 
   useEffect(() => {
     if (visible) {
-      translateX.value = withTiming(0, { duration: 220 });
-      backdrop.value = withTiming(1, { duration: 180 });
+      translateX.value = withTiming(0, { duration: 240 });
+      backdrop.value = withTiming(1, { duration: 200 });
     } else {
       translateX.value = PANEL_W;
       backdrop.value = 0;
@@ -102,11 +107,38 @@ export function MorePane({ visible, onClose }: Props) {
   );
 
   const dismissAnimated = useCallback(() => {
-    translateX.value = withTiming(PANEL_W, { duration: 180 }, (finished) => {
+    translateX.value = withTiming(PANEL_W, { duration: 200 }, (finished) => {
       if (finished) runOnJS(close)();
     });
-    backdrop.value = withTiming(0, { duration: 160 });
+    backdrop.value = withTiming(0, { duration: 180 });
   }, [backdrop, close, translateX]);
+
+  const pushAfterLeave = useCallback(
+    (href: string) => {
+      // Push first so pathname is on the stack before returnToMore is armed.
+      router.push(href as never);
+      leaveForStack();
+    },
+    [leaveForStack, router],
+  );
+
+  const go = useCallback(
+    (href: string) => {
+      log.debug("ui more navigate", { href });
+      const toStack = isMoreStackPath(href);
+      if (!toStack) {
+        close();
+        router.push(href as never);
+        return;
+      }
+      // Slide the sheet away, then push so Back can reopen it smoothly.
+      translateX.value = withTiming(PANEL_W, { duration: 200 }, (finished) => {
+        if (finished) runOnJS(pushAfterLeave)(href);
+      });
+      backdrop.value = withTiming(0, { duration: 180 });
+    },
+    [backdrop, close, pushAfterLeave, router, translateX],
+  );
 
   const pan = Gesture.Pan()
     .enabled(Platform.OS !== "web")
@@ -115,10 +147,10 @@ export function MorePane({ visible, onClose }: Props) {
     })
     .onEnd((e) => {
       if (e.translationX > DISMISS_X || e.velocityX > 900) {
-        translateX.value = withTiming(PANEL_W, { duration: 180 }, (finished) => {
+        translateX.value = withTiming(PANEL_W, { duration: 200 }, (finished) => {
           if (finished) runOnJS(close)();
         });
-        backdrop.value = withTiming(0, { duration: 160 });
+        backdrop.value = withTiming(0, { duration: 180 });
       } else {
         translateX.value = withTiming(0, { duration: 180 });
       }
@@ -131,12 +163,6 @@ export function MorePane({ visible, onClose }: Props) {
   const scrimStyle = useAnimatedStyle(() => ({
     opacity: backdrop.value,
   }));
-
-  function go(href: string) {
-    log.debug("ui more navigate", { href });
-    close();
-    router.push(href as never);
-  }
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={dismissAnimated}>
@@ -293,9 +319,27 @@ const styles = StyleSheet.create({
   },
   panel: {
     flex: 1,
-    borderLeftWidth: 1,
+    // Leading edge soft; top / right / bottom flush to the screen.
+    borderTopLeftRadius: PANEL_RADIUS,
+    borderBottomLeftRadius: PANEL_RADIUS,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    overflow: "hidden",
+    borderLeftWidth: StyleSheet.hairlineWidth,
     borderLeftColor: colors.border,
     paddingHorizontal: 18,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOpacity: 0.22,
+        shadowRadius: 16,
+        shadowOffset: { width: -4, height: 0 },
+      },
+      android: {
+        elevation: 12,
+      },
+      default: {},
+    }),
   },
   brand: {
     color: colors.accent,
@@ -335,7 +379,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 12,
     paddingHorizontal: 10,
-    borderRadius: 10,
+    borderRadius: 12,
   },
   itemPressed: {
     backgroundColor: colors.accentSoft,

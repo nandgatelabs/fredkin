@@ -1,16 +1,21 @@
 import { Pressable, StyleSheet, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 
 import { GlassSurface } from "@/components/GlassSurface";
+import { isMorePath } from "@/components/shell/morePaths";
 import { log } from "@/lib/logger";
 import { webClickable, webFocusableProps, webFontDisplay } from "@/lib/web";
+import { useMorePaneStore } from "@/store/morePane";
 import { colors } from "@/theme";
 
 export function AppHeader() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const pathname = usePathname();
+  const openMore = useMorePaneStore((s) => s.openMore);
+  const moreActive = isMorePath(pathname);
 
   return (
     <GlassSurface style={[styles.wrap, { paddingTop: insets.top + 8 }]}>
@@ -36,6 +41,30 @@ export function AppHeader() {
         <Text style={styles.searchPlaceholder} numberOfLines={1}>
           Search
         </Text>
+      </Pressable>
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Open more"
+        accessibilityState={{ selected: moreActive }}
+        onPress={() => {
+          log.debug("ui more open", { via: "header" });
+          openMore();
+        }}
+        hitSlop={8}
+        {...webFocusableProps}
+        style={({ pressed }) => [
+          styles.moreBtn,
+          webClickable,
+          moreActive && styles.moreBtnActive,
+          pressed && styles.moreBtnPressed,
+        ]}
+      >
+        <Ionicons
+          name="menu"
+          size={22}
+          color={moreActive ? colors.accent : colors.tabInactive}
+        />
       </Pressable>
     </GlassSurface>
   );
@@ -79,5 +108,18 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.textSecondary,
     fontSize: 14,
+  },
+  moreBtn: {
+    width: 40,
+    height: 38,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  moreBtnActive: {
+    backgroundColor: colors.accentSoft,
+  },
+  moreBtnPressed: {
+    opacity: 0.85,
   },
 });

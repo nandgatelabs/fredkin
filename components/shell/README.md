@@ -7,11 +7,19 @@ UI chrome diverges via Metro platform extensions:
 | File | Native | Web |
 |------|--------|-----|
 | `ShellFrame` | Full bleed | Full-bleed viewport |
-| `AppHeader` | Fredkin · search | Fredkin · optically centered search · period · display · panes · + · Split · ? · More |
+| `AppHeader` | Fredkin · search · menu | Fredkin · optically centered search · period · display · panes · + · Split · ? · More |
 | `ShellTabBar` / tabs `_layout` | Events · `+` · Insights | Hidden — nav is in the header |
 | Home (`index`) | Events tab | `DesktopShell` (single or split) |
-| Search | Full-screen route | Centered ~50% modal (`SearchModal`) |
-| More | Edge drawer (Manage + App) | Centered ~50% modal, App only |
+| Search | Full-screen route | Centered dialog (`SearchModal`) |
+| More | Edge drawer + header menu + edge swipe-in | Stack `/more` dialog, App only |
+| Dialog chrome | Chevron Back · icon Close; Back from More-stack reopens drawer | Text ← BACK / ✕ CLOSE |
+| Event rows | Swipe right Edit · left Delete | Tap → detail (no swipe) |
+
+**Native More**
+
+- Plain right-edge pill (no icon); header menu button; swipe left from the right edge.
+- Panel edge-flush (top/right/bottom); rounded leading edge only.
+- Navigating to Settings/Data/… slides the drawer away; **Back** returns with the drawer open again. **Close** returns to the shell without reopening More.
 
 **Web layout** (`store/desktopView.ts`):
 

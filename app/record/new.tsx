@@ -317,12 +317,16 @@ export default function NewRecordScreen() {
     >
       <View style={styles.header}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => {
+            if (!busy) router.back();
+          }}
           hitSlop={10}
           disabled={busy}
+          accessibilityRole="button"
+          accessibilityLabel="Discard"
           style={[styles.headerBtn, webClickable]}
         >
-          <Text style={[styles.action, { color: c.accent }]}>✕ DISCARD</Text>
+          <Text style={[styles.action, { color: c.accent }]}>Discard</Text>
         </Pressable>
         {isWeb ? (
           <Text style={[styles.keyboardHint, { color: c.textSecondary }]}>
@@ -335,6 +339,8 @@ export default function NewRecordScreen() {
           onPress={() => void handleSave()}
           hitSlop={10}
           disabled={busy}
+          accessibilityRole="button"
+          accessibilityLabel="Save"
           style={[
             styles.headerBtn,
             styles.saveBtn,
@@ -344,7 +350,7 @@ export default function NewRecordScreen() {
           ]}
         >
           <Text style={[styles.saveLabel, { color: c.onAccent }]}>
-            {busy ? "…" : "✓ SAVE"}
+            {busy ? "…" : "Save"}
           </Text>
         </Pressable>
       </View>

@@ -7,25 +7,27 @@ Versioning follows [Semantic Versioning](https://semver.org/) — see [`docs/VER
 
 ## [Unreleased]
 
+### Added
+
+- Native More: header menu, larger plain edge pill, edge swipe-in; Back from Settings/Data reopens the drawer
+- Event row swipe: right = Edit, left = Delete; in-app delete confirm
+- Verbose `__DEV__` logging trail (nav / UI); prod keeps milestones for Export Logs
+- `expo-dev-client` + EAS `development` APK profile for live Metro on device
+- Demo fixture [`fixtures/demo_ledger_3years.csv`](fixtures/demo_ledger_3years.csv) (~5.6k fictional rows for safe demos / import QA)
+
 ### Changed
 
 - Product / repo rebrand to **Fredkin** ([nandgatelabs/fredkin](https://github.com/nandgatelabs/fredkin)): UI chrome, npm/desktop package names, Expo slug/scheme, Android package `labs.nandgatelabs.fredkin`, export folder and CSV/`.mbak` filenames
 - SQLite file remains `money-money.db` so existing local ledgers keep working
+- Native dismiss chrome: chevron Back / icon Close; composer **Discard** / **Save**
+- Web dialogs: Search/More stack, Back/Close, Esc behavior
 
 ### Fixed
 
 - Expense/income flow line chart point selection on web; keep selected days when the series is sampled
 - Flow calendar renders every month in 3/6/yearly ranges
 - Decimal places capped at 0–4; All Accounts balance uses consistent money formatting
-
-### Added
-
-- CSV export From/To date range (defaults to this month; All time available)
-- Backup restore list of `.mbak` files in the save folder; web Save As dialog when no folder is chosen
-- Drawer Help / Feedback; Preferences Privacy and MIT License screens
-- Native daily remind via `expo-notifications` (≈7 PM local)
-- Electron pack targets for Windows (NSIS/portable) and macOS (dmg/zip)
-- Docs: web hosting COOP/COEP recipe, iOS EAS notes, release artifact upload steps
+- Android SQLite dead handle after JS reload (`useNewConnection`, `withDb` retry); export/save fallbacks when settings read fails
 
 ### Planned
 
