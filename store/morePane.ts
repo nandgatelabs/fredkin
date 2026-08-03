@@ -6,7 +6,7 @@ type MorePaneState = {
   closeMore: () => void;
 };
 
-/** Shared More drawer visibility — edge tab (native) or header control (web). */
+/** Native More edge drawer visibility. Web uses the `/more` route instead. */
 export const useMorePaneStore = create<MorePaneState>((set) => ({
   open: false,
   openMore: () => set({ open: true }),

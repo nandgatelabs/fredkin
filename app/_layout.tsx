@@ -65,6 +65,16 @@ export default function RootLayout() {
   const locked = ready && passcodeEnabled && !sessionUnlocked;
   const statusStyle = uiMode === "light" ? "dark" : "light";
 
+  /** Web More/App screens: centered dialog over the shell (not full-bleed). */
+  const webDialogOptions =
+    Platform.OS === "web"
+      ? {
+          presentation: "transparentModal" as const,
+          animation: "fade" as const,
+          contentStyle: { backgroundColor: "transparent" },
+        }
+      : { animation: "slide_from_right" as const };
+
   // Always mount Stack so the URL (/preferences etc.) is handled.
   // Overlays cover boot / passcode — never replace the navigator (that caused
   // expo-router onUnhandledAction crashes after theme reload).
@@ -81,14 +91,15 @@ export default function RootLayout() {
         >
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="search" options={{ animation: "fade" }} />
-          <Stack.Screen name="import-csv" options={{ animation: "slide_from_right" }} />
-          <Stack.Screen name="export-csv" options={{ animation: "slide_from_right" }} />
-          <Stack.Screen name="preferences" options={{ animation: "slide_from_right" }} />
-          <Stack.Screen name="data" options={{ animation: "slide_from_right" }} />
-          <Stack.Screen name="backup" options={{ animation: "slide_from_right" }} />
-          <Stack.Screen name="help" options={{ animation: "slide_from_right" }} />
-          <Stack.Screen name="about-doc" options={{ animation: "slide_from_right" }} />
-          <Stack.Screen name="reset" options={{ animation: "slide_from_right" }} />
+          <Stack.Screen name="more" options={webDialogOptions} />
+          <Stack.Screen name="import-csv" options={webDialogOptions} />
+          <Stack.Screen name="export-csv" options={webDialogOptions} />
+          <Stack.Screen name="preferences" options={webDialogOptions} />
+          <Stack.Screen name="data" options={webDialogOptions} />
+          <Stack.Screen name="backup" options={webDialogOptions} />
+          <Stack.Screen name="help" options={webDialogOptions} />
+          <Stack.Screen name="about-doc" options={webDialogOptions} />
+          <Stack.Screen name="reset" options={webDialogOptions} />
           <Stack.Screen name="account/[id]" options={{ animation: "slide_from_right" }} />
           <Stack.Screen name="category/[id]" options={{ animation: "slide_from_right" }} />
           <Stack.Screen

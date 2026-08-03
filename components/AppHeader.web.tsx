@@ -23,7 +23,6 @@ import {
   useDesktopViewStore,
   type PaneId,
 } from "@/store/desktopView";
-import { useMorePaneStore } from "@/store/morePane";
 import { useSearchModalStore } from "@/store/searchModal";
 import { useShortcutsHelpStore } from "@/store/shortcutsHelp";
 import { colors, layout } from "@/theme";
@@ -42,9 +41,7 @@ export function AppHeader() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const pathname = usePathname();
-  const openMore = useMorePaneStore((s) => s.openMore);
-  const moreOpen = useMorePaneStore((s) => s.open);
-  const moreActive = moreOpen || isMorePath(pathname);
+  const moreActive = isMorePath(pathname);
   const openSearch = useSearchModalStore((s) => s.openSearch);
   const searchOpen = useSearchModalStore((s) => s.open);
   const layoutState = useEffectiveDesktopLayout();
@@ -212,10 +209,13 @@ export function AppHeader() {
           accessibilityRole="button"
           accessibilityLabel="Open more"
           accessibilityState={{ selected: moreActive }}
-          onPress={openMore}
+          onPress={() => {
+            if (pathname === "/more") router.back();
+            else router.push("/more");
+          }}
           hitSlop={8}
           {...webFocusableProps}
-          {...webTitle("More")}
+          {...webTitle("More (M)")}
           style={({ pressed }) => [
             styles.toolBtn,
             webClickable,

@@ -1,7 +1,11 @@
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { Modal, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 
 import { GlassSurface } from "@/components/GlassSurface";
 import { SearchBody } from "@/components/search/SearchBody";
+import {
+  WEB_DIALOG_HEIGHT_FRAC,
+  WEB_DIALOG_WIDTH_FRAC,
+} from "@/lib/webDialog";
 import { colors } from "@/theme";
 
 type Props = {
@@ -9,8 +13,12 @@ type Props = {
   onClose: () => void;
 };
 
-/** Centered ~50% search dialog (web desktop). */
+/** Centered search dialog (web desktop). */
 export function SearchModal({ visible, onClose }: Props) {
+  const { width, height } = useWindowDimensions();
+  const cardW = Math.round(width * WEB_DIALOG_WIDTH_FRAC);
+  const cardH = Math.round(height * WEB_DIALOG_HEIGHT_FRAC);
+
   return (
     <Modal
       visible={visible}
@@ -18,16 +26,18 @@ export function SearchModal({ visible, onClose }: Props) {
       animationType="fade"
       onRequestClose={onClose}
     >
-      <Pressable style={styles.backdrop} onPress={onClose}>
+      <View style={styles.backdrop}>
         <Pressable
-          style={styles.cardWrap}
-          onPress={(e) => e.stopPropagation?.()}
-        >
+          style={StyleSheet.absoluteFill}
+          onPress={onClose}
+          accessibilityLabel="Dismiss"
+        />
+        <View style={{ width: cardW, height: cardH, zIndex: 1 }}>
           <GlassSurface elevated style={styles.card}>
             <SearchBody compact onClose={onClose} />
           </GlassSurface>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -40,16 +50,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 24,
   },
-  cardWrap: {
-    width: "50%",
-    minWidth: 380,
-    maxWidth: 720,
-    height: "50%",
-    minHeight: 360,
-    maxHeight: 640,
-  },
   card: {
     flex: 1,
+    width: "100%",
+    height: "100%",
     borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,

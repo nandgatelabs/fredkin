@@ -1,5 +1,6 @@
-/** Routes that belong under the More drawer (highlight edge / header control). */
+/** Routes that belong under the More flow (highlight header control). */
 export const MORE_PATHS = [
+  "/more",
   "/accounts",
   "/categories",
   "/budgets",
@@ -7,6 +8,10 @@ export const MORE_PATHS = [
   "/data",
   "/help",
   "/reset",
+  "/backup",
+  "/export-csv",
+  "/import-csv",
+  "/about-doc",
 ] as const;
 
 export function isMorePath(pathname: string): boolean {

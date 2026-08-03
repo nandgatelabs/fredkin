@@ -18,6 +18,8 @@ import { InfoModal } from "@/components/InfoModal";
 import { PasscodeSetupModal } from "@/components/PasscodeSetupModal";
 import { PreferenceRow } from "@/components/PreferenceRow";
 import { SaveLocationPanel } from "@/components/SaveLocationPanel";
+import { WebCenterFrame } from "@/components/shell/WebCenterFrame";
+import { WebDialogHeader } from "@/components/shell/WebDialogHeader";
 import { useKeydown } from "@/hooks/useKeydown";
 import { APP_VERSION } from "@/lib/appVersion";
 import { log } from "@/lib/logger";
@@ -154,9 +156,6 @@ export default function PreferencesScreen() {
     true,
     useCallback(
       (event) => {
-        if (event.key === "Escape" && !sheet && !passcodeSetup && !disablePasscode) {
-          router.back();
-        }
         if (
           (event.key === "s" || event.key === "S") &&
           (event.metaKey || event.ctrlKey) &&
@@ -166,9 +165,9 @@ export default function PreferencesScreen() {
           void onSave();
         }
       },
-      [disablePasscode, onSave, passcodeSetup, router, sheet],
+      [onSave, sheet],
     ),
-  )
+  );
 
   const themeLabel =
     THEME_OPTIONS.find((t) => t.id === themeId)?.label ?? "Glass Mist";
@@ -180,38 +179,24 @@ export default function PreferencesScreen() {
     POSITION_OPTIONS.find((p) => p.id === currencyPosition)?.label ??
     "At start of amount";
 
+  const padTop = Platform.OS === "web" ? 12 : insets.top + 12;
+  const padBottom = Platform.OS === "web" ? 8 : insets.bottom + 8;
+
   return (
+    <WebCenterFrame>
     <View
       style={[
         styles.screen,
-        { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 8 },
+        { paddingTop: padTop, paddingBottom: padBottom },
       ]}
     >
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Close"
-          onPress={() => router.back()}
-          hitSlop={10}
-          style={webClickable}
-          {...webFocusableProps}
-        >
-          <Text style={styles.back}>✕ CLOSE</Text>
-        </Pressable>
-        <Text style={styles.title}>Settings</Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Save settings"
-          onPress={() => void onSave()}
-          hitSlop={10}
-          disabled={busy}
-          style={webClickable}
-          {...webFocusableProps}
-        >
-          <Text style={[styles.save, busy && styles.saveBusy]}>
-            {busy ? "…" : "SAVE"}
-          </Text>
-        </Pressable>
+      <View style={styles.headerPad}>
+        <WebDialogHeader
+          title="Settings"
+          onSave={() => void onSave()}
+          saveBusy={busy}
+          escapeBack={!sheet && !passcodeSetup && !disablePasscode}
+        />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -445,6 +430,7 @@ export default function PreferencesScreen() {
         }}
       />
     </View>
+    </WebCenterFrame>
   );
 }
 
@@ -453,23 +439,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+  headerPad: {
     paddingHorizontal: 20,
-    marginBottom: 8,
   },
-  back: { color: colors.accent, fontWeight: "600", fontSize: 13, width: 64 },
-  save: {
-    color: colors.accent,
-    fontWeight: "700",
-    fontSize: 13,
-    width: 64,
-    textAlign: "right",
-  },
-  saveBusy: { opacity: 0.5 },
-  title: { color: colors.accent, fontSize: 17, fontWeight: "700" },
   scroll: {
     paddingHorizontal: 20,
     paddingBottom: 40,
