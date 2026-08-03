@@ -1,10 +1,10 @@
-import { useCallback, useMemo } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useMemo } from "react";
+import { ScrollView, StyleSheet, Text } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useKeydown } from "@/hooks/useKeydown";
-import { webClickable, webFocusableProps } from "@/lib/web";
+import { WebCenterFrame } from "@/components/shell/WebCenterFrame";
+import { WebDialogHeader } from "@/components/shell/WebDialogHeader";
 import { colors } from "@/theme";
 
 const PRIVACY = `Privacy
@@ -41,50 +41,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.`;
 
 export default function AboutDocScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { kind } = useLocalSearchParams<{ kind?: string }>();
   const isLicense = kind === "license";
   const title = isLicense ? "License" : "Privacy";
   const body = useMemo(() => (isLicense ? LICENSE : PRIVACY), [isLicense]);
 
-  useKeydown(
-    true,
-    useCallback(
-      (event) => {
-        if (event.key === "Escape") router.back();
-      },
-      [router],
-    ),
-  );
-
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={{
-        paddingTop: insets.top + 12,
-        paddingBottom: insets.bottom + 24,
-        paddingHorizontal: 20,
-      }}
-    >
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Close"
-          onPress={() => router.back()}
-          hitSlop={10}
-          style={webClickable}
-          {...webFocusableProps}
-        >
-          <Text style={styles.back}>✕ CLOSE</Text>
-        </Pressable>
-        <Text style={styles.title}>{title}</Text>
-        <View style={{ width: 64 }} />
-      </View>
-      <Text style={styles.body} selectable>
-        {body}
-      </Text>
-    </ScrollView>
+    <WebCenterFrame>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={{
+          paddingTop: insets.top + 12,
+          paddingBottom: insets.bottom + 24,
+          paddingHorizontal: 20,
+        }}
+      >
+        <WebDialogHeader title={title} />
+        <Text style={styles.body} selectable>
+          {body}
+        </Text>
+      </ScrollView>
+    </WebCenterFrame>
   );
 }
 
@@ -92,23 +70,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  back: {
-    color: colors.accent,
-    fontWeight: "600",
-    fontSize: 13,
-    width: 64,
-  },
-  title: {
-    color: colors.accent,
-    fontSize: 17,
-    fontWeight: "700",
   },
   body: {
     color: colors.text,

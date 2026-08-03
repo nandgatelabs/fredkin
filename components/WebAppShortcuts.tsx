@@ -3,8 +3,10 @@ import { usePathname, useRouter } from "expo-router";
 
 import { useCanSplit } from "@/hooks/useViewportWidth";
 import { useKeydown } from "@/hooks/useKeydown";
+import { isWebDialogPath } from "@/lib/webDialog";
 import { useDesktopViewStore, type PaneId } from "@/store/desktopView";
 import { usePeriodStore } from "@/store/period";
+import { useSearchModalStore } from "@/store/searchModal";
 import { useShortcutsHelpStore } from "@/store/shortcutsHelp";
 
 const PANE_BY_DIGIT: Record<number, PaneId> = {
@@ -22,21 +24,9 @@ function shiftMonthIso(iso: string, delta: number) {
   return `${yy}-${mm}-01`;
 }
 
-function isEditorRoute(pathname: string) {
-  return (
-    pathname.startsWith("/record") ||
-    pathname.startsWith("/search") ||
-    pathname.startsWith("/import") ||
-    pathname.startsWith("/export") ||
-    pathname.startsWith("/backup") ||
-    pathname.startsWith("/reset") ||
-    pathname.startsWith("/preferences")
-  );
-}
-
 /**
  * Laptop keyboard shortcuts (web only via useKeydown).
- * ⌘/Ctrl+K or / search · ? help · n new · s split · ← → period · 1–4 panes
+ * ⌘/Ctrl+K or / search · M more · ? help · n new · s split · ← → period · 1–4 panes
  */
 export function WebAppShortcuts() {
   const router = useRouter();
@@ -50,6 +40,10 @@ export function WebAppShortcuts() {
   const setMode = useDesktopViewStore((s) => s.setMode);
   const canSplit = useCanSplit();
   const openHelp = useShortcutsHelpStore((s) => s.openHelp);
+  const openSearch = useSearchModalStore((s) => s.openSearch);
+  const searchOpen = useSearchModalStore((s) => s.open);
+  const onMore = pathname === "/more";
+  const inDialog = isWebDialogPath(pathname);
 
   useKeydown(
     true,
@@ -59,16 +53,28 @@ export function WebAppShortcuts() {
 
         if (mod && (event.key === "k" || event.key === "K")) {
           event.preventDefault();
-          router.push("/search");
+          openSearch();
           return;
         }
 
         if (event.metaKey || event.ctrlKey || event.altKey) return;
-        if (isEditorRoute(pathname)) return;
+        if (searchOpen) return;
+
+        if (event.key === "m" || event.key === "M") {
+          event.preventDefault();
+          if (onMore) router.back();
+          else router.navigate("/more");
+          return;
+        }
+
+        // Digits while More is open are handled in MoreMenu.
+        if (onMore) return;
+
+        if (inDialog || pathname.startsWith("/record")) return;
 
         if (event.key === "/") {
           event.preventDefault();
-          router.push("/search");
+          openSearch();
           return;
         }
 
@@ -121,11 +127,15 @@ export function WebAppShortcuts() {
         anchorDate,
         canSplit,
         enterSplit,
+        inDialog,
         mode,
+        onMore,
         openHelp,
         openPane,
+        openSearch,
         pathname,
         router,
+        searchOpen,
         setAnchorDate,
         setMode,
         shiftPeriod,

@@ -1,9 +1,8 @@
-import { useCallback } from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { Linking, Pressable, ScrollView, StyleSheet, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useKeydown } from "@/hooks/useKeydown";
+import { WebCenterFrame } from "@/components/shell/WebCenterFrame";
+import { WebDialogHeader } from "@/components/shell/WebDialogHeader";
 import { log } from "@/lib/logger";
 import { webClickable, webFocusableProps } from "@/lib/web";
 import { colors } from "@/theme";
@@ -47,62 +46,40 @@ async function openUrl(url: string) {
 }
 
 export default function HelpScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  useKeydown(
-    true,
-    useCallback(
-      (event) => {
-        if (event.key === "Escape") router.back();
-      },
-      [router],
-    ),
-  );
-
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={{
-        paddingTop: insets.top + 12,
-        paddingBottom: insets.bottom + 24,
-        paddingHorizontal: 20,
-      }}
-    >
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Close"
-          onPress={() => router.back()}
-          hitSlop={10}
-          style={webClickable}
-          {...webFocusableProps}
-        >
-          <Text style={styles.back}>✕ CLOSE</Text>
-        </Pressable>
-        <Text style={styles.title}>Support</Text>
-        <View style={{ width: 64 }} />
-      </View>
+    <WebCenterFrame>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={{
+          paddingTop: insets.top + 12,
+          paddingBottom: insets.bottom + 24,
+          paddingHorizontal: 20,
+        }}
+      >
+        <WebDialogHeader title="Support" />
 
-      <Text style={styles.body}>
-        Fredkin by NandGateLabs is offline, local-first, and free of paywalls or
-        analytics. Use these links for help — nothing here phones home.
-      </Text>
+        <Text style={styles.body}>
+          Fredkin by NandGateLabs is offline, local-first, and free of paywalls or
+          analytics. Use these links for help — nothing here phones home.
+        </Text>
 
-      {LINKS.map((item) => (
-        <Pressable
-          key={item.url}
-          accessibilityRole="link"
-          accessibilityLabel={item.label}
-          onPress={() => void openUrl(item.url)}
-          style={[styles.row, webClickable]}
-          {...webFocusableProps}
-        >
-          <Text style={styles.rowLabel}>{item.label}</Text>
-          <Text style={styles.rowDesc}>{item.description}</Text>
-        </Pressable>
-      ))}
-    </ScrollView>
+        {LINKS.map((item) => (
+          <Pressable
+            key={item.url}
+            accessibilityRole="link"
+            accessibilityLabel={item.label}
+            onPress={() => void openUrl(item.url)}
+            style={[styles.row, webClickable]}
+            {...webFocusableProps}
+          >
+            <Text style={styles.rowLabel}>{item.label}</Text>
+            <Text style={styles.rowDesc}>{item.description}</Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </WebCenterFrame>
   );
 }
 
@@ -110,23 +87,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  back: {
-    color: colors.accent,
-    fontWeight: "600",
-    fontSize: 13,
-    width: 64,
-  },
-  title: {
-    color: colors.accent,
-    fontSize: 17,
-    fontWeight: "700",
   },
   body: {
     color: colors.textSecondary,

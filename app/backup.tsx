@@ -7,7 +7,6 @@ import {
   Text,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as DocumentPicker from "expo-document-picker";
 
@@ -15,13 +14,14 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { InfoModal } from "@/components/InfoModal";
 import { SaveLocationPanel } from "@/components/SaveLocationPanel";
+import { WebCenterFrame } from "@/components/shell/WebCenterFrame";
+import { WebDialogHeader } from "@/components/shell/WebDialogHeader";
 import {
   backupFileName,
   createBackupPayload,
   restoreBackupPayload,
   type MoneyBackup,
 } from "@/db/backup";
-import { useKeydown } from "@/hooks/useKeydown";
 import { formatComposerDate, formatComposerTime } from "@/lib/datetime";
 import { downloadTextFile } from "@/lib/download";
 import { log } from "@/lib/logger";
@@ -34,7 +34,6 @@ import { useSettingsStore } from "@/store/settings";
 import { colors } from "@/theme";
 
 export default function BackupScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const hydrate = useSettingsStore((s) => s.hydrate);
   const [busy, setBusy] = useState(false);
@@ -67,16 +66,6 @@ export default function BackupScreen() {
   useEffect(() => {
     void reloadList();
   }, [reloadList]);
-
-  useKeydown(
-    true,
-    useCallback(
-      (event) => {
-        if (event.key === "Escape" && !busy) router.back();
-      },
-      [busy, router],
-    ),
-  );
 
   async function onBackup() {
     setBusy(true);
@@ -154,29 +143,22 @@ export default function BackupScreen() {
   }
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={{
-        paddingTop: insets.top + 12,
-        paddingBottom: insets.bottom + 24,
-        paddingHorizontal: 20,
-      }}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Close"
-          onPress={() => router.back()}
-          hitSlop={10}
-          style={webClickable}
-          {...webFocusableProps}
-        >
-          <Text style={styles.back}>✕ CLOSE</Text>
-        </Pressable>
-        <Text style={styles.title}>Backup</Text>
-        <View style={{ width: 64 }} />
-      </View>
+    <WebCenterFrame>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={{
+          paddingTop: insets.top + 12,
+          paddingBottom: insets.bottom + 24,
+          paddingHorizontal: 20,
+        }}
+        keyboardShouldPersistTaps="handled"
+      >
+      <WebDialogHeader
+        title="Backup"
+        escapeBack={
+          !busy && pendingRestore == null && error == null && message == null
+        }
+      />
 
       <Text style={styles.body}>
         A `.mbak` file is a full local snapshot: accounts, categories, records,
@@ -274,7 +256,8 @@ export default function BackupScreen() {
             .finally(() => setBusy(false));
         }}
       />
-    </ScrollView>
+      </ScrollView>
+    </WebCenterFrame>
   );
 }
 
@@ -282,23 +265,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  back: {
-    color: colors.accent,
-    fontWeight: "600",
-    fontSize: 13,
-    width: 64,
-  },
-  title: {
-    color: colors.accent,
-    fontSize: 17,
-    fontWeight: "700",
   },
   body: {
     color: colors.textSecondary,

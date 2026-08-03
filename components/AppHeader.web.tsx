@@ -23,7 +23,7 @@ import {
   useDesktopViewStore,
   type PaneId,
 } from "@/store/desktopView";
-import { useMorePaneStore } from "@/store/morePane";
+import { useSearchModalStore } from "@/store/searchModal";
 import { useShortcutsHelpStore } from "@/store/shortcutsHelp";
 import { colors, layout } from "@/theme";
 
@@ -41,8 +41,9 @@ export function AppHeader() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const pathname = usePathname();
-  const openMore = useMorePaneStore((s) => s.openMore);
   const moreActive = isMorePath(pathname);
+  const openSearch = useSearchModalStore((s) => s.openSearch);
+  const searchOpen = useSearchModalStore((s) => s.open);
   const layoutState = useEffectiveDesktopLayout();
   const openPane = useDesktopViewStore((s) => s.openPane);
   const enterSplit = useDesktopViewStore((s) => s.enterSplit);
@@ -61,22 +62,19 @@ export function AppHeader() {
 
   return (
     <GlassSurface style={[styles.wrap, { paddingTop: insets.top + 8 }]}>
-      <View style={styles.left}>
-        <Text style={styles.logo} accessibilityRole="header">
-          Fredkin
-        </Text>
-      </View>
-
-      <View style={styles.center}>
+      {/* True optical center: search is centered on the header bar, not the flex gap. */}
+      <View style={styles.searchCenter} pointerEvents="box-none">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Search events"
-          onPress={() => router.push("/search")}
+          accessibilityState={{ selected: searchOpen }}
+          onPress={openSearch}
           {...webFocusableProps}
           {...webTitle("Search (⌘K)")}
           style={({ pressed }) => [
             styles.search,
             webClickable,
+            searchOpen && styles.searchActive,
             pressed && styles.searchPressed,
           ]}
         >
@@ -85,6 +83,12 @@ export function AppHeader() {
             Search
           </Text>
         </Pressable>
+      </View>
+
+      <View style={styles.left}>
+        <Text style={styles.logo} accessibilityRole="header">
+          Fredkin
+        </Text>
       </View>
 
       <View style={styles.right}>
@@ -205,10 +209,13 @@ export function AppHeader() {
           accessibilityRole="button"
           accessibilityLabel="Open more"
           accessibilityState={{ selected: moreActive }}
-          onPress={openMore}
+          onPress={() => {
+            if (pathname === "/more") router.back();
+            else router.push("/more");
+          }}
           hitSlop={8}
           {...webFocusableProps}
-          {...webTitle("More")}
+          {...webTitle("More (M)")}
           style={({ pressed }) => [
             styles.toolBtn,
             webClickable,
@@ -239,25 +246,31 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     gap: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
+    position: "relative",
+    zIndex: 1,
   },
-  left: {
-    flex: 1,
-    minWidth: 0,
-    alignItems: "flex-start",
-    justifyContent: "center",
-  },
-  center: {
-    flex: 1.15,
-    minWidth: 0,
+  searchCenter: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 0,
+  },
+  left: {
+    zIndex: 1,
+    alignItems: "flex-start",
+    justifyContent: "center",
+    flexShrink: 0,
   },
   right: {
-    flex: 1.35,
-    minWidth: 0,
+    zIndex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
@@ -276,14 +289,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    width: "100%",
-    maxWidth: layout.searchMaxWidth,
+    width: layout.searchMaxWidth,
     minHeight: 38,
     paddingHorizontal: 14,
     borderRadius: 999,
     borderWidth: 1.5,
     borderColor: colors.accent,
     backgroundColor: colors.inputBg,
+  },
+  searchActive: {
+    backgroundColor: colors.accentSoft,
   },
   searchPressed: { opacity: 0.88 },
   searchPlaceholder: {

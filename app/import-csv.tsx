@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import {
   Platform,
   Pressable,
@@ -14,8 +14,9 @@ import * as DocumentPicker from "expo-document-picker";
 import { DatePickerModal } from "@/components/DateTimePickers";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { WebCenterFrame } from "@/components/shell/WebCenterFrame";
+import { WebDialogHeader } from "@/components/shell/WebDialogHeader";
 import { importMoneyCsv, type ImportMode, type ImportResult } from "@/db/importCsv";
-import { useKeydown } from "@/hooks/useKeydown";
 import { formatComposerDate } from "@/lib/datetime";
 import { webClickable, webFocusableProps } from "@/lib/web";
 import { colors } from "@/theme";
@@ -35,16 +36,6 @@ export default function ImportCsvScreen() {
   const [from, setFrom] = useState<Date | null>(null);
   const [to, setTo] = useState<Date | null>(null);
   const [picking, setPicking] = useState<Bound>(null);
-
-  useKeydown(
-    true,
-    useCallback(
-      (event) => {
-        if (event.key === "Escape" && !busy && !pending) router.back();
-      },
-      [busy, pending, router],
-    ),
-  );
 
   async function runImport(text: string, name: string) {
     if (from && to && startKey(from) > startKey(to)) {
@@ -107,22 +98,20 @@ export default function ImportCsvScreen() {
       : `Add in-range rows from “${pending?.name ?? "this file"}” (${rangeLabel}) on top of your current records? Duplicate rows are possible if you import the same file twice.`;
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={{
-        paddingTop: insets.top + 12,
-        paddingBottom: insets.bottom + 24,
-        paddingHorizontal: 20,
-      }}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={10} style={webClickable}>
-          <Text style={styles.back}>✕ CLOSE</Text>
-        </Pressable>
-        <Text style={styles.title}>Import CSV</Text>
-        <View style={{ width: 64 }} />
-      </View>
+    <WebCenterFrame>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={{
+          paddingTop: insets.top + 12,
+          paddingBottom: insets.bottom + 24,
+          paddingHorizontal: 20,
+        }}
+        keyboardShouldPersistTaps="handled"
+      >
+      <WebDialogHeader
+        title="Import CSV"
+        escapeBack={!busy && pending == null && picking == null}
+      />
 
       <Text style={styles.body}>
         Load a worksheet export with columns TIME, TYPE, AMOUNT, CATEGORY,
@@ -260,7 +249,8 @@ export default function ImportCsvScreen() {
           void runImport(file.text, file.name);
         }}
       />
-    </ScrollView>
+      </ScrollView>
+    </WebCenterFrame>
   );
 }
 
@@ -328,23 +318,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  back: {
-    color: colors.accent,
-    fontWeight: "600",
-    fontSize: 13,
-    width: 64,
-  },
-  title: {
-    color: colors.accent,
-    fontSize: 17,
-    fontWeight: "700",
   },
   body: {
     color: colors.textSecondary,

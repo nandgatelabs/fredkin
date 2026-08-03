@@ -15,15 +15,17 @@ type Props = {
 const ROWS: { keys: string; action: string }[] = [
   { keys: "⌘/Ctrl + K", action: "Search" },
   { keys: "/", action: "Search" },
+  { keys: "M", action: "Open / close More" },
+  { keys: "1–4", action: "In More: Settings / Data / Support / Reset" },
   { keys: "N", action: "New event" },
   { keys: "S", action: "Toggle split view" },
   { keys: "← / →", action: "Previous / next period" },
-  { keys: "1", action: "Events" },
-  { keys: "2", action: "Insights" },
-  { keys: "3", action: "Wallets" },
-  { keys: "4", action: "Event types" },
+  { keys: "1", action: "Events (outside More)" },
+  { keys: "2", action: "Insights (outside More)" },
+  { keys: "3", action: "Wallets (outside More)" },
+  { keys: "4", action: "Event types (outside More)" },
   { keys: "?", action: "This shortcuts list" },
-  { keys: "Esc", action: "Close dialogs / details" },
+  { keys: "Esc", action: "Back (or close More / search)" },
 ];
 
 export function KeyboardShortcutsModal({ visible, onClose }: Props) {

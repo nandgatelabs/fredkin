@@ -1,14 +1,14 @@
-import { useCallback, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DatePickerModal } from "@/components/DateTimePickers";
 import { Button } from "@/components/ui/Button";
 import { InfoModal } from "@/components/InfoModal";
 import { SaveLocationPanel } from "@/components/SaveLocationPanel";
+import { WebCenterFrame } from "@/components/shell/WebCenterFrame";
+import { WebDialogHeader } from "@/components/shell/WebDialogHeader";
 import { exportMoneyCsv } from "@/db/exportCsv";
-import { useKeydown } from "@/hooks/useKeydown";
 import { formatComposerDate } from "@/lib/datetime";
 import { downloadTextFile } from "@/lib/download";
 import { log } from "@/lib/logger";
@@ -26,7 +26,6 @@ function todayNoon(d = new Date()) {
 }
 
 export default function ExportCsvScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,16 +33,6 @@ export default function ExportCsvScreen() {
   const [from, setFrom] = useState<Date | null>(monthStart());
   const [to, setTo] = useState<Date | null>(todayNoon());
   const [picking, setPicking] = useState<Bound>(null);
-
-  useKeydown(
-    true,
-    useCallback(
-      (event) => {
-        if (event.key === "Escape" && !busy) router.back();
-      },
-      [busy, router],
-    ),
-  );
 
   async function onExport() {
     if (from && to && startKey(from) > startKey(to)) {
@@ -70,92 +59,88 @@ export default function ExportCsvScreen() {
   }
 
   return (
-    <View
-      style={[
-        styles.screen,
-        { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 },
-      ]}
-    >
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Close"
-          onPress={() => router.back()}
-          hitSlop={10}
-          style={webClickable}
-          {...webFocusableProps}
-        >
-          <Text style={styles.back}>✕ CLOSE</Text>
-        </Pressable>
-        <Text style={styles.title}>Export CSV</Text>
-        <View style={{ width: 64 }} />
+    <WebCenterFrame>
+    <View style={[styles.screen, { paddingTop: insets.top + 12 }]}>
+      <View style={styles.headerPad}>
+        <WebDialogHeader
+          title="Export CSV"
+          escapeBack={!busy && picking == null && error == null && summary == null}
+        />
       </View>
 
-      <Text style={styles.body}>
-        Download your ledger as a worksheet CSV (TIME, TYPE, AMOUNT, CATEGORY,
-        ACCOUNT, NOTES).
-      </Text>
-      <Text style={styles.body}>
-        Each account’s initial (opening) balance is written as a{" "}
-        <Text style={styles.em}>(#) Opening</Text> row so a later import can restore
-        it. Record rows respect the From / To range below.
-      </Text>
+      <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingBottom: insets.bottom + 16,
+        }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={styles.body}>
+          Download your ledger as a worksheet CSV (TIME, TYPE, AMOUNT, CATEGORY,
+          ACCOUNT, NOTES).
+        </Text>
+        <Text style={styles.body}>
+          Each account’s initial (opening) balance is written as a{" "}
+          <Text style={styles.em}>(#) Opening</Text> row so a later import can restore
+          it. Record rows respect the From / To range below.
+        </Text>
 
-      <View style={styles.rangeCard}>
-        <Text style={styles.rangeTitle}>Date range</Text>
-        <View style={styles.rangeRow}>
-          <Pressable
-            style={[styles.rangeBtn, webClickable]}
-            onPress={() => setPicking("from")}
-            {...webFocusableProps}
-          >
-            <Text style={styles.rangeLabel}>From</Text>
-            <Text style={styles.rangeValue}>
-              {from ? formatComposerDate(from) : "All time"}
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[styles.rangeBtn, webClickable]}
-            onPress={() => setPicking("to")}
-            {...webFocusableProps}
-          >
-            <Text style={styles.rangeLabel}>To</Text>
-            <Text style={styles.rangeValue}>
-              {to ? formatComposerDate(to) : "All time"}
-            </Text>
-          </Pressable>
+        <View style={styles.rangeCard}>
+          <Text style={styles.rangeTitle}>Date range</Text>
+          <View style={styles.rangeRow}>
+            <Pressable
+              style={[styles.rangeBtn, webClickable]}
+              onPress={() => setPicking("from")}
+              {...webFocusableProps}
+            >
+              <Text style={styles.rangeLabel}>From</Text>
+              <Text style={styles.rangeValue}>
+                {from ? formatComposerDate(from) : "All time"}
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.rangeBtn, webClickable]}
+              onPress={() => setPicking("to")}
+              {...webFocusableProps}
+            >
+              <Text style={styles.rangeLabel}>To</Text>
+              <Text style={styles.rangeValue}>
+                {to ? formatComposerDate(to) : "All time"}
+              </Text>
+            </Pressable>
+          </View>
+          <View style={styles.rangeActions}>
+            <Pressable
+              style={[styles.chip, webClickable]}
+              onPress={() => {
+                setFrom(monthStart());
+                setTo(todayNoon());
+              }}
+            >
+              <Text style={styles.chipLabel}>This month</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.chip, webClickable]}
+              onPress={() => {
+                setFrom(null);
+                setTo(null);
+              }}
+            >
+              <Text style={styles.chipLabel}>All time</Text>
+            </Pressable>
+          </View>
         </View>
-        <View style={styles.rangeActions}>
-          <Pressable
-            style={[styles.chip, webClickable]}
-            onPress={() => {
-              setFrom(monthStart());
-              setTo(todayNoon());
-            }}
-          >
-            <Text style={styles.chipLabel}>This month</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.chip, webClickable]}
-            onPress={() => {
-              setFrom(null);
-              setTo(null);
-            }}
-          >
-            <Text style={styles.chipLabel}>All time</Text>
-          </Pressable>
-        </View>
-      </View>
 
-      <SaveLocationPanel />
+        <SaveLocationPanel />
 
-      <Button
-        label={busy ? "EXPORTING…" : "EXPORT NOW"}
-        variant="primary"
-        onPress={() => void onExport()}
-        busy={busy}
-        style={{ marginTop: 12 }}
-      />
+        <Button
+          label={busy ? "EXPORTING…" : "EXPORT NOW"}
+          variant="primary"
+          onPress={() => void onExport()}
+          busy={busy}
+          style={{ marginTop: 12 }}
+        />
+      </ScrollView>
 
       <DatePickerModal
         visible={picking != null}
@@ -182,6 +167,7 @@ export default function ExportCsvScreen() {
         }}
       />
     </View>
+    </WebCenterFrame>
   );
 }
 
@@ -193,24 +179,9 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  headerPad: {
     paddingHorizontal: 20,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  back: {
-    color: colors.accent,
-    fontWeight: "600",
-    fontSize: 13,
-    width: 64,
-  },
-  title: {
-    color: colors.accent,
-    fontSize: 17,
-    fontWeight: "700",
   },
   body: {
     color: colors.textSecondary,
