@@ -133,6 +133,7 @@ export function MorePane({ visible, onClose }: Props) {
   }));
 
   function go(href: string) {
+    log.debug("ui more navigate", { href });
     close();
     router.push(href as never);
   }

@@ -307,7 +307,7 @@ export default function PreferencesScreen() {
         <Text style={[styles.section, styles.sectionSpaced]}>About</Text>
         <PreferenceRow
           label="Record logs"
-          description="Keep a local debug log on this device (default on). Nothing is sent to a server. Export from the menu."
+          description="Save milestones to a local log you can export (default on). Dev builds also print a verbose trail (taps, navigation) to Metro. Nothing is sent to a server."
           switchValue={recordLogs}
           onSwitch={(v) => {
             void persistRecordLogs(v).then(() =>

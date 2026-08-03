@@ -3,6 +3,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { useKeydown } from "@/hooks/useKeydown";
+import { log } from "@/lib/logger";
 import {
   closeWebDialog,
   dismissWebDialog,
@@ -59,7 +60,10 @@ export function WebDialogHeader({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Close"
-          onPress={() => router.back()}
+          onPress={() => {
+            log.debug("ui dialog close", { title });
+            router.back();
+          }}
           hitSlop={10}
           style={webClickable}
           {...webFocusableProps}
@@ -71,7 +75,10 @@ export function WebDialogHeader({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Save"
-            onPress={onSave}
+            onPress={() => {
+              log.debug("ui dialog save", { title });
+              onSave();
+            }}
             hitSlop={10}
             disabled={saveBusy}
             style={webClickable}
@@ -116,7 +123,10 @@ export function WebDialogHeader({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Save"
-            onPress={onSave}
+            onPress={() => {
+              log.debug("ui dialog save", { title });
+              onSave();
+            }}
             hitSlop={10}
             disabled={saveBusy}
             style={webClickable}

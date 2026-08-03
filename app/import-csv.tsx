@@ -18,6 +18,7 @@ import { WebCenterFrame } from "@/components/shell/WebCenterFrame";
 import { WebDialogHeader } from "@/components/shell/WebDialogHeader";
 import { importMoneyCsv, type ImportMode, type ImportResult } from "@/db/importCsv";
 import { formatComposerDate } from "@/lib/datetime";
+import { log } from "@/lib/logger";
 import { webClickable, webFocusableProps } from "@/lib/web";
 import { colors } from "@/theme";
 
@@ -46,10 +47,12 @@ export default function ImportCsvScreen() {
     setError(null);
     setResult(null);
     setFileName(name);
+    log.debug("ui import run", { name, mode });
     try {
       const res = await importMoneyCsv(text, mode, { from, to });
       setResult(res);
     } catch (e) {
+      log.error("CSV import failed", e);
       setError(e instanceof Error ? e.message : "Import failed");
     } finally {
       setBusy(false);

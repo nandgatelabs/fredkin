@@ -67,12 +67,14 @@ export function MoreMenu({ handleEscape = true }: Props) {
         if (event.key === "Escape") {
           event.preventDefault();
           event.stopImmediatePropagation();
+          log.debug("shortcut Esc close more");
           closeWebDialog(router);
           return;
         }
         const item = MORE_APP_ITEMS.find((row) => row.shortcut === event.key);
         if (item) {
           event.preventDefault();
+          log.debug("shortcut more item", { key: event.key, href: item.href });
           router.push(item.href as never);
         }
       },
@@ -112,7 +114,10 @@ export function MoreMenu({ handleEscape = true }: Props) {
             key={item.href}
             accessibilityRole="button"
             accessibilityLabel={item.label}
-            onPress={() => router.push(item.href as never)}
+            onPress={() => {
+              log.debug("ui more navigate", { href: item.href });
+              router.push(item.href as never);
+            }}
             {...webFocusableProps}
             style={({ pressed }) => [
               styles.item,
