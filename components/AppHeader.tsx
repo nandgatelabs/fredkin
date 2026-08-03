@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 import { GlassSurface } from "@/components/GlassSurface";
+import { log } from "@/lib/logger";
 import { webClickable, webFocusableProps, webFontDisplay } from "@/lib/web";
 import { colors } from "@/theme";
 
@@ -20,7 +21,10 @@ export function AppHeader() {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Search events"
-        onPress={() => router.push("/search")}
+        onPress={() => {
+          log.debug("ui search open");
+          router.push("/search");
+        }}
         {...webFocusableProps}
         style={({ pressed }) => [
           styles.search,

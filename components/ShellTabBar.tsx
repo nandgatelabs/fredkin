@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { GlassSurface } from "@/components/GlassSurface";
+import { log } from "@/lib/logger";
 import { webClickable, webFocusableProps, webFontBody } from "@/lib/web";
 import { colors } from "@/theme";
 
@@ -41,7 +42,10 @@ export function ShellTabBar({ state, navigation }: ShellTabBarProps) {
           accessibilityRole="button"
           accessibilityLabel="Events"
           accessibilityState={{ selected: activeName === "index" }}
-          onPress={() => navigation.navigate("index")}
+          onPress={() => {
+            log.debug("ui tab", { tab: "events" });
+            navigation.navigate("index");
+          }}
           {...webFocusableProps}
           style={({ pressed }) => [
             styles.tabItem,
@@ -66,7 +70,10 @@ export function ShellTabBar({ state, navigation }: ShellTabBarProps) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Add event"
-          onPress={() => router.push("/record/new")}
+          onPress={() => {
+            log.debug("ui add event");
+            router.push("/record/new");
+          }}
           {...webFocusableProps}
           style={({ pressed }) => [
             styles.addBtn,
@@ -83,7 +90,10 @@ export function ShellTabBar({ state, navigation }: ShellTabBarProps) {
           accessibilityRole="button"
           accessibilityLabel="Insights"
           accessibilityState={{ selected: activeName === "analysis" }}
-          onPress={() => navigation.navigate("analysis")}
+          onPress={() => {
+            log.debug("ui tab", { tab: "insights" });
+            navigation.navigate("analysis");
+          }}
           {...webFocusableProps}
           style={({ pressed }) => [
             styles.tabItem,

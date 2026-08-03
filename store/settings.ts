@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 import { getSetting, setSetting } from "@/db/client";
-import { log, setLogRecording } from "@/lib/logger";
+import { isLogVerbose, log, setLogRecording } from "@/lib/logger";
 import {
   applyPalette,
   normalizeThemeId,
@@ -153,7 +153,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
     applyPalette(themeId, uiMode);
     setLogRecording(recordLogs);
-    log.info("Settings hydrated", { themeId, uiMode, recordLogs });
+    log.info("Settings hydrated", {
+      themeId,
+      uiMode,
+      recordLogs,
+      verbose: isLogVerbose(),
+    });
 
     set({
       hydrated: true,

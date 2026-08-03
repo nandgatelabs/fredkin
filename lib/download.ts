@@ -83,23 +83,30 @@ export async function downloadTextFile(
     return { locationLabel: `Browser Downloads / ${fileName}` };
   }
 
-  const written = await writeTextToSaveLocation(fileName, text, mime);
-  if (written.uri && (await Sharing.isAvailableAsync())) {
-    try {
-      await Sharing.shareAsync(written.uri, {
-        mimeType: mime,
-        dialogTitle: fileName,
-        UTI: mime.includes("json") ? "public.json" : "public.comma-separated-values-text",
-      });
-      log.info("Share sheet presented", written.uri);
-    } catch (e) {
-      log.warn("Share sheet dismissed or failed", e);
-      // File is still on disk — that counts as saved.
+  try {
+    const written = await writeTextToSaveLocation(fileName, text, mime);
+    if (written.uri && (await Sharing.isAvailableAsync())) {
+      try {
+        await Sharing.shareAsync(written.uri, {
+          mimeType: mime,
+          dialogTitle: fileName,
+          UTI: mime.includes("json")
+            ? "public.json"
+            : "public.comma-separated-values-text",
+        });
+        log.info("Share sheet presented", written.uri);
+      } catch (e) {
+        log.warn("Share sheet dismissed or failed", e);
+        // File is still on disk — that counts as saved.
+      }
+    } else if (!written.uri) {
+      await Share.share({ title: fileName, message: text });
     }
-  } else if (!written.uri) {
-    // Fallback: text share (should be rare)
+    return { locationLabel: written.label };
+  } catch (e) {
+    // Last resort (e.g. dead SQLite while resolving save folder): share raw text.
+    log.warn("File write failed; falling back to text share", e);
     await Share.share({ title: fileName, message: text });
+    return { locationLabel: "Shared as text (save folder unavailable)" };
   }
-
-  return { locationLabel: written.label };
 }

@@ -3,6 +3,7 @@ import { usePathname, useRouter } from "expo-router";
 
 import { useCanSplit } from "@/hooks/useViewportWidth";
 import { useKeydown } from "@/hooks/useKeydown";
+import { log } from "@/lib/logger";
 import { isWebDialogPath } from "@/lib/webDialog";
 import { useDesktopViewStore, type PaneId } from "@/store/desktopView";
 import { usePeriodStore } from "@/store/period";
@@ -53,6 +54,7 @@ export function WebAppShortcuts() {
 
         if (mod && (event.key === "k" || event.key === "K")) {
           event.preventDefault();
+          log.debug("shortcut search", { key: "mod+k" });
           openSearch();
           return;
         }
@@ -62,6 +64,7 @@ export function WebAppShortcuts() {
 
         if (event.key === "m" || event.key === "M") {
           event.preventDefault();
+          log.debug(onMore ? "shortcut more toggle close" : "shortcut more open");
           if (onMore) router.back();
           else router.navigate("/more");
           return;
@@ -74,24 +77,28 @@ export function WebAppShortcuts() {
 
         if (event.key === "/") {
           event.preventDefault();
+          log.debug("shortcut search", { key: "/" });
           openSearch();
           return;
         }
 
         if (event.key === "?") {
           event.preventDefault();
+          log.debug("shortcut help");
           openHelp();
           return;
         }
 
         if (event.key === "n" || event.key === "N") {
           event.preventDefault();
+          log.debug("shortcut new record");
           router.push("/record/new");
           return;
         }
 
         if ((event.key === "s" || event.key === "S") && canSplit) {
           event.preventDefault();
+          log.debug(mode === "split" ? "shortcut split off" : "shortcut split on");
           if (mode === "split") setMode("single");
           else enterSplit();
           router.navigate("/");
@@ -101,6 +108,7 @@ export function WebAppShortcuts() {
         if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
           const delta = event.key === "ArrowLeft" ? -1 : 1;
           event.preventDefault();
+          log.debug("shortcut period", { delta, key: event.key });
           if (pathname.includes("budgets")) {
             setAnchorDate(shiftMonthIso(anchorDate, delta));
           } else if (
@@ -119,6 +127,7 @@ export function WebAppShortcuts() {
         const pane = PANE_BY_DIGIT[digit];
         if (pane) {
           event.preventDefault();
+          log.debug("shortcut pane", { pane, key: event.key });
           openPane(pane);
           router.navigate("/");
         }

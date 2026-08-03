@@ -76,7 +76,7 @@ export async function ensureRemindPermission(): Promise<boolean> {
     const current = await Notifications.getPermissionsAsync();
     if (current.granted) return true;
     const asked = await Notifications.requestPermissionsAsync();
-    log.info("Native remind permission", asked.status);
+    log.debug("Native remind permission", asked.status);
     return asked.granted;
   } catch (e) {
     log.warn("Remind permission failed", e);
@@ -107,7 +107,7 @@ export async function syncNativeDailyRemind(schedule: RemindSchedule): Promise<v
     }
 
     if (!schedule.enabled) {
-      log.info("Native daily remind cancelled");
+      log.debug("Native daily remind cancelled");
       return;
     }
 

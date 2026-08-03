@@ -39,8 +39,15 @@ export async function getDefaultSaveLocationLabel(): Promise<string> {
 }
 
 export async function getSaveLocation(): Promise<SaveLocationInfo> {
-  const customUri = (await getSetting(KEY_CUSTOM_URI))?.trim() || "";
-  const customLabel = (await getSetting(KEY_CUSTOM_LABEL))?.trim() || "";
+  let customUri = "";
+  let customLabel = "";
+  try {
+    customUri = (await getSetting(KEY_CUSTOM_URI))?.trim() || "";
+    customLabel = (await getSetting(KEY_CUSTOM_LABEL))?.trim() || "";
+  } catch (e) {
+    // Export/import should still work if settings DB is briefly unavailable.
+    log.warn("getSaveLocation: settings read failed, using default folder", e);
+  }
 
   if (Platform.OS === "web") {
     if (webDirHandle || customUri === "web-directory") {

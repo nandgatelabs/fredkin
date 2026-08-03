@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { WebCenterFrame } from "@/components/shell/WebCenterFrame";
 import { WebDialogHeader } from "@/components/shell/WebDialogHeader";
+import { log } from "@/lib/logger";
 import { webClickable, webFocusableProps } from "@/lib/web";
 import { colors } from "@/theme";
 
@@ -63,7 +64,10 @@ export default function DataScreen() {
             key={`${item.label}-${item.href}`}
             accessibilityRole="button"
             accessibilityLabel={item.label}
-            onPress={() => router.push(item.href as never)}
+            onPress={() => {
+              log.debug("ui data navigate", { label: item.label, href: item.href });
+              router.push(item.href as never);
+            }}
             style={({ pressed }) => [
               styles.row,
               webClickable,

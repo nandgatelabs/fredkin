@@ -42,6 +42,10 @@ export default function ExportCsvScreen() {
     setBusy(true);
     setError(null);
     setSummary(null);
+    log.info("CSV export start", {
+      from: from?.toISOString() ?? null,
+      to: to?.toISOString() ?? null,
+    });
     try {
       const result = await exportMoneyCsv({ from, to });
       const saved = await downloadTextFile(result.fileName, result.text, "text/csv");

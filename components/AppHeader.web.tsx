@@ -11,6 +11,7 @@ import { KeyboardShortcutsModal } from "@/components/shell/KeyboardShortcutsModa
 import { isMorePath } from "@/components/shell/morePaths";
 import { useEffectiveDesktopLayout } from "@/hooks/useEffectiveDesktopView";
 import { useCanSplit } from "@/hooks/useViewportWidth";
+import { log } from "@/lib/logger";
 import {
   webClickable,
   webFocusableProps,
@@ -97,7 +98,10 @@ export function AppHeader() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Display options"
-          onPress={() => setDisplayOpen(true)}
+          onPress={() => {
+            log.debug("ui display options open");
+            setDisplayOpen(true);
+          }}
           hitSlop={8}
           {...webFocusableProps}
           {...webTitle("Display options")}
@@ -120,6 +124,7 @@ export function AppHeader() {
                 accessibilityLabel={PANE_LABELS[pane]}
                 accessibilityState={{ selected }}
                 onPress={() => {
+                  log.debug("ui pane", { pane });
                   openPane(pane);
                   router.navigate("/");
                 }}
@@ -144,7 +149,10 @@ export function AppHeader() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Add event"
-            onPress={() => router.push("/record/new")}
+            onPress={() => {
+              log.debug("ui add event");
+              router.push("/record/new");
+            }}
             {...webFocusableProps}
             {...webTitle("Add event (N)")}
             style={({ pressed }) => [
@@ -163,6 +171,7 @@ export function AppHeader() {
             accessibilityLabel="Split view"
             accessibilityState={{ selected: splitActive }}
             onPress={() => {
+              log.debug(splitActive ? "ui split off" : "ui split on");
               if (splitActive) setMode("single");
               else enterSplit();
               router.navigate("/");

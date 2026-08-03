@@ -6,10 +6,11 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { PasscodeGate } from "@/components/PasscodeGate";
 import { MorePaneHost } from "@/components/shell/MorePaneHost";
+import { NavigationLogger } from "@/components/shell/NavigationLogger";
 import { SearchModalHost } from "@/components/shell/SearchModalHost";
 import { ShellFrame } from "@/components/shell/ShellFrame";
 import { getDb } from "@/db/client";
-import { log } from "@/lib/logger";
+import { isLogVerbose, log } from "@/lib/logger";
 import { maybeFireDailyRemind } from "@/lib/remind";
 import { useSettingsStore } from "@/store/settings";
 import { colors } from "@/theme";
@@ -33,7 +34,11 @@ export default function RootLayout() {
     (async () => {
       await getDb();
       await hydrate();
-      log.info("App boot complete");
+      log.info("App boot complete", {
+        platform: Platform.OS,
+        verbose: isLogVerbose(),
+        dev: typeof __DEV__ !== "undefined" && __DEV__,
+      });
       if (!cancelled) {
         setBootError(null);
         setDbReady(true);
@@ -116,6 +121,7 @@ export default function RootLayout() {
           />
         </Stack>
 
+        <NavigationLogger />
         <MorePaneHost />
         <SearchModalHost />
 

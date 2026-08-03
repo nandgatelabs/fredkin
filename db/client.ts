@@ -50,9 +50,22 @@ async function migrate(db: SQLite.SQLiteDatabase) {
   await seedDefaultsIfEmpty(db);
 }
 
+function isDeadNativeDbError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return (
+    msg.includes("NativeDatabase") ||
+    msg.includes("NullPointerException") ||
+    msg.includes("prepareAsync") ||
+    msg.includes("execAsync")
+  );
+}
+
 async function openAppDatabase(): Promise<SQLite.SQLiteDatabase> {
   if (Platform.OS !== "web") {
-    return SQLite.openDatabaseAsync("money-money.db");
+    // Android can keep a dead shared handle after JS reload; force a fresh native connection.
+    return SQLite.openDatabaseAsync("money-money.db", {
+      useNewConnection: true,
+    });
   }
 
   // Web SQLite (OPFS) needs COOP/COEP and exclusive access — a second tab
@@ -72,22 +85,47 @@ async function openAppDatabase(): Promise<SQLite.SQLiteDatabase> {
   }
 }
 
+async function openAndMigrate(): Promise<SQLite.SQLiteDatabase> {
+  log.info("Opening database", { platform: Platform.OS });
+  const db = await openAppDatabase();
+  await migrate(db);
+  // Touch the connection so a dead native handle fails here, not on first user action.
+  await db.getFirstAsync<{ v: number }>("SELECT 1 AS v");
+  log.info("Database ready");
+  return db;
+}
+
 export async function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (!dbPromise) {
-    dbPromise = (async () => {
-      log.info("Opening database", { platform: Platform.OS });
-      const db = await openAppDatabase();
-      await migrate(db);
-      log.info("Database ready");
-      return db;
-    })().catch((err) => {
+    dbPromise = openAndMigrate().catch((err) => {
       // Allow a later retry after the user closes a conflicting tab / reloads.
       log.error("Database open failed", err);
       dbPromise = null;
       throw err;
     });
   }
-  return dbPromise;
+
+  try {
+    return await dbPromise;
+  } catch (err) {
+    throw err;
+  }
+}
+
+/**
+ * Run a DB op; on Android native-handle death, drop the cache and retry once.
+ */
+export async function withDb<T>(fn: (db: SQLite.SQLiteDatabase) => Promise<T>): Promise<T> {
+  try {
+    const db = await getDb();
+    return await fn(db);
+  } catch (err) {
+    if (!isDeadNativeDbError(err)) throw err;
+    log.warn("DB handle dead; reopening", err);
+    resetDbConnection();
+    const db = await getDb();
+    return fn(db);
+  }
 }
 
 /** Test helper / recovery: drop cached connection so next getDb() remigrates. */
@@ -96,19 +134,21 @@ export function resetDbConnection() {
 }
 
 export async function getSetting(key: string): Promise<string | null> {
-  const db = await getDb();
-  const row = await db.getFirstAsync<{ value: string }>(
-    "SELECT value FROM settings WHERE key = ?",
-    key,
-  );
-  return row?.value ?? null;
+  return withDb(async (db) => {
+    const row = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM settings WHERE key = ?",
+      key,
+    );
+    return row?.value ?? null;
+  });
 }
 
 export async function setSetting(key: string, value: string): Promise<void> {
-  const db = await getDb();
-  await db.runAsync(
-    "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-    key,
-    value,
-  );
+  await withDb(async (db) => {
+    await db.runAsync(
+      "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+      key,
+      value,
+    );
+  });
 }
