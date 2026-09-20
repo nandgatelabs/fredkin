@@ -1,5 +1,7 @@
 import {
   CSV_OPENING_TIME,
+  CSV_TYPE_ADJUSTMENT_IN,
+  CSV_TYPE_ADJUSTMENT_OUT,
   CSV_TYPE_EXPENSE,
   CSV_TYPE_INCOME,
   CSV_TYPE_OPENING,
@@ -8,6 +10,7 @@ import {
   serializeMoneyCsv,
   type CsvRow,
 } from "@/lib/csv";
+import { isAdjustmentFlag } from "@/lib/personRole";
 import {
   formatComposerDate,
   formatComposerTime,
@@ -44,9 +47,12 @@ function formatCsvTime(iso: string): string {
   return `${formatComposerDate(d)} ${formatComposerTime(d)}`;
 }
 
-function typeLabel(type: MoneyRecord["type"]): string {
-  if (type === "income") return CSV_TYPE_INCOME;
-  if (type === "transfer") return CSV_TYPE_TRANSFER;
+function typeLabel(record: MoneyRecord): string {
+  if (isAdjustmentFlag(record.is_adjustment)) {
+    return record.type === "income" ? CSV_TYPE_ADJUSTMENT_IN : CSV_TYPE_ADJUSTMENT_OUT;
+  }
+  if (record.type === "income") return CSV_TYPE_INCOME;
+  if (record.type === "transfer") return CSV_TYPE_TRANSFER;
   return CSV_TYPE_EXPENSE;
 }
 
@@ -125,10 +131,12 @@ export async function exportMoneyCsv(
         : record.account_name;
     rows.push({
       time: formatCsvTime(record.occurred_at),
-      type: typeLabel(record.type),
+      type: typeLabel(record),
       amount: formatCsvAmount(record.amount),
       category:
-        record.type === "transfer" ? "-" : (record.category_name?.trim() || "-"),
+        record.type === "transfer" || isAdjustmentFlag(record.is_adjustment)
+          ? "-"
+          : (record.category_name?.trim() || "-"),
       account: accountField,
       notes: record.note ?? "",
       person: record.person_name?.trim() ?? "",

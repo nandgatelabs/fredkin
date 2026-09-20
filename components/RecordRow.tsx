@@ -5,7 +5,7 @@ import { Swipeable } from "react-native-gesture-handler";
 
 import type { RecordListItem } from "@/db/records";
 import { formatMoney } from "@/lib/money";
-import { isLifestyleRole } from "@/lib/personRole";
+import { isAdjustmentFlag, isLifestyleRole } from "@/lib/personRole";
 import {
   accountIcon,
   categoryColor,
@@ -29,19 +29,23 @@ export function RecordRow({ item, onPress, onEdit, onDelete }: Props) {
   const title = recordTitle(item);
   const amount = signedDisplayAmount(item);
   const amountColor =
-    item.type === "transfer" || !isLifestyleRole(item.person_role)
+    isAdjustmentFlag(item.is_adjustment) ||
+    item.type === "transfer" ||
+    !isLifestyleRole(item.person_role)
       ? colors.transfer
       : item.type === "income"
         ? colors.income
         : colors.expense;
 
-  const iconBg =
-    item.type === "transfer"
+  const iconBg = isAdjustmentFlag(item.is_adjustment)
+    ? colors.transfer
+    : item.type === "transfer"
       ? colors.transfer
       : (item.category_color ?? categoryColor(item.category_icon_key ?? "pricetag"));
 
-  const iconName =
-    item.type === "transfer"
+  const iconName = isAdjustmentFlag(item.is_adjustment)
+    ? "swap-vertical"
+    : item.type === "transfer"
       ? "swap-horizontal"
       : categoryIcon(item.category_icon_key ?? "pricetag");
 
@@ -89,7 +93,9 @@ export function RecordRow({ item, onPress, onEdit, onDelete }: Props) {
     </Pressable>
   );
 
-  if (Platform.OS === "web" || (!onEdit && !onDelete)) {
+  const canEdit = Boolean(onEdit) && !isAdjustmentFlag(item.is_adjustment);
+
+  if (Platform.OS === "web" || (!canEdit && !onDelete)) {
     return row;
   }
 
@@ -102,7 +108,7 @@ export function RecordRow({ item, onPress, onEdit, onDelete }: Props) {
       leftThreshold={40}
       rightThreshold={40}
       renderLeftActions={
-        onEdit
+        canEdit
           ? () => (
               <View style={styles.leftWrap}>
                 <Pressable
@@ -110,7 +116,7 @@ export function RecordRow({ item, onPress, onEdit, onDelete }: Props) {
                   accessibilityLabel="Edit event"
                   onPress={() => {
                     swipeRef.current?.close();
-                    onEdit();
+                    onEdit?.();
                   }}
                   style={[styles.actionBtn, styles.editBtn]}
                 >

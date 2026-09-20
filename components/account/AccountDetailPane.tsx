@@ -12,14 +12,18 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { GhostButton } from "@/components/GhostButton";
 import { RecordDetailModal } from "@/components/RecordDetailModal";
 import { RecordRow } from "@/components/RecordRow";
+import { WalletCheckModal } from "@/components/WalletCheckModal";
 import {
   getAccount,
   getAccountPeriodStats,
   type AccountPeriodStats,
 } from "@/db/accountDetails";
 import { computeAccountBalance } from "@/db/accounts";
+import { saveWalletCheck } from "@/db/walletCheck";
+import { walletCheckChip } from "@/lib/walletCheck";
 import {
   deleteRecord,
   listRecordsForAccount,
@@ -61,6 +65,7 @@ export function AccountDetailPane({ id, onClose, embedded = false }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<RecordListItem | null>(null);
   const [pendingDelete, setPendingDelete] = useState<RecordListItem | null>(null);
+  const [checkOpen, setCheckOpen] = useState(false);
 
   const range = useMemo(
     () => rangeForViewMode(anchorDate, viewMode),
@@ -116,6 +121,13 @@ export function AccountDetailPane({ id, onClose, embedded = false }: Props) {
     ),
   );
 
+  const checkChip = account
+    ? walletCheckChip({
+        balance,
+        last_checked_balance: account.last_checked_balance,
+        last_checked_at: account.last_checked_at,
+      })
+    : null;
   const sections = useMemo(() => groupRecordsByDate(records), [records]);
 
   return (
@@ -224,8 +236,16 @@ export function AccountDetailPane({ id, onClose, embedded = false }: Props) {
                       Initially: {formatMoney(account.opening_balance, { sign: "never" })}
                     </Text>
                   ) : null}
+                  {checkChip ? (
+                    <Text style={styles.checkChip}>{checkChip}</Text>
+                  ) : null}
                 </View>
               </View>
+
+              <GhostButton
+                label="CHECK WALLET"
+                onPress={() => setCheckOpen(true)}
+              />
 
               {scope === "period" && stats ? (
                 <View style={styles.card}>
@@ -341,6 +361,41 @@ export function AccountDetailPane({ id, onClose, embedded = false }: Props) {
           })();
         }}
       />
+      <WalletCheckModal
+        visible={checkOpen}
+        walletName={account?.name ?? "wallet"}
+        appBalance={balance}
+        onClose={() => setCheckOpen(false)}
+        onSave={async ({ realBalance, asOf, absorb }) => {
+          if (!account) return;
+          await saveWalletCheck({
+            accountId: account.id,
+            realBalance,
+            asOf,
+            absorb,
+          });
+          setCheckOpen(false);
+          await reload();
+        }}
+        onAddMissing={async ({ realBalance, asOf, gap }) => {
+          if (!account) return;
+          await saveWalletCheck({
+            accountId: account.id,
+            realBalance,
+            asOf,
+            absorb: false,
+          });
+          setCheckOpen(false);
+          router.push({
+            pathname: "/record/new",
+            params: {
+              accountId: account.id,
+              type: gap < 0 ? "expense" : "income",
+              amount: String(Math.abs(gap)),
+            },
+          });
+        }}
+      />
     </View>
   );
 }
@@ -423,6 +478,7 @@ const styles = StyleSheet.create({
   accountName: { color: colors.accent, fontSize: 20, fontWeight: "700" },
   balanceLine: { color: colors.textSecondary, fontSize: 14, marginTop: 4 },
   initialLine: { color: colors.textSecondary, fontSize: 13, marginTop: 2 },
+  checkChip: { color: colors.expense, fontSize: 12, fontWeight: "600", marginTop: 4 },
   card: {
     borderWidth: 1,
     borderColor: colors.border,

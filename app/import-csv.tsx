@@ -119,7 +119,7 @@ export default function ImportCsvScreen() {
       <Text style={styles.body}>
         Load a worksheet export with columns TIME, TYPE, AMOUNT, CATEGORY,
         ACCOUNT, NOTES (optional PERSON, PERSON_ROLE).
-        ACCOUNT, NOTES. Missing wallets and event types are created automatically.
+        `(~+) Adjustment` / `(~-) Adjustment` rows restore wallet-check absorbs.
         Rows typed `(#) Opening` restore each account’s initial balance (Fredkin
         extension).
       </Text>

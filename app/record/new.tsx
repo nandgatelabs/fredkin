@@ -46,6 +46,7 @@ import { accountIcon, categoryColor, categoryIcon } from "@/lib/icons";
 import { log } from "@/lib/logger";
 import {
   defaultRoleForCategory,
+  isAdjustmentFlag,
   isLifestyleRole,
   pickDefaultCategory,
   PERSON_ROLES,
@@ -72,10 +73,21 @@ export default function NewRecordScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const c = useThemeColors();
-  const params = useLocalSearchParams<{ id?: string }>();
+  const params = useLocalSearchParams<{
+    id?: string;
+    accountId?: string;
+    type?: string;
+    amount?: string;
+  }>();
   const editId = typeof params.id === "string" ? params.id : undefined;
+  const prefAccountId = typeof params.accountId === "string" ? params.accountId : undefined;
+  const prefType =
+    params.type === "income" || params.type === "expense" || params.type === "transfer"
+      ? params.type
+      : undefined;
+  const prefAmount = typeof params.amount === "string" ? params.amount : undefined;
 
-  const [type, setType] = useState<RecordType>("expense");
+  const [type, setType] = useState<RecordType>(prefType ?? "expense");
   const [accounts, setAccounts] = useState<AccountWithBalance[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [account, setAccount] = useState<AccountWithBalance | null>(null);
@@ -85,12 +97,15 @@ export default function NewRecordScreen() {
   const [personRole, setPersonRole] = useState<PersonRole>("with");
   const [people, setPeople] = useState<Person[]>([]);
   const [note, setNote] = useState("");
-  const [expression, setExpression] = useState("0");
+  const [expression, setExpression] = useState(
+    prefAmount && Number(prefAmount) > 0 ? prefAmount : "0",
+  );
   const [occurredAt, setOccurredAt] = useState(() => new Date());
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hydratedEdit, setHydratedEdit] = useState(false);
+  const [lockedAdjustment, setLockedAdjustment] = useState(false);
   const stickyApplied = useRef(false);
 
   const [accountPicker, setAccountPicker] = useState<"from" | "to" | null>(null);
@@ -118,7 +133,11 @@ export default function NewRecordScreen() {
     setCategories(cats);
     setPeople(pers);
     // Keep selections only if still valid — never auto-pick account/category.
-    setAccount((prev) => (prev && accs.some((a) => a.id === prev.id) ? prev : null));
+    setAccount((prev) => {
+      if (prev && accs.some((a) => a.id === prev.id)) return prev;
+      if (prefAccountId) return accs.find((a) => a.id === prefAccountId) ?? null;
+      return null;
+    });
     setToAccount((prev) => (prev && accs.some((a) => a.id === prev.id) ? prev : null));
     setPerson((prev) => (prev && pers.some((p) => p.id === prev.id) ? prev : null));
     setCategory((prev) => {
@@ -133,7 +152,7 @@ export default function NewRecordScreen() {
       }
       return null;
     });
-  }, [categoryType, type]);
+  }, [categoryType, prefAccountId, type]);
 
   useEffect(() => {
     let cancelled = false;
@@ -152,6 +171,11 @@ export default function NewRecordScreen() {
       if (!editId || hydratedEdit) return;
       const existing = await getRecord(editId);
       if (!existing || cancelled) return;
+      if (isAdjustmentFlag(existing.is_adjustment)) {
+        setLockedAdjustment(true);
+        setError("Wallet adjustments can’t be edited. Delete the row if it was a mistake.");
+        return;
+      }
       const accs = await listAccounts();
       const cats =
         existing.type === "transfer"
@@ -231,6 +255,7 @@ export default function NewRecordScreen() {
   }
 
   const handleSave = useCallback(async () => {
+    if (lockedAdjustment) return;
     const amount = resolveAmount(expression);
     if (amount == null || amount <= 0) {
       setError("Enter an amount greater than 0");
@@ -298,6 +323,7 @@ export default function NewRecordScreen() {
     note,
     person?.id,
     personRole,
+    lockedAdjustment,
   ]);
 
   const overlayOpen =
@@ -433,7 +459,7 @@ export default function NewRecordScreen() {
         <Pressable
           onPress={() => void handleSave()}
           hitSlop={10}
-          disabled={busy}
+          disabled={busy || lockedAdjustment}
           accessibilityRole="button"
           accessibilityLabel="Save"
           style={[

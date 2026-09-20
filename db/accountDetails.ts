@@ -13,7 +13,14 @@ function toIsoBound(d: Date) {
 
 export async function getAccount(id: string): Promise<Account | null> {
   const db = await getDb();
-  return db.getFirstAsync<Account>("SELECT * FROM accounts WHERE id = ?", id);
+  const row = await db.getFirstAsync<Account>("SELECT * FROM accounts WHERE id = ?", id);
+  if (!row) return null;
+  return {
+    ...row,
+    last_checked_balance:
+      row.last_checked_balance == null ? null : Number(row.last_checked_balance),
+    last_checked_at: row.last_checked_at ?? null,
+  };
 }
 
 async function ledgerDelta(
@@ -85,8 +92,8 @@ export async function getAccountPeriodStats(
         transfer_out: number;
       }>(
         `SELECT
-           COALESCE(SUM(CASE WHEN type = 'expense' AND account_id = ? THEN amount ELSE 0 END), 0) AS expense,
-           COALESCE(SUM(CASE WHEN type = 'income' AND account_id = ? THEN amount ELSE 0 END), 0) AS income,
+           COALESCE(SUM(CASE WHEN type = 'expense' AND account_id = ? AND IFNULL(is_adjustment, 0) = 0 THEN amount ELSE 0 END), 0) AS expense,
+           COALESCE(SUM(CASE WHEN type = 'income' AND account_id = ? AND IFNULL(is_adjustment, 0) = 0 THEN amount ELSE 0 END), 0) AS income,
            COALESCE(SUM(CASE WHEN type = 'transfer' AND to_account_id = ? THEN amount ELSE 0 END), 0) AS transfer_in,
            COALESCE(SUM(CASE WHEN type = 'transfer' AND account_id = ? THEN amount ELSE 0 END), 0) AS transfer_out
          FROM records

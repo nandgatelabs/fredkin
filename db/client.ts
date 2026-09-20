@@ -35,6 +35,9 @@ async function migrate(db: SQLite.SQLiteDatabase) {
   await ensureColumn(db, "accounts", "archived", "INTEGER NOT NULL DEFAULT 0");
   await ensureColumn(db, "records", "person_id", "TEXT");
   await ensureColumn(db, "records", "person_role", "TEXT");
+  await ensureColumn(db, "records", "is_adjustment", "INTEGER NOT NULL DEFAULT 0");
+  await ensureColumn(db, "accounts", "last_checked_balance", "REAL");
+  await ensureColumn(db, "accounts", "last_checked_at", "TEXT");
   // After columns exist (CREATE TABLE IF NOT EXISTS will not add them on old DBs).
   await db.execAsync(
     "CREATE INDEX IF NOT EXISTS idx_records_person ON records(person_id)",

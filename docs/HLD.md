@@ -97,7 +97,7 @@ Strict dependency direction: **UI → application → domain → persistence**. 
 | `search` | Filter over note/category/account | `searchRecords(query)` |
 | `analysis` | Overview / Flow / Account analysis VMs | `getAnalysis(mode, period)` |
 | `budgets` | Monthly limits vs spent | `setBudget()`, `listBudgets(month)` |
-| `accounts` | Account CRUD + balances | `createAccount()`, `getBalances()` |
+| `accounts` | Account CRUD + balances + wallet check | `createAccount()`, `saveWalletCheck()` |
 | `people` | Person CRUD; optional on records | `createPerson()`, `convertAccountToPerson()` |
 | `categories` | Income/expense taxonomy + icons | `createCategory()`, `listByType()` |
 | `settings` | Preferences | `getSetting()`, `setSetting()` |
@@ -131,7 +131,7 @@ Strict dependency direction: **UI → application → domain → persistence**. 
 |--------|---------------|------------|
 | Account | 1 → N Record (as account or to_account) | Name unique; balance = opening + Σ effects |
 | Category | 1 → N Record; 1 → N Budget | `type ∈ income\|expense`; transfers have no category |
-| Record | Account; optional Category; optional to_account; optional Person | `amount > 0`; transfer requires `to_account ≠ account` |
+| Record | Account; optional Category; optional to_account; optional Person; optional wallet-check adjustment | `amount > 0`; transfer requires `to_account ≠ account`; adjustments excluded from SPEND/INCOME |
 | Person | 0–1 per Record | Optional; role `with\|gift\|they_owe\|you_owe\|settled`. IOU roles excluded from SPEND/INCOME |
 | Budget | Category × (year, month) | One limit per category per month |
 | Setting | key/value | viewMode, carryOver, currency, decimals, lastNewEventOccurredAt, … |
@@ -145,7 +145,9 @@ accounts(
   icon_key TEXT NOT NULL,
   opening_balance REAL NOT NULL DEFAULT 0,
   sort_order INTEGER NOT NULL DEFAULT 0,
-  archived INTEGER NOT NULL DEFAULT 0
+  archived INTEGER NOT NULL DEFAULT 0,
+  last_checked_balance REAL,
+  last_checked_at TEXT
 );
 
 categories(
@@ -165,7 +167,10 @@ records(
   account_id TEXT NOT NULL REFERENCES accounts(id),
   to_account_id TEXT REFERENCES accounts(id),
   note TEXT NOT NULL DEFAULT '',
-  occurred_at TEXT NOT NULL  -- ISO-8601
+  occurred_at TEXT NOT NULL,  -- ISO-8601
+  person_id TEXT,
+  person_role TEXT,
+  is_adjustment INTEGER NOT NULL DEFAULT 0
 );
 
 budgets(
@@ -198,6 +203,7 @@ settings(
 | Expense | −amount on `account_id` | +EXPENSE |
 | Income | +amount on `account_id` | +INCOME |
 | Transfer | −from `account_id`, +to `to_account_id` | Excluded from EXPENSE/INCOME |
+| Adjustment (`is_adjustment=1`, stored as income or expense) | ±amount on `account_id` | Excluded from EXPENSE/INCOME |
 
 ### Period engine
 
@@ -213,6 +219,7 @@ settings(
 |------|-------|
 | Add expense | FAB → composer (date+time from last new event until Today) → account/category → keypad → SAVE → txn → balances → Records |
 | Transfer | Composer TRANSFER → From/To → amount → SAVE → dual balance; list shows blue amount |
+| Wallet check | Wallet details → CHECK WALLET → real balance → add missing event or absorb Adjustment |
 | Change period | Chevron or Display options → period store → re-query Records/Analysis/Budgets |
 | Analysis | Select mode → SQL aggregates → chart + list VM → render |
 | Set budget | Budgets → SET BUDGET → upsert → recompute spent/remaining |
@@ -234,6 +241,7 @@ Columns: `TIME`, `TYPE`, `AMOUNT`, `CATEGORY`, `ACCOUNT`, `NOTES`, `PERSON`, `PE
 | `(+) Income` | Income |
 | `(*) Transfer` | Transfer; `ACCOUNT` is `From->To`; category blank |
 | `(#) Opening` | Sets the account’s opening/initial balance; not a ledger record |
+| `(~+) Adjustment` / `(~-) Adjustment` | Wallet-check absorb; moves balance; not spend/income |
 
 Not a full backup (budgets/settings still need `.mbak`). Opening rows make account initial balances round-trip via CSV. Web saves to the browser Downloads folder; native uses the Share sheet. (Optional choose-folder picker is parked — see GitHub issues.)
 
@@ -243,7 +251,7 @@ Not a full backup (budgets/settings still need `.mbak`). Opening rows make accou
 
 - Versioned JSON.
 - Includes: records, accounts, categories, people, budgets, settings.
-- Version 2 JSON (version 1 restore still works; people empty).
+- Version 3 JSON (v1/v2 restore still work; missing people/adjustments/last-checked default empty).
 - Filename pattern: `fredkin-backup_DD_MM_YY_XXX.mbak`.
 - Same download / Share path as CSV export.
 - Real user exports live under gitignored `private/` and must never be committed.

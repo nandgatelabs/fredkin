@@ -15,7 +15,13 @@ async function listAccountsByArchived(archived: 0 | 1): Promise<AccountWithBalan
   const result: AccountWithBalance[] = [];
   for (const account of rows) {
     const balance = await computeAccountBalance(account.id, account.opening_balance);
-    result.push({ ...account, balance });
+    result.push({
+      ...account,
+      last_checked_balance:
+        account.last_checked_balance == null ? null : Number(account.last_checked_balance),
+      last_checked_at: account.last_checked_at ?? null,
+      balance,
+    });
   }
   return result;
 }
@@ -109,6 +115,8 @@ export async function createAccount(input: {
     opening_balance,
     sort_order,
     archived: 0,
+    last_checked_balance: null,
+    last_checked_at: null,
   };
 }
 

@@ -55,12 +55,16 @@ function inImportRange(when: Date, from: Date | null, to: Date | null): boolean 
   return true;
 }
 
-function mapType(raw: string): RecordType | null {
+function mapType(raw: string): { type: RecordType; isAdjustment: boolean } | null {
   const t = raw.toLowerCase();
   if (isOpeningType(raw)) return null;
-  if (t.includes("expense")) return "expense";
-  if (t.includes("income")) return "income";
-  if (t.includes("transfer")) return "transfer";
+  if (t.includes("adjustment")) {
+    const out = t.includes("-") || t.includes("out") || t.includes("expense");
+    return { type: out ? "expense" : "income", isAdjustment: true };
+  }
+  if (t.includes("expense")) return { type: "expense", isAdjustment: false };
+  if (t.includes("income")) return { type: "income", isAdjustment: false };
+  if (t.includes("transfer")) return { type: "transfer", isAdjustment: false };
   return null;
 }
 
@@ -272,8 +276,9 @@ async function importOneRow(
   ensureCategory: (name: string, type: "income" | "expense") => Promise<string>,
   ensurePerson: (name: string) => Promise<string>,
 ) {
-  const type = mapType(row.type);
-  if (!type) throw new Error(`Unknown TYPE "${row.type}"`);
+  const mapped = mapType(row.type);
+  if (!mapped) throw new Error(`Unknown TYPE "${row.type}"`);
+  const { type, isAdjustment } = mapped;
 
   const amount = Number(row.amount);
   if (!(amount > 0) || Number.isNaN(amount)) {
@@ -285,7 +290,7 @@ async function importOneRow(
   const id = createId("rec");
   let personId: string | null = null;
   let personRole: string | null = null;
-  if (row.person.trim()) {
+  if (!isAdjustment && row.person.trim()) {
     personId = await ensurePerson(row.person);
     personRole = parsePersonRole(row.personRole) ?? "with";
   }
@@ -299,8 +304,8 @@ async function importOneRow(
     }
     await db.runAsync(
       `INSERT INTO records
-         (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role)
-       VALUES (?, 'transfer', ?, NULL, ?, ?, ?, ?, ?, ?)`,
+         (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role, is_adjustment)
+       VALUES (?, 'transfer', ?, NULL, ?, ?, ?, ?, ?, ?, 0)`,
       id,
       amount,
       accountId,
@@ -316,14 +321,14 @@ async function importOneRow(
   if (!row.account.trim()) throw new Error("ACCOUNT is required");
   const accountId = await ensureAccount(row.account);
   let categoryId: string | null = null;
-  if (!isBlankCategory(row.category)) {
+  if (!isAdjustment && !isBlankCategory(row.category)) {
     categoryId = await ensureCategory(row.category, type);
   }
 
   await db.runAsync(
-      `INSERT INTO records
-       (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role)
-     VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?)`,
+    `INSERT INTO records
+       (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role, is_adjustment)
+     VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?)`,
     id,
     type,
     amount,
@@ -333,5 +338,6 @@ async function importOneRow(
     occurred,
     personId,
     personRole,
+    isAdjustment ? 1 : 0,
   );
 }

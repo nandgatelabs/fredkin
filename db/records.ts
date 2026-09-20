@@ -14,6 +14,7 @@ export type CreateRecordInput = {
   occurred_at: string;
   person_id?: string | null;
   person_role?: PersonRole | null;
+  is_adjustment?: boolean;
 };
 
 export type RecordListItem = MoneyRecord & {
@@ -37,6 +38,12 @@ function validateRecordInput(input: CreateRecordInput): void {
   }
   if (!input.account_id) {
     throw new Error("Account is required");
+  }
+  if (input.is_adjustment) {
+    if (input.type === "transfer") {
+      throw new Error("Adjustments cannot be transfers");
+    }
+    return;
   }
   if (input.type === "transfer") {
     if (!input.to_account_id) {
@@ -68,9 +75,10 @@ export async function createRecord(input: CreateRecordInput): Promise<MoneyRecor
   const db = await getDb();
   const id = createId("rec");
   const note = input.note?.trim() ?? "";
-  const categoryId = input.type === "transfer" ? null : (input.category_id ?? null);
+  const isAdj = !!input.is_adjustment;
+  const categoryId = input.type === "transfer" || isAdj ? null : (input.category_id ?? null);
   const toAccountId = input.type === "transfer" ? (input.to_account_id ?? null) : null;
-  const personId = input.person_id ?? null;
+  const personId = isAdj ? null : (input.person_id ?? null);
   const personRole = personId
     ? input.type === "transfer" && !isLifestyleRole(input.person_role)
       ? "with"
@@ -80,8 +88,8 @@ export async function createRecord(input: CreateRecordInput): Promise<MoneyRecor
   await db.withTransactionAsync(async () => {
     await db.runAsync(
       `INSERT INTO records
-         (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role, is_adjustment)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       id,
       input.type,
       input.amount,
@@ -92,6 +100,7 @@ export async function createRecord(input: CreateRecordInput): Promise<MoneyRecor
       input.occurred_at,
       personId,
       personRole,
+      isAdj ? 1 : 0,
     );
   });
 
@@ -106,6 +115,7 @@ export async function createRecord(input: CreateRecordInput): Promise<MoneyRecor
     occurred_at: input.occurred_at,
     person_id: personId,
     person_role: personRole,
+    is_adjustment: isAdj ? 1 : 0,
   };
 }
 
@@ -116,9 +126,10 @@ export async function updateRecord(
   validateRecordInput(input);
   const db = await getDb();
   const note = input.note?.trim() ?? "";
-  const categoryId = input.type === "transfer" ? null : (input.category_id ?? null);
+  const isAdj = !!input.is_adjustment;
+  const categoryId = input.type === "transfer" || isAdj ? null : (input.category_id ?? null);
   const toAccountId = input.type === "transfer" ? (input.to_account_id ?? null) : null;
-  const personId = input.person_id ?? null;
+  const personId = isAdj ? null : (input.person_id ?? null);
   const personRole = personId
     ? input.type === "transfer" && !isLifestyleRole(input.person_role)
       ? "with"
@@ -128,7 +139,7 @@ export async function updateRecord(
   const result = await db.runAsync(
     `UPDATE records SET
        type = ?, amount = ?, category_id = ?, account_id = ?,
-       to_account_id = ?, note = ?, occurred_at = ?, person_id = ?, person_role = ?
+       to_account_id = ?, note = ?, occurred_at = ?, person_id = ?, person_role = ?, is_adjustment = ?
      WHERE id = ?`,
     input.type,
     input.amount,
@@ -139,6 +150,7 @@ export async function updateRecord(
     input.occurred_at,
     personId,
     personRole,
+    isAdj ? 1 : 0,
     id,
   );
   if (result.changes === 0) throw new Error("Record not found");
