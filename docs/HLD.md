@@ -99,6 +99,7 @@ Strict dependency direction: **UI → application → domain → persistence**. 
 | `budgets` | Monthly limits vs spent | `setBudget()`, `listBudgets(month)` |
 | `accounts` | Account CRUD + balances + wallet check | `createAccount()`, `saveWalletCheck()` |
 | `people` | Person CRUD; optional on records | `createPerson()`, `convertAccountToPerson()` |
+| `occasions` | Optional folders around events | `createOccasion()`, `attachRecordsToOccasion()` |
 | `categories` | Income/expense taxonomy + icons | `createCategory()`, `listByType()` |
 | `settings` | Preferences | `getSetting()`, `setSetting()` |
 | `portability` | CSV, `.mbak`, wipe | `exportCsv()`, `backup()`, `restore()`, `reset()` |
@@ -110,7 +111,7 @@ Strict dependency direction: **UI → application → domain → persistence**. 
 
 ### Root stack
 
-- `(tabs)` | `search` | `record/new` | `record/[id]`
+- `(tabs)` | `search` | `record/new` | `occasion/new` | `record/[id]`
 - Modals: account-picker, category-picker
 - Drawer destinations: preferences, export, backup, delete-reset
 
@@ -133,6 +134,7 @@ Strict dependency direction: **UI → application → domain → persistence**. 
 | Category | 1 → N Record; 1 → N Budget | `type ∈ income\|expense`; transfers have no category |
 | Record | Account; optional Category; optional to_account; optional Person; optional wallet-check adjustment | `amount > 0`; transfer requires `to_account ≠ account`; adjustments excluded from SPEND/INCOME |
 | Person | 0–1 per Record | Optional; role `with\|gift\|they_owe\|you_owe\|settled`. IOU roles excluded from SPEND/INCOME |
+| Occasion | 0–N Record members | Optional folder; members keep type/category/wallet/amount; delete unlinks |
 | Budget | Category × (year, month) | One limit per category per month |
 | Setting | key/value | viewMode, carryOver, currency, decimals, lastNewEventOccurredAt, … |
 
@@ -159,6 +161,13 @@ categories(
   sort_order INTEGER NOT NULL DEFAULT 0
 );
 
+occasions(
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  occurred_at TEXT NOT NULL,
+  note TEXT NOT NULL DEFAULT ''
+);
+
 records(
   id TEXT PRIMARY KEY,
   type TEXT NOT NULL CHECK(type IN ('expense','income','transfer')),
@@ -170,7 +179,8 @@ records(
   occurred_at TEXT NOT NULL,  -- ISO-8601
   person_id TEXT,
   person_role TEXT,
-  is_adjustment INTEGER NOT NULL DEFAULT 0
+  is_adjustment INTEGER NOT NULL DEFAULT 0,
+  occasion_id TEXT
 );
 
 budgets(
@@ -194,7 +204,7 @@ settings(
 - `records(category_id, occurred_at)`
 - `records(account_id, occurred_at)`
 - `budgets(year, month, category_id)` UNIQUE already
-- Search: `LIKE` on note + joins to category/account names (FTS optional later)
+- Search: `LIKE` on note + joins to category/account/person/occasion names (FTS optional later)
 
 ### Record effects on balance
 
@@ -220,6 +230,7 @@ settings(
 | Add expense | FAB → composer (date+time from last new event until Today) → account/category → keypad → SAVE → txn → balances → Records |
 | Transfer | Composer TRANSFER → From/To → amount → SAVE → dual balance; list shows blue amount |
 | Wallet check | Wallet details → CHECK WALLET → real balance → add missing event or absorb Adjustment |
+| Occasion | Optional folder: native long-press +, web circled +, or More; group existing events; composer can stay to add another line |
 | Change period | Chevron or Display options → period store → re-query Records/Analysis/Budgets |
 | Analysis | Select mode → SQL aggregates → chart + list VM → render |
 | Set budget | Budgets → SET BUDGET → upsert → recompute spent/remaining |
@@ -233,7 +244,7 @@ settings(
 
 ### CSV (export / import)
 
-Columns: `TIME`, `TYPE`, `AMOUNT`, `CATEGORY`, `ACCOUNT`, `NOTES`, `PERSON`, `PERSON_ROLE`
+Columns: `TIME`, `TYPE`, `AMOUNT`, `CATEGORY`, `ACCOUNT`, `NOTES`, `PERSON`, `PERSON_ROLE`, `OCCASION`
 
 | TYPE marker | Meaning |
 |-------------|---------|
@@ -243,6 +254,8 @@ Columns: `TIME`, `TYPE`, `AMOUNT`, `CATEGORY`, `ACCOUNT`, `NOTES`, `PERSON`, `PE
 | `(#) Opening` | Sets the account’s opening/initial balance; not a ledger record |
 | `(~+) Adjustment` / `(~-) Adjustment` | Wallet-check absorb; moves balance; not spend/income |
 
+Optional `OCCASION` column groups rows by title (same title + calendar day).
+
 Not a full backup (budgets/settings still need `.mbak`). Opening rows make account initial balances round-trip via CSV. Web saves to the browser Downloads folder; native uses the Share sheet. (Optional choose-folder picker is parked — see GitHub issues.)
 
 **Demo data:** [`fixtures/demo_ledger_3years.csv`](../fixtures/demo_ledger_3years.csv) is a fictional ~5.6k-row ledger for demos and import QA. Real user exports live under gitignored `private/` and must never be committed.
@@ -250,8 +263,8 @@ Not a full backup (budgets/settings still need `.mbak`). Opening rows make accou
 ### Backup (`.mbak`)
 
 - Versioned JSON.
-- Includes: records, accounts, categories, people, budgets, settings.
-- Version 3 JSON (v1/v2 restore still work; missing people/adjustments/last-checked default empty).
+- Includes: records, accounts, categories, people, occasions, budgets, settings.
+- Version 4 JSON (v1–v3 restore still work; missing occasions default empty).
 - Filename pattern: `fredkin-backup_DD_MM_YY_XXX.mbak`.
 - Same download / Share path as CSV export.
 - Real user exports live under gitignored `private/` and must never be committed.

@@ -70,10 +70,16 @@ export function ShellTabBar({ state, navigation }: ShellTabBarProps) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Add event"
+          accessibilityHint="Long press to create an occasion"
           onPress={() => {
             log.debug("ui add event");
             router.push("/record/new");
           }}
+          onLongPress={() => {
+            log.debug("ui add occasion");
+            router.push("/occasion/new");
+          }}
+          delayLongPress={350}
           {...webFocusableProps}
           style={({ pressed }) => [
             styles.addBtn,

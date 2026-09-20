@@ -164,6 +164,23 @@ export function AppHeader() {
           >
             <Ionicons name="add" size={20} color={colors.onAccent} />
           </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="New occasion"
+            onPress={() => {
+              log.debug("ui add occasion");
+              router.push("/occasion/new");
+            }}
+            {...webFocusableProps}
+            {...webTitle("New occasion")}
+            style={({ pressed }) => [
+              styles.occasionBtn,
+              webClickable,
+              pressed && styles.addPressed,
+            ]}
+          >
+            <Ionicons name="add-circle-outline" size={22} color={colors.accent} />
+          </Pressable>
         </View>
 
         {canSplit ? (
@@ -348,6 +365,14 @@ const styles = StyleSheet.create({
   addPressed: {
     opacity: 0.88,
     transform: [{ scale: 0.96 }],
+  },
+  occasionBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 2,
   },
   toolBtn: {
     width: 34,

@@ -15,6 +15,7 @@ export type CreateRecordInput = {
   person_id?: string | null;
   person_role?: PersonRole | null;
   is_adjustment?: boolean;
+  occasion_id?: string | null;
 };
 
 export type RecordListItem = MoneyRecord & {
@@ -25,6 +26,7 @@ export type RecordListItem = MoneyRecord & {
   account_icon_key: string;
   to_account_name: string | null;
   person_name: string | null;
+  occasion_title: string | null;
 };
 
 export type PeriodTotals = {
@@ -84,12 +86,13 @@ export async function createRecord(input: CreateRecordInput): Promise<MoneyRecor
       ? "with"
       : (input.person_role ?? "with")
     : null;
+  const occasionId = isAdj ? null : (input.occasion_id ?? null);
 
   await db.withTransactionAsync(async () => {
     await db.runAsync(
       `INSERT INTO records
-         (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role, is_adjustment)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role, is_adjustment, occasion_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       id,
       input.type,
       input.amount,
@@ -101,6 +104,7 @@ export async function createRecord(input: CreateRecordInput): Promise<MoneyRecor
       personId,
       personRole,
       isAdj ? 1 : 0,
+      occasionId,
     );
   });
 
@@ -116,6 +120,7 @@ export async function createRecord(input: CreateRecordInput): Promise<MoneyRecor
     person_id: personId,
     person_role: personRole,
     is_adjustment: isAdj ? 1 : 0,
+    occasion_id: occasionId,
   };
 }
 
@@ -136,10 +141,20 @@ export async function updateRecord(
       : (input.person_role ?? "with")
     : null;
 
+  const existing = await db.getFirstAsync<{ occasion_id: string | null }>(
+    "SELECT occasion_id FROM records WHERE id = ?",
+    id,
+  );
+  if (!existing) throw new Error("Record not found");
+  const occasionId =
+    input.occasion_id !== undefined
+      ? input.occasion_id
+      : existing.occasion_id;
+
   const result = await db.runAsync(
     `UPDATE records SET
        type = ?, amount = ?, category_id = ?, account_id = ?,
-       to_account_id = ?, note = ?, occurred_at = ?, person_id = ?, person_role = ?, is_adjustment = ?
+       to_account_id = ?, note = ?, occurred_at = ?, person_id = ?, person_role = ?, is_adjustment = ?, occasion_id = ?
      WHERE id = ?`,
     input.type,
     input.amount,
@@ -151,6 +166,7 @@ export async function updateRecord(
     personId,
     personRole,
     isAdj ? 1 : 0,
+    isAdj ? null : occasionId,
     id,
   );
   if (result.changes === 0) throw new Error("Record not found");
@@ -184,12 +200,14 @@ SELECT
   a.name AS account_name,
   a.icon_key AS account_icon_key,
   ta.name AS to_account_name,
-  p.name AS person_name
+  p.name AS person_name,
+  o.title AS occasion_title
 FROM records r
 LEFT JOIN categories c ON c.id = r.category_id
 JOIN accounts a ON a.id = r.account_id
 LEFT JOIN accounts ta ON ta.id = r.to_account_id
 LEFT JOIN people p ON p.id = r.person_id
+LEFT JOIN occasions o ON o.id = r.occasion_id
 `;
 
 export async function listRecordsInRange(
@@ -326,6 +344,7 @@ export async function searchRecords(query: string): Promise<RecordListItem[]> {
        OR a.name LIKE ? COLLATE NOCASE ESCAPE '\\'
        OR IFNULL(ta.name, '') LIKE ? COLLATE NOCASE ESCAPE '\\'
        OR IFNULL(p.name, '') LIKE ? COLLATE NOCASE ESCAPE '\\'
+       OR IFNULL(o.title, '') LIKE ? COLLATE NOCASE ESCAPE '\\'
      ORDER BY r.occurred_at DESC, r.id DESC
      LIMIT 500`,
     like,
@@ -333,5 +352,34 @@ export async function searchRecords(query: string): Promise<RecordListItem[]> {
     like,
     like,
     like,
+    like,
+  );
+}
+
+export async function listUngroupedRecordsInRange(
+  start: Date,
+  end: Date,
+): Promise<RecordListItem[]> {
+  const db = await getDb();
+  return db.getAllAsync<RecordListItem>(
+    `${LIST_SELECT}
+     WHERE r.occurred_at >= ? AND r.occurred_at <= ?
+       AND r.occasion_id IS NULL
+       AND IFNULL(r.is_adjustment, 0) = 0
+     ORDER BY r.occurred_at DESC, r.id DESC`,
+    toIsoBound(start),
+    toIsoBound(end),
+  );
+}
+
+export async function listRecordsForOccasion(
+  occasionId: string,
+): Promise<RecordListItem[]> {
+  const db = await getDb();
+  return db.getAllAsync<RecordListItem>(
+    `${LIST_SELECT}
+     WHERE r.occasion_id = ?
+     ORDER BY r.occurred_at ASC, r.id ASC`,
+    occasionId,
   );
 }

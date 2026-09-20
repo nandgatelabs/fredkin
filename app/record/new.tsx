@@ -24,7 +24,8 @@ import { listAccounts } from "@/db/accounts";
 import { createCategory, listCategories } from "@/db/categories";
 import { createPerson, listPeople } from "@/db/people";
 import { createRecord, getRecord, updateRecord } from "@/db/records";
-import type { AccountWithBalance, Category, Person, RecordType } from "@/db/types";
+import { getOccasion } from "@/db/occasions";
+import type { AccountWithBalance, Category, Occasion, Person, RecordType } from "@/db/types";
 import { parseOccurredAt } from "@/lib/recordsUi";
 import { useKeydown } from "@/hooks/useKeydown";
 import { useThemeColors } from "@/hooks/useThemeColors";
@@ -78,6 +79,7 @@ export default function NewRecordScreen() {
     accountId?: string;
     type?: string;
     amount?: string;
+    occasionId?: string;
   }>();
   const editId = typeof params.id === "string" ? params.id : undefined;
   const prefAccountId = typeof params.accountId === "string" ? params.accountId : undefined;
@@ -86,6 +88,8 @@ export default function NewRecordScreen() {
       ? params.type
       : undefined;
   const prefAmount = typeof params.amount === "string" ? params.amount : undefined;
+  const prefOccasionId =
+    typeof params.occasionId === "string" ? params.occasionId : undefined;
 
   const [type, setType] = useState<RecordType>(prefType ?? "expense");
   const [accounts, setAccounts] = useState<AccountWithBalance[]>([]);
@@ -106,6 +110,8 @@ export default function NewRecordScreen() {
   const [error, setError] = useState<string | null>(null);
   const [hydratedEdit, setHydratedEdit] = useState(false);
   const [lockedAdjustment, setLockedAdjustment] = useState(false);
+  const [occasion, setOccasion] = useState<Occasion | null>(null);
+  const [stayHint, setStayHint] = useState<string | null>(null);
   const stickyApplied = useRef(false);
 
   const [accountPicker, setAccountPicker] = useState<"from" | "to" | null>(null);
@@ -159,6 +165,10 @@ export default function NewRecordScreen() {
     setLoading(true);
     (async () => {
       await reloadMeta();
+      if (!editId && prefOccasionId && !cancelled) {
+        const occ = await getOccasion(prefOccasionId);
+        if (!cancelled) setOccasion(occ);
+      }
       if (!editId && !stickyApplied.current) {
         stickyApplied.current = true;
         try {
@@ -202,6 +212,10 @@ export default function NewRecordScreen() {
         existing.person_id ? (pers.find((p) => p.id === existing.person_id) ?? null) : null,
       );
       setPersonRole(existing.person_role ?? "with");
+      if (existing.occasion_id) {
+        const occ = await getOccasion(existing.occasion_id);
+        if (!cancelled) setOccasion(occ);
+      }
       setHydratedEdit(true);
     })()
       .catch((e) => {
@@ -213,7 +227,7 @@ export default function NewRecordScreen() {
     return () => {
       cancelled = true;
     };
-  }, [editId, hydratedEdit, reloadMeta]);
+  }, [editId, hydratedEdit, prefOccasionId, reloadMeta]);
 
   const filteredCategories = useMemo(
     () => (type === "transfer" ? [] : categories),
@@ -291,6 +305,7 @@ export default function NewRecordScreen() {
         occurred_at: toIsoLocal(occurredAt),
         person_id: person?.id ?? null,
         person_role: person ? personRole : null,
+        occasion_id: editId ? undefined : (occasion?.id ?? prefOccasionId ?? null),
       };
       if (editId) await updateRecord(editId, payload);
       else {
@@ -305,6 +320,15 @@ export default function NewRecordScreen() {
         type,
         amount,
       });
+      if (!editId && (occasion?.id || prefOccasionId)) {
+        setExpression("0");
+        setNote("");
+        setCategory(null);
+        autoPersonCategory.current = false;
+        setStayHint("Saved in this occasion — add another line or Discard to leave.");
+        setBusy(false);
+        return;
+      }
       router.back();
     } catch (e) {
       log.error("Record save failed", e);
@@ -324,6 +348,8 @@ export default function NewRecordScreen() {
     person?.id,
     personRole,
     lockedAdjustment,
+    occasion?.id,
+    prefOccasionId,
   ]);
 
   const overlayOpen =
@@ -503,6 +529,15 @@ export default function NewRecordScreen() {
           );
         })}
       </View>
+
+      {occasion ? (
+        <Text style={[styles.occasionBanner, { color: c.accent }]}>
+          Occasion · {occasion.title}
+        </Text>
+      ) : null}
+      {stayHint ? (
+        <Text style={[styles.occasionBanner, { color: c.textSecondary }]}>{stayHint}</Text>
+      ) : null}
 
       {loading ? (
         <ActivityIndicator color={c.accent} style={{ marginTop: 40 }} />
@@ -910,6 +945,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 18,
+  },
+  occasionBanner: {
+    textAlign: "center",
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 10,
   },
   typeCell: {
     flexDirection: "row",

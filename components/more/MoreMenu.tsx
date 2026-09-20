@@ -30,6 +30,12 @@ export const MORE_MANAGE_ITEMS: MoreNavItem[] =
           href: "/people",
           shortcut: "p",
         },
+        {
+          label: "New occasion",
+          icon: "add-circle-outline",
+          href: "/occasion/new",
+          shortcut: "o",
+        },
       ];
 
 export const MORE_APP_ITEMS: MoreNavItem[] = [

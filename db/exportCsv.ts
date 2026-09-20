@@ -86,6 +86,7 @@ export async function exportMoneyCsv(
       account_name: string;
       to_account_name: string | null;
       person_name: string | null;
+      occasion_title: string | null;
     }
   >(
     `SELECT
@@ -93,12 +94,14 @@ export async function exportMoneyCsv(
        c.name AS category_name,
        a.name AS account_name,
        ta.name AS to_account_name,
-       p.name AS person_name
+       p.name AS person_name,
+       o.title AS occasion_title
      FROM records r
      LEFT JOIN categories c ON c.id = r.category_id
      JOIN accounts a ON a.id = r.account_id
      LEFT JOIN accounts ta ON ta.id = r.to_account_id
      LEFT JOIN people p ON p.id = r.person_id
+     LEFT JOIN occasions o ON o.id = r.occasion_id
      ORDER BY r.occurred_at ASC, r.id ASC`,
   );
 
@@ -121,6 +124,7 @@ export async function exportMoneyCsv(
       notes: "Opening balance",
       person: "",
       personRole: "",
+      occasion: "",
     });
   }
 
@@ -141,6 +145,7 @@ export async function exportMoneyCsv(
       notes: record.note ?? "",
       person: record.person_name?.trim() ?? "",
       personRole: record.person_role ?? "",
+      occasion: record.occasion_title?.trim() ?? "",
     });
   }
 

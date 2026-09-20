@@ -12,6 +12,7 @@ Versioning follows [Semantic Versioning](https://semver.org/) — see [`docs/VER
 - Add-event composer remembers the last **new** event **date and time** (any month/year) until **Today**; month calendar + hour/minute pickers on web and native
 - **People:** person on an event with roles (With / Gift / They owe / You owe / Settled). IOUs do not count as spend or income. Web: People header pane. Native: More → People. Convert a wallet to a person. CSV `PERSON` / `PERSON_ROLE`; `.mbak` v2 includes people. Picking a person without an event type attaches a default type (overridable)
 - **Wallet check:** on a wallet, enter the real cash/bank balance. Absorb a gap as an Adjustment (not spend/income), or add missing events and leave an Off-by warning. Stale after 14 days. CSV `(~+)/ (~-) Adjustment`; `.mbak` v3
+- **Occasions:** optional folders around normal events. Native long-press **+**, web circled **+**, or More. Group into an existing same-day occasion or create one. Events list collapses to title · count · spend (coral) / income (green). Native: long-press an event and drop it on a folder to attach, or drag a member off to unlink. Composer can stay to add another line. Delete unlinks. CSV `OCCASION`; `.mbak` v4
 - Native More: header menu, larger plain edge pill, edge swipe-in; Back from Settings/Data reopens the drawer
 - Event row swipe: right = Edit, left = Delete; in-app delete confirm
 - Verbose `__DEV__` logging trail (nav / UI); prod keeps milestones for Export Logs
@@ -33,6 +34,7 @@ Versioning follows [Semantic Versioning](https://semver.org/) — see [`docs/VER
 - Android SQLite dead handle after JS reload (`useNewConnection`, `withDb` retry); export/save fallbacks when settings read fails
 - Add-event person is one row (`Name · role`); roles live in the person sheet so notes can fill the space above the keypad like the original composer
 - Person they-owe / you-owe totals follow the role (a spend tagged You owe counts as you-owe)
+- Long-press an occasion folder for add event / group / delete; grouping an event lists existing occasions on that day
 
 ### Planned
 

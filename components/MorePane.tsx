@@ -56,6 +56,11 @@ const MANAGE: NavItem[] = [
     icon: "people-outline",
     href: "/people",
   },
+  {
+    label: "New occasion",
+    icon: "add-circle-outline",
+    href: "/occasion/new",
+  },
 ];
 
 /** On web, Wallets / Event Type live in the header pane switcher. */

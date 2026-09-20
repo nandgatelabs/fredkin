@@ -1,7 +1,8 @@
 import { useRef } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Swipeable } from "react-native-gesture-handler";
+import { Gesture, GestureDetector, Swipeable } from "react-native-gesture-handler";
+import { runOnJS } from "react-native-reanimated";
 
 import type { RecordListItem } from "@/db/records";
 import { formatMoney } from "@/lib/money";
@@ -21,9 +22,27 @@ type Props = {
   onPress: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  hideOccasion?: boolean;
+  nested?: boolean;
+  /** Native: long-press then drag onto an occasion. */
+  onOccasionDragStart?: (x: number, y: number) => void;
+  onOccasionDragMove?: (x: number, y: number) => void;
+  onOccasionDragEnd?: (x: number, y: number) => void;
+  dragging?: boolean;
 };
 
-export function RecordRow({ item, onPress, onEdit, onDelete }: Props) {
+export function RecordRow({
+  item,
+  onPress,
+  onEdit,
+  onDelete,
+  hideOccasion = false,
+  nested = false,
+  onOccasionDragStart,
+  onOccasionDragMove,
+  onOccasionDragEnd,
+  dragging = false,
+}: Props) {
   const notesInList = useSettingsStore((s) => s.notesInList);
   const swipeRef = useRef<Swipeable>(null);
   const title = recordTitle(item);
@@ -55,7 +74,13 @@ export function RecordRow({ item, onPress, onEdit, onDelete }: Props) {
       accessibilityLabel={title}
       onPress={onPress}
       {...webFocusableProps}
-      style={({ pressed }) => [styles.row, webClickable, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.row,
+        nested && styles.nested,
+        webClickable,
+        pressed && styles.pressed,
+        dragging && styles.dragging,
+      ]}
     >
       <View style={[styles.icon, { backgroundColor: iconBg }]}>
         <Ionicons name={iconName} size={18} color="#fff" />
@@ -76,6 +101,7 @@ export function RecordRow({ item, onPress, onEdit, onDelete }: Props) {
               ? `${item.account_name} → ${item.to_account_name ?? "?"}`
               : item.account_name}
             {item.person_name ? `  · ${item.person_name}` : ""}
+            {!hideOccasion && item.occasion_title ? `  · ${item.occasion_title}` : ""}
           </Text>
         </View>
         {notesInList && item.note.trim() ? (
@@ -94,14 +120,39 @@ export function RecordRow({ item, onPress, onEdit, onDelete }: Props) {
   );
 
   const canEdit = Boolean(onEdit) && !isAdjustmentFlag(item.is_adjustment);
+  const dragEnabled =
+    Platform.OS !== "web" &&
+    Boolean(onOccasionDragStart && onOccasionDragMove && onOccasionDragEnd) &&
+    !isAdjustmentFlag(item.is_adjustment);
+
+  const dragGesture = Gesture.Pan()
+    .enabled(dragEnabled)
+    .activateAfterLongPress(420)
+    .maxPointers(1)
+    .onStart((e) => {
+      if (onOccasionDragStart) runOnJS(onOccasionDragStart)(e.absoluteX, e.absoluteY);
+    })
+    .onUpdate((e) => {
+      if (onOccasionDragMove) runOnJS(onOccasionDragMove)(e.absoluteX, e.absoluteY);
+    })
+    .onFinalize((e) => {
+      if (onOccasionDragEnd) runOnJS(onOccasionDragEnd)(e.absoluteX, e.absoluteY);
+    });
+
+  const inner = dragEnabled ? (
+    <GestureDetector gesture={dragGesture}>{row}</GestureDetector>
+  ) : (
+    row
+  );
 
   if (Platform.OS === "web" || (!canEdit && !onDelete)) {
-    return row;
+    return inner;
   }
 
   return (
     <Swipeable
       ref={swipeRef}
+      enabled={!dragging}
       friction={2}
       overshootLeft={false}
       overshootRight={false}
@@ -152,7 +203,7 @@ export function RecordRow({ item, onPress, onEdit, onDelete }: Props) {
           : undefined
       }
     >
-      {row}
+      {inner}
     </Swipeable>
   );
 }
@@ -164,12 +215,15 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    // Transparent so Glass Mist / atmosphere shows through (no solid slab).
     backgroundColor: "transparent",
+  },
+  nested: {
+    paddingLeft: 36,
   },
   pressed: {
     backgroundColor: colors.accentSoft,
   },
+  dragging: { opacity: 0.35 },
   icon: {
     width: 40,
     height: 40,

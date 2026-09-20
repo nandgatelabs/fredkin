@@ -34,6 +34,7 @@ export type ImportResult = {
   accountsCreated: number;
   categoriesCreated: number;
   peopleCreated: number;
+  occasionsCreated: number;
   errors: string[];
 };
 
@@ -102,12 +103,14 @@ export async function importMoneyCsv(
       accountsCreated: 0,
       categoriesCreated: 0,
       peopleCreated: 0,
+      occasionsCreated: 0,
       errors: [],
     };
 
     const accountIds = new Map<string, string>();
     const categoryIds = new Map<string, string>(); // key: type|name
     const personIds = new Map<string, string>();
+    const occasionIds = new Map<string, string>();
 
     async function ensureAccount(name: string): Promise<string> {
       const key = name.trim();
@@ -206,17 +209,44 @@ export async function importMoneyCsv(
       return id;
     }
 
+    async function ensureOccasion(title: string, occurredAt: string): Promise<string> {
+      const key = `${title.trim().toLowerCase()}|${occurredAt.slice(0, 10)}`;
+      const cached = occasionIds.get(key);
+      if (cached) return cached;
+      const existing = await db.getFirstAsync<{ id: string }>(
+        `SELECT id FROM occasions WHERE title = ? COLLATE NOCASE AND substr(occurred_at, 1, 10) = ? LIMIT 1`,
+        title.trim(),
+        occurredAt.slice(0, 10),
+      );
+      if (existing) {
+        occasionIds.set(key, existing.id);
+        return existing.id;
+      }
+      const id = createId("occ");
+      await db.runAsync(
+        `INSERT INTO occasions (id, title, occurred_at, note) VALUES (?, ?, ?, '')`,
+        id,
+        title.trim(),
+        occurredAt,
+      );
+      occasionIds.set(key, id);
+      result.occasionsCreated += 1;
+      return id;
+    }
+
     await db.withTransactionAsync(async () => {
       if (mode === "replace") {
         // Full override: ledger matches the CSV only (settings kept).
         await db.runAsync("DELETE FROM budgets");
         await db.runAsync("DELETE FROM records");
+        await db.runAsync("DELETE FROM occasions");
         await db.runAsync("DELETE FROM people");
         await db.runAsync("DELETE FROM categories");
         await db.runAsync("DELETE FROM accounts");
         accountIds.clear();
         categoryIds.clear();
         personIds.clear();
+        occasionIds.clear();
       }
 
       for (let i = 0; i < rows.length; i++) {
@@ -232,7 +262,7 @@ export async function importMoneyCsv(
               result.skippedOutOfRange += 1;
               continue;
             }
-            await importOneRow(db, row, ensureAccount, ensureCategory, ensurePerson);
+            await importOneRow(db, row, ensureAccount, ensureCategory, ensurePerson, ensureOccasion);
             result.imported += 1;
           }
         } catch (e) {
@@ -275,6 +305,7 @@ async function importOneRow(
   ensureAccount: (name: string) => Promise<string>,
   ensureCategory: (name: string, type: "income" | "expense") => Promise<string>,
   ensurePerson: (name: string) => Promise<string>,
+  ensureOccasion: (title: string, occurredAt: string) => Promise<string>,
 ) {
   const mapped = mapType(row.type);
   if (!mapped) throw new Error(`Unknown TYPE "${row.type}"`);
@@ -294,6 +325,10 @@ async function importOneRow(
     personId = await ensurePerson(row.person);
     personRole = parsePersonRole(row.personRole) ?? "with";
   }
+  const occasionId =
+    !isAdjustment && row.occasion.trim()
+      ? await ensureOccasion(row.occasion, occurred)
+      : null;
 
   if (type === "transfer") {
     const { from, to } = parseTransferAccounts(row.account);
@@ -304,8 +339,8 @@ async function importOneRow(
     }
     await db.runAsync(
       `INSERT INTO records
-         (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role, is_adjustment)
-       VALUES (?, 'transfer', ?, NULL, ?, ?, ?, ?, ?, ?, 0)`,
+         (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role, is_adjustment, occasion_id)
+       VALUES (?, 'transfer', ?, NULL, ?, ?, ?, ?, ?, ?, 0, ?)`,
       id,
       amount,
       accountId,
@@ -314,6 +349,7 @@ async function importOneRow(
       occurred,
       personId,
       personRole === "with" || personRole === "gift" ? personRole : personId ? "with" : null,
+      occasionId,
     );
     return;
   }
@@ -326,9 +362,9 @@ async function importOneRow(
   }
 
   await db.runAsync(
-    `INSERT INTO records
-       (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role, is_adjustment)
-     VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?)`,
+      `INSERT INTO records
+       (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role, is_adjustment, occasion_id)
+     VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?)`,
     id,
     type,
     amount,
@@ -339,5 +375,6 @@ async function importOneRow(
     personId,
     personRole,
     isAdjustment ? 1 : 0,
+    occasionId,
   );
 }
