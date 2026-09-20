@@ -36,6 +36,13 @@ export type Category = {
   archived: number;
 };
 
+export type Occasion = {
+  id: string;
+  title: string;
+  occurred_at: string;
+  note: string;
+};
+
 export type MoneyRecord = {
   id: string;
   type: RecordType;
@@ -48,6 +55,7 @@ export type MoneyRecord = {
   person_id: string | null;
   person_role: PersonRole | null;
   is_adjustment: number;
+  occasion_id: string | null;
 };
 
 export type Totals = {

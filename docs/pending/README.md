@@ -8,7 +8,9 @@ Do not treat this as a rewrite of wallets into a double-entry graph.
 |---------|--------|--------|
 | Sticky event date | **Shipped (this slice)** | Composer remembers last **new** event date |
 | Wallet check + adjustment | **Shipped (this slice)** | Reconcile vs real cash/bank without fake spend/income |
-| Occasions | Pending | Group related events (outing / trip) |
+| Occasions | **Shipped (this slice)** | Optional folder around events; group existing |
+| Occasions spanning days | Pending | Trip/outing across more than one calendar day ([#52](https://github.com/nandgatelabs/fredkin/issues/52)) |
+| Drag event to another date | Pending | Native: drop an event on a different day; date updates, time stays ([#53](https://github.com/nandgatelabs/fredkin/issues/53)) |
 | People (gift vs claim) | **Shipped (this slice)** | Optional person + roles; wallet convert |
 
 ---
@@ -45,14 +47,42 @@ Do not treat this as a rewrite of wallets into a double-entry graph.
 
 **Problem:** Related lines (lunch, auto, metro) repeat place names in every note.
 
+**Behavior (implemented):**
+
+- Optional. **+** still adds a normal event.
+- Create from scratch: native **long-press +**, web **circled +** beside +, More → New occasion. Title + date; Save & add event, or save an empty folder.
+- Group existing events (same-day picker, including occasions already on that day) from an event’s detail or from an occasion.
+- Events list collapses an occasion to title · count · spend (coral) / income (green); expand to members.
+- Native only: long-press an event, then drag onto an occasion folder to attach; drag a member off the folder (drop on empty space) to unlink. Swipe still edits/deletes. Not on web.
+- Composer stays on the occasion after Save so another line can be added.
+- Delete occasion unlinks members (events stay). Not for SIPs, salary, or card bills.
+
+---
+
+## Drag event to another date
+
+**Problem:** A line on the wrong day means opening the composer just to change the date.
+
 **Direction:**
 
-- Occasion = folder around **normal** events (not one merged Food row).
-- Title, date, optional people; members keep type / category / wallet / amount.
-- Composer: stay in occasion to add another line.
-- Events list: collapse to one row with total + count; expand to members.
-- Attach existing same-day rows later. Delete occasion unlinks by default.
-- Not for SIPs, salary, or card bills.
+- **Native only** (same idea as dragging into an occasion). Web keeps the composer.
+- Long-press an event, drop it on another **date section** in Events. The event’s calendar day becomes that section’s day; **time of day is unchanged**.
+- Dropping on empty space in a day (not on an occasion folder) still means that day.
+- Occasion drag stays: drop on a folder to attach; drop off a folder to unlink. Date-move is a separate drop target (the day header / that day’s list).
+- Adjustments can move days like any other event. Do not invent a new record; only update `occurred_at`.
+
+---
+
+## Occasions spanning days
+
+**Problem:** A trip or wedding can run across several calendar days; today’s occasion is one date.
+
+**Direction:**
+
+- One occasion can cover a date range, not only a single day.
+- Events on any day in the range can join that folder.
+- Events list still collapses to one row (show the span in the subtitle).
+- Stay optional; do not force every event into an occasion.
 
 ---
 

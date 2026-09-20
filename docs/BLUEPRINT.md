@@ -32,8 +32,8 @@ Persistent chrome on main tabs. **Native and web share one repo/core; shells div
 - **Native top:** **Fredkin** · oval search · header menu · plain right-edge More pill (also swipe-in from the right edge)  
 - **Native bottom:** Events · in-bar `+` · Insights  
 - **Native dismiss:** chevron **Back** when returning to a parent (More stack, wallet/type details); icon **Close** / **Discard** for sheets and modals. Stack screens opened from More (Settings, Data, …) **Back** to the drawer still open.  
-- **Web desktop:** full-bleed shell, no bottom tab bar. Header: **Fredkin** · search · period (split) · pane icons (Events / Insights / Wallets / Types / People) · **+** · Split · shortcuts · **More** (App). Default **Split** with any left|right pair; details stay in-pane. Below ~900px, split falls back to single. Web dialogs use text **← BACK** / **✕ CLOSE**.  
-- Native More: Manage (Wallets, Event Type, People) + App (Settings, Data, Support, Reset, Export Logs). Native panel is edge-flush with a rounded leading edge.
+- **Web desktop:** full-bleed shell, no bottom tab bar. Header: **Fredkin** · search · period (split) · pane icons (Events / Insights / Wallets / Types / People) · **+** · circled **+** (new occasion) · Split · shortcuts · **More** (App). Default **Split** with any left|right pair; details stay in-pane. Below ~900px, split falls back to single. Web dialogs use text **← BACK** / **✕ CLOSE**.  
+- Native More: Manage (Wallets, Event Type, People, New occasion) + App (Settings, Data, Support, Reset, Export Logs). Native panel is edge-flush with a rounded leading edge.
 
 Attribution line: **Fredkin by NandGateLabs**.
 
@@ -60,7 +60,8 @@ Attribution line: **Fredkin by NandGateLabs**.
 - Row: category icon · name · account chip · quoted note · signed amount.
 - Transfer: From → To, blue amount, no category.
 - Tap row → detail sheet; native swipe **right → Edit**, **left → Delete** (in-app confirm).
-- FAB / tab **+** → add.
+- FAB / tab **+** → add a normal event (occasions are optional). Native **long-press +** → new occasion. Web circled **+** beside **+** → new occasion.
+- Occasion rows collapse to title · count · spend (coral) / income (green); expand to members. **Long-press** the folder for add event / group / delete. On **native**, long-press an event then drag onto a folder to attach, or drag a member off the folder to unlink. Event detail can **Group into occasion** (pick an existing same-day occasion or create one). Delete occasion unlinks members.
 
 ---
 
@@ -84,6 +85,7 @@ Attribution line: **Fredkin by NandGateLabs**.
 - Footer: tappable date + time → calendar / clock modals
 - **New events:** reuse the last saved **date and time** (settings `lastNewEventOccurredAt`) with no month/year/age cutoff. Edit does not read/write that memory. Footer is **date · time · Today** (Today = now). Date opens a **month calendar** (tap a day; chevrons / year title to jump); time is hour grid + minutes.
 - **Person:** one row under wallet/type (`Name · role`). Tap opens the person sheet (list + With / Gift / They owe / You owe / Settled). Notes stay the large field above the keypad — same as the original composer. IOU roles do not count as spend/income. Wallet still required. Picking a person with no event type selected attaches a default type (Social / Loan / Gift / Grants by role; first matching type if those names are missing) — user can change it.
+- **Occasion:** optional. Composer opened from an occasion stays after Save so another line can be added. Discard leaves.
 - Validation: amount > 0; **account required** (transfer: both From and To, and From ≠ To); **category optional** for income/expense unless a person is tagged (then a default type is attached)
 - Save: write record + update balances in one transaction
 
@@ -247,8 +249,8 @@ Refs: `private/new/category-details-expense.jpeg`, `private/new/category-details
 ### Backup & Restore
 
 - **BACKUP NOW** · **RESTORE** · **SELECT/CHANGE DIRECTORY**
-- Backup includes records, categories, accounts, people, budgets, settings.
-- Version 3 JSON (v1/v2 restore still work).
+- Backup includes records, categories, accounts, people, occasions, budgets, settings.
+- Version 4 JSON (v1–v3 restore still work).
 - Restore lists `.mbak` files with modified timestamps.
 
 ### Delete & Reset
@@ -279,13 +281,14 @@ Patterns: period chevrons + filter; category = colored circle + white glyph; acc
 Columns:
 
 ```
-TIME, TYPE, AMOUNT, CATEGORY, ACCOUNT, NOTES, PERSON, PERSON_ROLE
+TIME, TYPE, AMOUNT, CATEGORY, ACCOUNT, NOTES, PERSON, PERSON_ROLE, OCCASION
 ```
 
 TYPE values: `(#) Opening`, `(-) Expense`, `(+) Income`, `(*) Transfer`, `(~+) Adjustment`, `(~-) Adjustment`.  
 Transfers: `ACCOUNT` = `From->To`, category `-`.  
 Openings: `Jan 01, 2000 12:00 AM`, category `-`, note `Opening balance`.
 `PERSON` / `PERSON_ROLE` optional on import (blank = none). Roles: `with`, `gift`, `they_owe`, `you_owe`, `settled`.
+`OCCASION` optional (same title + day = one folder).
 
 ### Demo fixture (safe for screenshots / demos)
 
@@ -305,6 +308,7 @@ Personal worksheets for migration testing stay under `private/` only.
 - [ ] Budgets with spent vs limit progress  
 - [ ] Account balances and lifetime expense/income headers  
 - [ ] Wallet check: real vs app, absorb Adjustment (not spend/income), Off-by / Stale chips  
+- [ ] Occasions optional: native long-press +, web circled +; group existing; collapse in Events; native drag onto / off a folder  
 - [ ] CSV export + local backup/restore + wipe options  
 - [ ] Import `fixtures/demo_ledger_3years.csv` for demo / load testing (optional: `private/` CSV for personal migration)  
 

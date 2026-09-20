@@ -118,7 +118,7 @@ export default function ImportCsvScreen() {
 
       <Text style={styles.body}>
         Load a worksheet export with columns TIME, TYPE, AMOUNT, CATEGORY,
-        ACCOUNT, NOTES (optional PERSON, PERSON_ROLE).
+        ACCOUNT, NOTES (optional PERSON, PERSON_ROLE, OCCASION).
         `(~+) Adjustment` / `(~-) Adjustment` rows restore wallet-check absorbs.
         Rows typed `(#) Opening` restore each account’s initial balance (Fredkin
         extension).
@@ -211,6 +211,9 @@ export default function ImportCsvScreen() {
           </Text>
           <Text style={styles.resultLine}>
             People created: {result.peopleCreated}
+          </Text>
+          <Text style={styles.resultLine}>
+            Occasions created: {result.occasionsCreated}
           </Text>
           {result.errors.length > 0 ? (
             <Text style={styles.errorList}>{result.errors.join("\n")}</Text>

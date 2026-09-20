@@ -9,6 +9,7 @@ export type CsvRow = {
   notes: string;
   person: string;
   personRole: string;
+  occasion: string;
 };
 
 /** Fredkin extension: account opening balance (not a ledger record). */
@@ -31,11 +32,11 @@ export function formatCsvAmount(amount: number): string {
 }
 
 export function serializeMoneyCsv(rows: CsvRow[]): string {
-  const header = ["TIME", "TYPE", "AMOUNT", "CATEGORY", "ACCOUNT", "NOTES", "PERSON", "PERSON_ROLE"]
+  const header = ["TIME", "TYPE", "AMOUNT", "CATEGORY", "ACCOUNT", "NOTES", "PERSON", "PERSON_ROLE", "OCCASION"]
     .map(csvEscape)
     .join(",");
   const lines = rows.map((r) =>
-    [r.time, r.type, r.amount, r.category, r.account, r.notes, r.person, r.personRole]
+    [r.time, r.type, r.amount, r.category, r.account, r.notes, r.person, r.personRole, r.occasion]
       .map(csvEscape)
       .join(","),
   );
@@ -118,6 +119,7 @@ export function parseMoneyCsv(text: string): CsvRow[] {
     notes: header.indexOf("NOTES"),
     person: header.indexOf("PERSON"),
     personRole: header.indexOf("PERSON_ROLE"),
+    occasion: header.indexOf("OCCASION"),
   };
   if (
     idx.time < 0 ||
@@ -145,6 +147,7 @@ export function parseMoneyCsv(text: string): CsvRow[] {
       notes: (cells[idx.notes] ?? "").trim(),
       person: idx.person >= 0 ? (cells[idx.person] ?? "").trim() : "",
       personRole: idx.personRole >= 0 ? (cells[idx.personRole] ?? "").trim() : "",
+      occasion: idx.occasion >= 0 ? (cells[idx.occasion] ?? "").trim() : "",
     });
   }
   return out;

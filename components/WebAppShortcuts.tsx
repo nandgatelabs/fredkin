@@ -74,7 +74,7 @@ export function WebAppShortcuts() {
         // Digits while More is open are handled in MoreMenu.
         if (onMore) return;
 
-        if (inDialog || pathname.startsWith("/record")) return;
+        if (inDialog || pathname.startsWith("/record") || pathname.startsWith("/occasion")) return;
 
         if (event.key === "/") {
           event.preventDefault();

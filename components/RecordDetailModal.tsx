@@ -25,9 +25,18 @@ type Props = {
   onClose: () => void;
   onEdit: (record: RecordListItem) => void;
   onDelete: (record: RecordListItem) => void;
+  onAddToOccasion?: (record: RecordListItem) => void;
+  onRemoveFromOccasion?: (record: RecordListItem) => void;
 };
 
-export function RecordDetailModal({ record, onClose, onEdit, onDelete }: Props) {
+export function RecordDetailModal({
+  record,
+  onClose,
+  onEdit,
+  onDelete,
+  onAddToOccasion,
+  onRemoveFromOccasion,
+}: Props) {
   const c = useThemeColors();
 
   useKeydown(
@@ -157,6 +166,36 @@ export function RecordDetailModal({ record, onClose, onEdit, onDelete }: Props) 
                 border={c.border}
               />
             ) : null}
+            {record.occasion_title ? (
+              <DetailRow
+                label="Occasion"
+                icon="albums-outline"
+                value={record.occasion_title}
+                accent={c.accent}
+                accentMuted={c.accentMuted}
+                border={c.border}
+              />
+            ) : null}
+            {adj ? null : onAddToOccasion ? (
+              <Pressable
+                onPress={() => onAddToOccasion(record)}
+                style={[styles.linkBtn, webClickable]}
+              >
+                <Text style={[styles.linkText, { color: c.accent }]}>
+                  {record.occasion_id ? "Move to another occasion" : "Group into occasion"}
+                </Text>
+              </Pressable>
+            ) : null}
+            {record.occasion_id && onRemoveFromOccasion ? (
+              <Pressable
+                onPress={() => onRemoveFromOccasion(record)}
+                style={[styles.linkBtn, webClickable]}
+              >
+                <Text style={[styles.linkText, { color: c.accentMuted }]}>
+                  Remove from occasion
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
         </Pressable>
       </Pressable>
@@ -282,4 +321,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: 4,
   },
+  linkBtn: { paddingVertical: 4 },
+  linkText: { fontSize: 14, fontWeight: "600" },
 });

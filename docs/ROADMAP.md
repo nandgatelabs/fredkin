@@ -44,7 +44,9 @@ Detailed specs: [`docs/pending/README.md`](./pending/README.md).
 |-------|--------|
 | Sticky event date | Shipped — composer remembers last new-event date |
 | Wallet check + adjustment | Shipped — real vs app balance; absorb without fake spend/income |
-| Occasions | Pending — group related events (e.g. outing) |
+| Occasions | Shipped — optional folders; group existing events; collapse in Events |
+| Occasions spanning days | Pending — one folder across a date range ([#52](https://github.com/nandgatelabs/fredkin/issues/52)) |
+| Drag event to another date | Pending — native drop onto a day header; keep time, change date ([#53](https://github.com/nandgatelabs/fredkin/issues/53)) |
 | People | Shipped — person on events; IOU roles; wallet → person; web People pane |
 
 ## Later / out of band

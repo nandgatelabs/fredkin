@@ -121,6 +121,17 @@ export default function RootLayout() {
                   : { backgroundColor: colors.background },
             }}
           />
+          <Stack.Screen
+            name="occasion/new"
+            options={{
+              presentation: Platform.OS === "web" ? "transparentModal" : "modal",
+              animation: Platform.OS === "web" ? "fade" : "slide_from_bottom",
+              contentStyle:
+                Platform.OS === "web"
+                  ? { backgroundColor: "transparent" }
+                  : { backgroundColor: colors.background },
+            }}
+          />
         </Stack>
 
         <NavigationLogger />
