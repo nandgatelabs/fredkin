@@ -9,6 +9,7 @@ Versioning follows [Semantic Versioning](https://semver.org/) — see [`docs/VER
 
 ### Added
 
+- Add-event composer remembers the last **new** event **date and time** (any month/year) until **Today**; month calendar + hour/minute pickers on web and native
 - Native More: header menu, larger plain edge pill, edge swipe-in; Back from Settings/Data reopens the drawer
 - Event row swipe: right = Edit, left = Delete; in-app delete confirm
 - Verbose `__DEV__` logging trail (nav / UI); prod keeps milestones for Export Logs

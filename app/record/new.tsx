@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -41,6 +41,12 @@ import {
 } from "@/lib/datetime";
 import { accountIcon, categoryColor, categoryIcon } from "@/lib/icons";
 import { log } from "@/lib/logger";
+import {
+  isSameDateAndMinute,
+  readStickyNewEventOccurredAt,
+  resolveNewEventOccurredAt,
+  writeStickyNewEventOccurredAt,
+} from "@/lib/stickyEventDate";
 import { webClickable } from "@/lib/web";
 
 const TYPES: RecordType[] = ["income", "expense", "transfer"];
@@ -71,6 +77,7 @@ export default function NewRecordScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hydratedEdit, setHydratedEdit] = useState(false);
+  const stickyApplied = useRef(false);
 
   const [accountPicker, setAccountPicker] = useState<"from" | "to" | null>(null);
   const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
@@ -102,6 +109,15 @@ export default function NewRecordScreen() {
     setLoading(true);
     (async () => {
       await reloadMeta();
+      if (!editId && !stickyApplied.current) {
+        stickyApplied.current = true;
+        try {
+          const stored = await readStickyNewEventOccurredAt();
+          if (!cancelled) setOccurredAt(resolveNewEventOccurredAt(stored));
+        } catch (e) {
+          log.warn("Sticky event date read failed", e);
+        }
+      }
       if (!editId || hydratedEdit) return;
       const existing = await getRecord(editId);
       if (!existing || cancelled) return;
@@ -185,7 +201,14 @@ export default function NewRecordScreen() {
         occurred_at: toIsoLocal(occurredAt),
       };
       if (editId) await updateRecord(editId, payload);
-      else await createRecord(payload);
+      else {
+        await createRecord(payload);
+        try {
+          await writeStickyNewEventOccurredAt(occurredAt);
+        } catch (e) {
+          log.warn("Sticky event date save failed", e);
+        }
+      }
       log.info(editId ? "Record updated" : "Record created", {
         type,
         amount,
@@ -298,6 +321,7 @@ export default function NewRecordScreen() {
   );
 
   const isWeb = Platform.OS === "web";
+  const usingNow = isSameDateAndMinute(occurredAt, new Date());
   const composerPad = {
     paddingTop: isWeb ? 12 : insets.top + 8,
     paddingBottom: isWeb ? 12 : insets.bottom,
@@ -504,15 +528,48 @@ export default function NewRecordScreen() {
           </View>
 
           <View style={[styles.footer, { borderColor: c.border }]}>
-            <Pressable onPress={() => setDateOpen(true)} style={styles.footerBtn}>
-              <Text style={[styles.footerText, { color: c.accent }]}>
+            <Pressable
+              onPress={() => setDateOpen(true)}
+              style={styles.footerBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Pick date"
+            >
+              <Text style={[styles.footerText, { color: c.accent }]} numberOfLines={1}>
                 {formatComposerDate(occurredAt)}
               </Text>
             </Pressable>
             <View style={[styles.footerDivider, { backgroundColor: c.border }]} />
-            <Pressable onPress={() => setTimeOpen(true)} style={styles.footerBtn}>
-              <Text style={[styles.footerText, { color: c.accent }]}>
+            <Pressable
+              onPress={() => setTimeOpen(true)}
+              style={styles.footerBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Pick time"
+            >
+              <Text style={[styles.footerText, { color: c.accent }]} numberOfLines={1}>
                 {formatComposerTime(occurredAt)}
+              </Text>
+            </Pressable>
+            <View style={[styles.footerDivider, { backgroundColor: c.border }]} />
+            <Pressable
+              onPress={() => {
+                const now = new Date();
+                setOccurredAt(now);
+                if (!editId) void writeStickyNewEventOccurredAt(now);
+              }}
+              style={styles.footerBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Use today's date and time"
+            >
+              <Text
+                style={[
+                  styles.footerText,
+                  {
+                    color: usingNow ? c.textSecondary : c.accent,
+                    fontWeight: "700",
+                  },
+                ]}
+              >
+                Today
               </Text>
             </Pressable>
           </View>
@@ -567,6 +624,7 @@ export default function NewRecordScreen() {
         onConfirm={(d) => {
           setOccurredAt(d);
           setDateOpen(false);
+          if (!editId) void writeStickyNewEventOccurredAt(d);
         }}
       />
       <TimePickerModal
@@ -576,6 +634,7 @@ export default function NewRecordScreen() {
         onConfirm={(d) => {
           setOccurredAt(d);
           setTimeOpen(false);
+          if (!editId) void writeStickyNewEventOccurredAt(d);
         }}
       />
 
