@@ -12,6 +12,8 @@ export const MORE_PATHS = [
   "/export-csv",
   "/import-csv",
   "/about-doc",
+  "/people",
+  "/person",
 ] as const;
 
 /**
@@ -27,6 +29,7 @@ export const MORE_STACK_PATHS = [
   "/export-csv",
   "/import-csv",
   "/about-doc",
+  "/people",
 ] as const;
 
 export function isMorePath(pathname: string): boolean {

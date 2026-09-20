@@ -1,5 +1,7 @@
 import { createId } from "@/lib/id";
 
+import { sqlLifestyle } from "@/lib/personRole";
+
 import { getDb } from "./client";
 import type { Account, AccountWithBalance, Totals } from "./types";
 
@@ -59,7 +61,8 @@ export async function getLifetimeTotals(): Promise<Totals> {
     `SELECT
        COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) AS expense,
        COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) AS income
-     FROM records`,
+     FROM records
+     WHERE ${sqlLifestyle()}`,
   );
 
   const accounts = await listAccounts();

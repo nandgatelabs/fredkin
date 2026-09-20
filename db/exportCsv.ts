@@ -79,17 +79,20 @@ export async function exportMoneyCsv(
       category_name: string | null;
       account_name: string;
       to_account_name: string | null;
+      person_name: string | null;
     }
   >(
     `SELECT
        r.*,
        c.name AS category_name,
        a.name AS account_name,
-       ta.name AS to_account_name
+       ta.name AS to_account_name,
+       p.name AS person_name
      FROM records r
      LEFT JOIN categories c ON c.id = r.category_id
      JOIN accounts a ON a.id = r.account_id
      LEFT JOIN accounts ta ON ta.id = r.to_account_id
+     LEFT JOIN people p ON p.id = r.person_id
      ORDER BY r.occurred_at ASC, r.id ASC`,
   );
 
@@ -110,6 +113,8 @@ export async function exportMoneyCsv(
       category: "-",
       account: account.name,
       notes: "Opening balance",
+      person: "",
+      personRole: "",
     });
   }
 
@@ -126,6 +131,8 @@ export async function exportMoneyCsv(
         record.type === "transfer" ? "-" : (record.category_name?.trim() || "-"),
       account: accountField,
       notes: record.note ?? "",
+      person: record.person_name?.trim() ?? "",
+      personRole: record.person_role ?? "",
     });
   }
 

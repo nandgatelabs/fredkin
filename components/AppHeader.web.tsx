@@ -33,6 +33,7 @@ const PANE_ICONS: Record<PaneId, keyof typeof Ionicons.glyphMap> = {
   insights: "pie-chart-outline",
   wallets: "wallet-outline",
   categories: "pricetag-outline",
+  people: "person-outline",
 };
 
 /**

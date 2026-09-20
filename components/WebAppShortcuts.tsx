@@ -15,6 +15,7 @@ const PANE_BY_DIGIT: Record<number, PaneId> = {
   2: "insights",
   3: "wallets",
   4: "categories",
+  5: "people",
 };
 
 function shiftMonthIso(iso: string, delta: number) {
@@ -27,7 +28,7 @@ function shiftMonthIso(iso: string, delta: number) {
 
 /**
  * Laptop keyboard shortcuts (web only via useKeydown).
- * ⌘/Ctrl+K or / search · M more · ? help · n new · s split · ← → period · 1–4 panes
+ * ⌘/Ctrl+K or / search · M more · ? help · n new · s split · ← → period · 1–5 panes
  */
 export function WebAppShortcuts() {
   const router = useRouter();

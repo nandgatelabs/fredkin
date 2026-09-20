@@ -10,6 +10,7 @@ Versioning follows [Semantic Versioning](https://semver.org/) — see [`docs/VER
 ### Added
 
 - Add-event composer remembers the last **new** event **date and time** (any month/year) until **Today**; month calendar + hour/minute pickers on web and native
+- **People:** person on an event with roles (With / Gift / They owe / You owe / Settled). IOUs do not count as spend or income. Web: People header pane. Native: More → People. Convert a wallet to a person. CSV `PERSON` / `PERSON_ROLE`; `.mbak` v2 includes people. Picking a person without an event type attaches a default type (overridable)
 - Native More: header menu, larger plain edge pill, edge swipe-in; Back from Settings/Data reopens the drawer
 - Event row swipe: right = Edit, left = Delete; in-app delete confirm
 - Verbose `__DEV__` logging trail (nav / UI); prod keeps milestones for Export Logs
@@ -29,6 +30,8 @@ Versioning follows [Semantic Versioning](https://semver.org/) — see [`docs/VER
 - Flow calendar renders every month in 3/6/yearly ranges
 - Decimal places capped at 0–4; All Accounts balance uses consistent money formatting
 - Android SQLite dead handle after JS reload (`useNewConnection`, `withDb` retry); export/save fallbacks when settings read fails
+- Add-event person is one row (`Name · role`); roles live in the person sheet so notes can fill the space above the keypad like the original composer
+- Person they-owe / you-owe totals follow the role (a spend tagged You owe counts as you-owe)
 
 ### Planned
 

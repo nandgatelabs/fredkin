@@ -33,6 +33,12 @@ async function migrate(db: SQLite.SQLiteDatabase) {
   // Always repair missing columns (fixes DBs stuck after a failed v2 bump).
   await ensureColumn(db, "categories", "archived", "INTEGER NOT NULL DEFAULT 0");
   await ensureColumn(db, "accounts", "archived", "INTEGER NOT NULL DEFAULT 0");
+  await ensureColumn(db, "records", "person_id", "TEXT");
+  await ensureColumn(db, "records", "person_role", "TEXT");
+  // After columns exist (CREATE TABLE IF NOT EXISTS will not add them on old DBs).
+  await db.execAsync(
+    "CREATE INDEX IF NOT EXISTS idx_records_person ON records(person_id)",
+  );
 
   const row = await db.getFirstAsync<{ version: number }>(
     "SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1",

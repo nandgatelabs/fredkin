@@ -105,6 +105,8 @@ export default function RootLayout() {
           <Stack.Screen name="help" options={webDialogOptions} />
           <Stack.Screen name="about-doc" options={webDialogOptions} />
           <Stack.Screen name="reset" options={webDialogOptions} />
+          <Stack.Screen name="people" options={webDialogOptions} />
+          <Stack.Screen name="person/[id]" options={{ animation: "slide_from_right" }} />
           <Stack.Screen name="account/[id]" options={{ animation: "slide_from_right" }} />
           <Stack.Screen name="category/[id]" options={{ animation: "slide_from_right" }} />
           <Stack.Screen

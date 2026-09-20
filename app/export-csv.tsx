@@ -81,7 +81,7 @@ export default function ExportCsvScreen() {
       >
         <Text style={styles.body}>
           Download your ledger as a worksheet CSV (TIME, TYPE, AMOUNT, CATEGORY,
-          ACCOUNT, NOTES).
+          ACCOUNT, NOTES, optional PERSON / PERSON_ROLE).
         </Text>
         <Text style={styles.body}>
           Each account’s initial (opening) balance is written as a{" "}

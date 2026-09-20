@@ -5,6 +5,7 @@ import { Swipeable } from "react-native-gesture-handler";
 
 import type { RecordListItem } from "@/db/records";
 import { formatMoney } from "@/lib/money";
+import { isLifestyleRole } from "@/lib/personRole";
 import {
   accountIcon,
   categoryColor,
@@ -28,7 +29,7 @@ export function RecordRow({ item, onPress, onEdit, onDelete }: Props) {
   const title = recordTitle(item);
   const amount = signedDisplayAmount(item);
   const amountColor =
-    item.type === "transfer"
+    item.type === "transfer" || !isLifestyleRole(item.person_role)
       ? colors.transfer
       : item.type === "income"
         ? colors.income
@@ -70,9 +71,14 @@ export function RecordRow({ item, onPress, onEdit, onDelete }: Props) {
             {item.type === "transfer"
               ? `${item.account_name} → ${item.to_account_name ?? "?"}`
               : item.account_name}
-            {notesInList && item.note.trim() ? `  “${item.note.trim()}”` : ""}
+            {item.person_name ? `  · ${item.person_name}` : ""}
           </Text>
         </View>
+        {notesInList && item.note.trim() ? (
+          <Text style={styles.note} numberOfLines={1}>
+            {item.note.trim()}
+          </Text>
+        ) : null}
       </View>
 
       <Text style={[styles.amount, { color: amountColor }]}>
@@ -179,9 +185,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    minWidth: 0,
   },
   metaText: {
     flex: 1,
+    minWidth: 0,
+    color: colors.textSecondary,
+    fontSize: 12,
+  },
+  note: {
     color: colors.textSecondary,
     fontSize: 12,
   },

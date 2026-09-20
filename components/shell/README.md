@@ -23,14 +23,14 @@ UI chrome diverges via Metro platform extensions:
 
 **Web layout** (`store/desktopView.ts`):
 
-- Panes: `events` · `insights` · `wallets` · `categories`
+- Panes: `events` · `insights` · `wallets` · `categories` · `people`
 - Modes: `single` | `split` (any left|right pair)
 - Preference persisted in `localStorage` (`fredkin.desktopShell`)
 - Below `layout.splitMinWidth` (900px), split falls back to single
 - In split: header period chip; each column has picker + maximize; details stay in-pane
 - Keyboard help: header `?` or `?` key
 
-Shared panes: `EventsPane`, `InsightsPane`, `WalletsPane`, `CategoriesPane`.
+Shared panes: `EventsPane`, `InsightsPane`, `WalletsPane`, `CategoriesPane`, `PeoplePane`.
 
 Prefer `.web.tsx` / default native files for structural differences.
 Use `Platform.OS` only for tiny style tweaks.

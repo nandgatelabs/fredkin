@@ -24,6 +24,7 @@ const ROWS: { keys: string; action: string }[] = [
   { keys: "2", action: "Insights (outside More)" },
   { keys: "3", action: "Wallets (outside More)" },
   { keys: "4", action: "Event types (outside More)" },
+  { keys: "5", action: "People (outside More)" },
   { keys: "?", action: "This shortcuts list" },
   { keys: "Esc", action: "Back (or close More / search)" },
 ];

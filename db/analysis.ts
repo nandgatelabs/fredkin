@@ -1,3 +1,5 @@
+import { sqlLifestyle } from "@/lib/personRole";
+
 import { getDb } from "./client";
 
 function toIsoBound(d: Date) {
@@ -55,6 +57,7 @@ export async function getCategoryBreakdown(
      WHERE r.type = ?
        AND r.occurred_at >= ?
        AND r.occurred_at <= ?
+       AND ${sqlLifestyle("r")}
      GROUP BY r.category_id
      ORDER BY amount DESC`,
     type,
@@ -87,6 +90,7 @@ export async function getDailyTotals(
      WHERE r.type = ?
        AND r.occurred_at >= ?
        AND r.occurred_at <= ?
+       AND ${sqlLifestyle("r")}
      GROUP BY substr(r.occurred_at, 1, 10)
      ORDER BY day ASC`,
     type,
@@ -118,11 +122,13 @@ export async function getAccountPeriodBreakdown(
          SELECT SUM(r.amount) FROM records r
          WHERE r.type = 'expense' AND r.account_id = a.id
            AND r.occurred_at >= ? AND r.occurred_at <= ?
+           AND ${sqlLifestyle("r")}
        ), 0) AS expense,
        COALESCE((
          SELECT SUM(r.amount) FROM records r
          WHERE r.type = 'income' AND r.account_id = a.id
            AND r.occurred_at >= ? AND r.occurred_at <= ?
+           AND ${sqlLifestyle("r")}
        ), 0) AS income
      FROM accounts a
      WHERE a.archived = 0

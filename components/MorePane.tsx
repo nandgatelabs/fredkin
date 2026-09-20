@@ -36,7 +36,6 @@ type Props = {
 
 type NavItem = {
   label: string;
-  description?: string;
   icon: keyof typeof Ionicons.glyphMap;
   href: string;
 };
@@ -44,15 +43,18 @@ type NavItem = {
 const MANAGE: NavItem[] = [
   {
     label: "Wallets",
-    description: "Balances and accounts",
     icon: "wallet-outline",
     href: "/accounts",
   },
   {
     label: "Event Type",
-    description: "Spend and income types",
     icon: "pricetag-outline",
     href: "/categories",
+  },
+  {
+    label: "People",
+    icon: "people-outline",
+    href: "/people",
   },
 ];
 
@@ -291,10 +293,9 @@ function MoreRow({ item, onPress }: { item: NavItem; onPress: () => void }) {
     >
       <Ionicons name={item.icon} size={20} color={colors.accent} />
       <View style={styles.itemText}>
-        <Text style={styles.itemLabel}>{item.label}</Text>
-        {item.description ? (
-          <Text style={styles.itemDesc}>{item.description}</Text>
-        ) : null}
+        <Text style={styles.itemLabel} numberOfLines={1}>
+          {item.label}
+        </Text>
       </View>
       <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
     </Pressable>
@@ -384,14 +385,10 @@ const styles = StyleSheet.create({
   itemPressed: {
     backgroundColor: colors.accentSoft,
   },
-  itemText: { flex: 1, gap: 2 },
+  itemText: { flex: 1, minWidth: 0 },
   itemLabel: {
     color: colors.text,
     fontSize: 16,
     fontWeight: "600",
-  },
-  itemDesc: {
-    color: colors.textSecondary,
-    fontSize: 12,
   },
 });

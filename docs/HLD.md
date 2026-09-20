@@ -98,6 +98,7 @@ Strict dependency direction: **UI → application → domain → persistence**. 
 | `analysis` | Overview / Flow / Account analysis VMs | `getAnalysis(mode, period)` |
 | `budgets` | Monthly limits vs spent | `setBudget()`, `listBudgets(month)` |
 | `accounts` | Account CRUD + balances | `createAccount()`, `getBalances()` |
+| `people` | Person CRUD; optional on records | `createPerson()`, `convertAccountToPerson()` |
 | `categories` | Income/expense taxonomy + icons | `createCategory()`, `listByType()` |
 | `settings` | Preferences | `getSetting()`, `setSetting()` |
 | `portability` | CSV, `.mbak`, wipe | `exportCsv()`, `backup()`, `restore()`, `reset()` |
@@ -130,7 +131,8 @@ Strict dependency direction: **UI → application → domain → persistence**. 
 |--------|---------------|------------|
 | Account | 1 → N Record (as account or to_account) | Name unique; balance = opening + Σ effects |
 | Category | 1 → N Record; 1 → N Budget | `type ∈ income\|expense`; transfers have no category |
-| Record | Account; optional Category; optional to_account | `amount > 0`; transfer requires `to_account ≠ account` |
+| Record | Account; optional Category; optional to_account; optional Person | `amount > 0`; transfer requires `to_account ≠ account` |
+| Person | 0–1 per Record | Optional; role `with\|gift\|they_owe\|you_owe\|settled`. IOU roles excluded from SPEND/INCOME |
 | Budget | Category × (year, month) | One limit per category per month |
 | Setting | key/value | viewMode, carryOver, currency, decimals, lastNewEventOccurredAt, … |
 
@@ -224,7 +226,7 @@ settings(
 
 ### CSV (export / import)
 
-Columns: `TIME`, `TYPE`, `AMOUNT`, `CATEGORY`, `ACCOUNT`, `NOTES`
+Columns: `TIME`, `TYPE`, `AMOUNT`, `CATEGORY`, `ACCOUNT`, `NOTES`, `PERSON`, `PERSON_ROLE`
 
 | TYPE marker | Meaning |
 |-------------|---------|
@@ -240,7 +242,8 @@ Not a full backup (budgets/settings still need `.mbak`). Opening rows make accou
 ### Backup (`.mbak`)
 
 - Versioned JSON.
-- Includes: records, accounts, categories, budgets, settings.
+- Includes: records, accounts, categories, people, budgets, settings.
+- Version 2 JSON (version 1 restore still works; people empty).
 - Filename pattern: `fredkin-backup_DD_MM_YY_XXX.mbak`.
 - Same download / Share path as CSV export.
 - Real user exports live under gitignored `private/` and must never be committed.

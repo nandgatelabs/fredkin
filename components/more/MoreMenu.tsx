@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { usePathname, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -13,12 +13,24 @@ import { colors } from "@/theme";
 
 export type MoreNavItem = {
   label: string;
-  description?: string;
   icon: keyof typeof Ionicons.glyphMap;
   href: string;
   /** Digit shortcut while More is open (web). */
   shortcut: string;
 };
+
+/** People is a header pane on web. */
+export const MORE_MANAGE_ITEMS: MoreNavItem[] =
+  Platform.OS === "web"
+    ? []
+    : [
+        {
+          label: "People",
+          icon: "people-outline",
+          href: "/people",
+          shortcut: "p",
+        },
+      ];
 
 export const MORE_APP_ITEMS: MoreNavItem[] = [
   {
@@ -71,7 +83,9 @@ export function MoreMenu({ handleEscape = true }: Props) {
           closeWebDialog(router);
           return;
         }
-        const item = MORE_APP_ITEMS.find((row) => row.shortcut === event.key);
+        const item = [...MORE_MANAGE_ITEMS, ...MORE_APP_ITEMS].find(
+          (row) => row.shortcut === event.key,
+        );
         if (item) {
           event.preventDefault();
           log.debug("shortcut more item", { key: event.key, href: item.href });
@@ -108,7 +122,49 @@ export function MoreMenu({ handleEscape = true }: Props) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.section}>App</Text>
+        {MORE_MANAGE_ITEMS.length > 0 ? (
+          <>
+            <Text style={styles.section}>Manage</Text>
+            {MORE_MANAGE_ITEMS.map((item) => (
+              <Pressable
+                key={item.href}
+                accessibilityRole="button"
+                accessibilityLabel={item.label}
+                onPress={() => {
+                  log.debug("ui more navigate", { href: item.href });
+                  router.push(item.href as never);
+                }}
+                {...webFocusableProps}
+                style={({ pressed }) => [
+                  styles.item,
+                  webClickable,
+                  pressed && styles.itemPressed,
+                ]}
+              >
+                <Ionicons name={item.icon} size={20} color={colors.accent} />
+                <View style={styles.itemText}>
+                  <Text style={styles.itemLabel} numberOfLines={1}>
+                    {item.label}
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={colors.textSecondary}
+                />
+              </Pressable>
+            ))}
+          </>
+        ) : null}
+
+        <Text
+          style={[
+            styles.section,
+            MORE_MANAGE_ITEMS.length > 0 && styles.sectionSpaced,
+          ]}
+        >
+          App
+        </Text>
         {MORE_APP_ITEMS.map((item) => (
           <Pressable
             key={item.href}
@@ -225,6 +281,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     marginLeft: 10,
   },
+  sectionSpaced: {
+    marginTop: 16,
+  },
   item: {
     flexDirection: "row",
     alignItems: "center",
@@ -236,7 +295,7 @@ const styles = StyleSheet.create({
   itemPressed: {
     backgroundColor: colors.accentSoft,
   },
-  itemText: { flex: 1, gap: 2 },
+  itemText: { flex: 1, minWidth: 0 },
   itemLabel: {
     color: colors.text,
     fontSize: 16,
