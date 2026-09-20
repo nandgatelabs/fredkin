@@ -82,6 +82,7 @@ Attribution line: **Fredkin by NandGateLabs**.
 - **Defaults:** account and category start blank (placeholder “Account” / “Category”); notes empty (“Add notes”); amount `0`
 - Custom calculator keypad: `0–9`, `.`, `+ − × ÷ =`, backspace
 - Footer: tappable date + time → calendar / clock modals
+- **New events:** reuse the last saved **date and time** (settings `lastNewEventOccurredAt`) with no month/year/age cutoff. Edit does not read/write that memory. Footer is **date · time · Today** (Today = now). Date opens a **month calendar** (tap a day; chevrons / year title to jump); time is hour grid + minutes.
 - Validation: amount > 0; **account required** (transfer: both From and To, and From ≠ To); **category optional** for income/expense
 - Save: write record + update balances in one transaction
 
@@ -279,7 +280,7 @@ Personal worksheets for migration testing stay under `private/` only.
 ## 13. Acceptance checklist
 
 - [ ] Five tabs + drawer + search + FAB add flow  
-- [ ] Three record types with calculator and date/time  
+- [ ] Three record types with calculator, month calendar date, and time; new events reuse last saved date and time until Today  
 - [ ] Period aggregation Daily → Yearly (incl. 3/6) + carry-over toggle  
 - [ ] No paywall / upgrade UI anywhere  
 - [ ] Analysis: overview donuts, flow lines, day calendar, account bars  

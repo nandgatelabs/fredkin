@@ -10,6 +10,7 @@ This repo is **Fredkin** ([nandgatelabs/fredkin](https://github.com/nandgatelabs
 | Feature blueprint | [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) | Screen-by-screen UI/behavior, acceptance checklist |
 | Changelog | [`CHANGELOG.md`](CHANGELOG.md) | Note user-facing changes under `[Unreleased]` |
 | Roadmap | [`docs/ROADMAP.md`](docs/ROADMAP.md) | What’s deferred vs next (do not invent scope) |
+| Ledger backlog | [`docs/pending/README.md`](docs/pending/README.md) | Specs for sticky date, wallet check, occasions, people |
 | Versioning / release | [`docs/VERSIONING.md`](docs/VERSIONING.md), [`docs/RELEASE.md`](docs/RELEASE.md) | Bumps, tags, GitHub Releases (maintainer) |
 
 Do **not** invent paywalls, premium locks, or cloud sync unless a human explicitly asks.

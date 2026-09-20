@@ -132,7 +132,7 @@ Strict dependency direction: **UI → application → domain → persistence**. 
 | Category | 1 → N Record; 1 → N Budget | `type ∈ income\|expense`; transfers have no category |
 | Record | Account; optional Category; optional to_account | `amount > 0`; transfer requires `to_account ≠ account` |
 | Budget | Category × (year, month) | One limit per category per month |
-| Setting | key/value | viewMode, carryOver, currency, decimals, … |
+| Setting | key/value | viewMode, carryOver, currency, decimals, lastNewEventOccurredAt, … |
 
 ### Suggested SQLite tables
 
@@ -209,7 +209,7 @@ settings(
 
 | Flow | Steps |
 |------|-------|
-| Add expense | FAB → composer → account/category → keypad → date/time → SAVE → txn → balances → Records |
+| Add expense | FAB → composer (date+time from last new event until Today) → account/category → keypad → SAVE → txn → balances → Records |
 | Transfer | Composer TRANSFER → From/To → amount → SAVE → dual balance; list shows blue amount |
 | Change period | Chevron or Display options → period store → re-query Records/Analysis/Budgets |
 | Analysis | Select mode → SQL aggregates → chart + list VM → render |

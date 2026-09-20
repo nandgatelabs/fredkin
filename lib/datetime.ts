@@ -34,6 +34,16 @@ export function toIsoLocal(d: Date): string {
   );
 }
 
+/** Parse `YYYY-MM-DDTHH:mm:ss` as local wall time (no UTC shift). */
+export function parseLocalIso(iso: string): Date {
+  const trimmed = iso.trim().replace(/Z$/i, "");
+  const [datePart, rest = "00:00:00"] = trimmed.split("T");
+  const [y, month, day] = datePart.split("-").map(Number);
+  const timePart = rest.split(/[+-]/)[0] ?? "00:00:00";
+  const [hh, mm, ss] = timePart.split(":").map(Number);
+  return new Date(y, (month ?? 1) - 1, day ?? 1, hh || 0, mm || 0, ss || 0);
+}
+
 export function setDatePart(base: Date, year: number, monthIndex: number, day: number): Date {
   const next = new Date(base);
   next.setFullYear(year, monthIndex, day);

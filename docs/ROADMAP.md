@@ -36,6 +36,17 @@ Living plan after **v1.0.0**. Priorities change when a maintainer schedules work
 | Publish GitHub Release v1.0.0 | Follow [`RELEASE.md`](./RELEASE.md); attach Linux artifacts |
 | Play Store AAB submit | Optional; needs Play Console |
 
+## Ledger backlog
+
+Detailed specs: [`docs/pending/README.md`](./pending/README.md).
+
+| Theme | Notes |
+|-------|--------|
+| Sticky event date | Shipped — composer remembers last new-event date |
+| Wallet check + adjustment | Pending — reconcile wallet vs real cash/bank without fake spend/income |
+| Occasions | Pending — group related events (e.g. outing) |
+| People | Pending — gift vs IOU, not extra wallets |
+
 ## Later / out of band
 
 | Theme | Notes |
@@ -54,5 +65,6 @@ Living plan after **v1.0.0**. Priorities change when a maintainer schedules work
 
 - Changelog = what shipped ([`CHANGELOG.md`](../CHANGELOG.md))
 - Roadmap = what’s next (this file)
+- Ledger ideas = [`docs/pending/README.md`](./pending/README.md)
 - HLD §13 = delivery history + deferred issue table
 - New work → feature branch → PR → release when we cut a version ([`RELEASE.md`](./RELEASE.md))
