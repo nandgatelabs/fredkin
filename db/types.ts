@@ -1,5 +1,15 @@
+import type { PersonRole } from "@/lib/personRole";
+
 export type CategoryType = "income" | "expense";
 export type RecordType = "expense" | "income" | "transfer";
+
+export type Person = {
+  id: string;
+  name: string;
+  note: string;
+  archived: number;
+  converted_from_account_id: string | null;
+};
 
 export type Account = {
   id: string;
@@ -33,6 +43,8 @@ export type MoneyRecord = {
   to_account_id: string | null;
   note: string;
   occurred_at: string;
+  person_id: string | null;
+  person_role: PersonRole | null;
 };
 
 export type Totals = {

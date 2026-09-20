@@ -1,4 +1,5 @@
 import { createId } from "@/lib/id";
+import { sqlLifestyle } from "@/lib/personRole";
 
 import { getDb } from "./client";
 
@@ -52,6 +53,7 @@ export async function listBudgetsForMonth(
            AND r.category_id = b.category_id
            AND r.occurred_at >= ?
            AND r.occurred_at <= ?
+           AND ${sqlLifestyle("r")}
        ), 0) AS spent
      FROM budgets b
      JOIN categories c ON c.id = b.category_id

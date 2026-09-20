@@ -15,6 +15,7 @@ import {
   categoryIcon,
 } from "@/lib/icons";
 import { formatMoney } from "@/lib/money";
+import { personRoleLabel } from "@/lib/personRole";
 import { parseOccurredAt, signedDisplayAmount } from "@/lib/recordsUi";
 import { webClickable } from "@/lib/web";
 import { layout } from "@/theme/layout";
@@ -140,6 +141,18 @@ export function RecordDetailModal({ record, onClose, onEdit, onDelete }: Props) 
               <Text style={[styles.note, { color: c.textSecondary }]}>
                 {record.note.trim()}
               </Text>
+            ) : null}
+            {record.person_name ? (
+              <DetailRow
+                label="Person"
+                icon="person-outline"
+                value={`${record.person_name}${
+                  record.person_role ? ` · ${personRoleLabel(record.person_role)}` : ""
+                }`}
+                accent={c.accent}
+                accentMuted={c.accentMuted}
+                border={c.border}
+              />
             ) : null}
           </View>
         </Pressable>

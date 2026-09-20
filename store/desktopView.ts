@@ -1,13 +1,14 @@
 import { create } from "zustand";
 
 /** Surfaces that can fill a desktop pane. */
-export type PaneId = "events" | "insights" | "wallets" | "categories";
+export type PaneId = "events" | "insights" | "wallets" | "categories" | "people";
 
 export const PANE_LABELS: Record<PaneId, string> = {
   events: "Events",
   insights: "Insights",
   wallets: "Wallets",
   categories: "Types",
+  people: "People",
 };
 
 export const ALL_PANES: PaneId[] = [
@@ -15,6 +16,7 @@ export const ALL_PANES: PaneId[] = [
   "insights",
   "wallets",
   "categories",
+  "people",
 ];
 
 const STORAGE_KEY = "fredkin.desktopShell";
@@ -34,7 +36,8 @@ function isPaneId(v: unknown): v is PaneId {
     v === "events" ||
     v === "insights" ||
     v === "wallets" ||
-    v === "categories"
+    v === "categories" ||
+    v === "people"
   );
 }
 

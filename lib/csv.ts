@@ -7,6 +7,8 @@ export type CsvRow = {
   category: string;
   account: string;
   notes: string;
+  person: string;
+  personRole: string;
 };
 
 /** Fredkin extension: account opening balance (not a ledger record). */
@@ -27,11 +29,13 @@ export function formatCsvAmount(amount: number): string {
 }
 
 export function serializeMoneyCsv(rows: CsvRow[]): string {
-  const header = ["TIME", "TYPE", "AMOUNT", "CATEGORY", "ACCOUNT", "NOTES"]
+  const header = ["TIME", "TYPE", "AMOUNT", "CATEGORY", "ACCOUNT", "NOTES", "PERSON", "PERSON_ROLE"]
     .map(csvEscape)
     .join(",");
   const lines = rows.map((r) =>
-    [r.time, r.type, r.amount, r.category, r.account, r.notes].map(csvEscape).join(","),
+    [r.time, r.type, r.amount, r.category, r.account, r.notes, r.person, r.personRole]
+      .map(csvEscape)
+      .join(","),
   );
   return [header, ...lines].join("\n") + "\n";
 }
@@ -110,8 +114,17 @@ export function parseMoneyCsv(text: string): CsvRow[] {
     category: header.indexOf("CATEGORY"),
     account: header.indexOf("ACCOUNT"),
     notes: header.indexOf("NOTES"),
+    person: header.indexOf("PERSON"),
+    personRole: header.indexOf("PERSON_ROLE"),
   };
-  if (Object.values(idx).some((v) => v < 0)) {
+  if (
+    idx.time < 0 ||
+    idx.type < 0 ||
+    idx.amount < 0 ||
+    idx.category < 0 ||
+    idx.account < 0 ||
+    idx.notes < 0
+  ) {
     throw new Error(
       "CSV must have columns: TIME, TYPE, AMOUNT, CATEGORY, ACCOUNT, NOTES",
     );
@@ -128,6 +141,8 @@ export function parseMoneyCsv(text: string): CsvRow[] {
       category: (cells[idx.category] ?? "").trim(),
       account: (cells[idx.account] ?? "").trim(),
       notes: (cells[idx.notes] ?? "").trim(),
+      person: idx.person >= 0 ? (cells[idx.person] ?? "").trim() : "",
+      personRole: idx.personRole >= 0 ? (cells[idx.personRole] ?? "").trim() : "",
     });
   }
   return out;

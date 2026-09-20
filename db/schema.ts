@@ -1,6 +1,6 @@
 /** SQL schema for Fredkin (HLD §6). */
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const CREATE_TABLES_SQL = `
 PRAGMA foreign_keys = ON;
@@ -29,6 +29,14 @@ CREATE TABLE IF NOT EXISTS categories (
   archived INTEGER NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS people (
+  id TEXT PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL UNIQUE,
+  note TEXT NOT NULL DEFAULT '',
+  archived INTEGER NOT NULL DEFAULT 0,
+  converted_from_account_id TEXT
+);
+
 CREATE TABLE IF NOT EXISTS records (
   id TEXT PRIMARY KEY NOT NULL,
   type TEXT NOT NULL CHECK(type IN ('expense', 'income', 'transfer')),
@@ -37,7 +45,9 @@ CREATE TABLE IF NOT EXISTS records (
   account_id TEXT NOT NULL REFERENCES accounts(id),
   to_account_id TEXT REFERENCES accounts(id),
   note TEXT NOT NULL DEFAULT '',
-  occurred_at TEXT NOT NULL
+  occurred_at TEXT NOT NULL,
+  person_id TEXT REFERENCES people(id),
+  person_role TEXT
 );
 
 CREATE TABLE IF NOT EXISTS budgets (

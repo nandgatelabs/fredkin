@@ -18,10 +18,13 @@ import { CategoryEditorModal } from "@/components/CategoryEditorModal";
 import { CategoryPickerModal } from "@/components/CategoryPickerModal";
 import { DatePickerModal, TimePickerModal } from "@/components/DateTimePickers";
 import { InfoModal } from "@/components/InfoModal";
+import { PersonEditorModal } from "@/components/PersonEditorModal";
+import { PersonPickerModal } from "@/components/PersonPickerModal";
 import { listAccounts } from "@/db/accounts";
 import { createCategory, listCategories } from "@/db/categories";
+import { createPerson, listPeople } from "@/db/people";
 import { createRecord, getRecord, updateRecord } from "@/db/records";
-import type { AccountWithBalance, Category, RecordType } from "@/db/types";
+import type { AccountWithBalance, Category, Person, RecordType } from "@/db/types";
 import { parseOccurredAt } from "@/lib/recordsUi";
 import { useKeydown } from "@/hooks/useKeydown";
 import { useThemeColors } from "@/hooks/useThemeColors";
@@ -41,6 +44,14 @@ import {
 } from "@/lib/datetime";
 import { accountIcon, categoryColor, categoryIcon } from "@/lib/icons";
 import { log } from "@/lib/logger";
+import {
+  defaultRoleForCategory,
+  isLifestyleRole,
+  pickDefaultCategory,
+  PERSON_ROLES,
+  personRoleLabel,
+  type PersonRole,
+} from "@/lib/personRole";
 import {
   isSameDateAndMinute,
   readStickyNewEventOccurredAt,
@@ -70,6 +81,9 @@ export default function NewRecordScreen() {
   const [account, setAccount] = useState<AccountWithBalance | null>(null);
   const [toAccount, setToAccount] = useState<AccountWithBalance | null>(null);
   const [category, setCategory] = useState<Category | null>(null);
+  const [person, setPerson] = useState<Person | null>(null);
+  const [personRole, setPersonRole] = useState<PersonRole>("with");
+  const [people, setPeople] = useState<Person[]>([]);
   const [note, setNote] = useState("");
   const [expression, setExpression] = useState("0");
   const [occurredAt, setOccurredAt] = useState(() => new Date());
@@ -84,22 +98,39 @@ export default function NewRecordScreen() {
   const [categoryEditorOpen, setCategoryEditorOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [timeOpen, setTimeOpen] = useState(false);
+  const [personPickerOpen, setPersonPickerOpen] = useState(false);
+  const [personEditorOpen, setPersonEditorOpen] = useState(false);
+  const autoPersonCategory = useRef(false);
+  const personRef = useRef<Person | null>(null);
+  const personRoleRef = useRef<PersonRole>("with");
+  personRef.current = person;
+  personRoleRef.current = personRole;
 
   const categoryType = type === "income" ? "income" : "expense";
 
   const reloadMeta = useCallback(async () => {
-    const [accs, cats] = await Promise.all([
+    const [accs, cats, pers] = await Promise.all([
       listAccounts(),
       type === "transfer" ? Promise.resolve([] as Category[]) : listCategories(categoryType),
+      listPeople(),
     ]);
     setAccounts(accs);
     setCategories(cats);
+    setPeople(pers);
     // Keep selections only if still valid — never auto-pick account/category.
     setAccount((prev) => (prev && accs.some((a) => a.id === prev.id) ? prev : null));
     setToAccount((prev) => (prev && accs.some((a) => a.id === prev.id) ? prev : null));
+    setPerson((prev) => (prev && pers.some((p) => p.id === prev.id) ? prev : null));
     setCategory((prev) => {
       if (type === "transfer") return null;
       if (prev && cats.some((c) => c.id === prev.id)) return prev;
+      if (autoPersonCategory.current && personRef.current) {
+        return pickDefaultCategory(
+          cats,
+          personRoleRef.current,
+          type === "income" ? "income" : "expense",
+        );
+      }
       return null;
     });
   }, [categoryType, type]);
@@ -141,6 +172,12 @@ export default function NewRecordScreen() {
           ? (cats.find((c) => c.id === existing.category_id) ?? null)
           : null,
       );
+      const pers = await listPeople();
+      setPeople(pers);
+      setPerson(
+        existing.person_id ? (pers.find((p) => p.id === existing.person_id) ?? null) : null,
+      );
+      setPersonRole(existing.person_role ?? "with");
       setHydratedEdit(true);
     })()
       .catch((e) => {
@@ -163,6 +200,34 @@ export default function NewRecordScreen() {
     setType(next);
     setCategory(null);
     setError(null);
+    if (next === "transfer") {
+      autoPersonCategory.current = false;
+      if (!isLifestyleRole(personRole)) setPersonRole("with");
+    }
+  }
+
+  function attachPerson(next: Person | null) {
+    setPerson(next);
+    if (!next) {
+      autoPersonCategory.current = false;
+      return;
+    }
+    const role = defaultRoleForCategory(category?.name);
+    setPersonRole(role);
+    if (!category && type !== "transfer") {
+      const picked = pickDefaultCategory(filteredCategories, role, type);
+      if (picked) {
+        setCategory(picked);
+        autoPersonCategory.current = true;
+      }
+    }
+  }
+
+  function handleRoleChange(role: PersonRole) {
+    setPersonRole(role);
+    if (!autoPersonCategory.current || type === "transfer") return;
+    const picked = pickDefaultCategory(filteredCategories, role, type);
+    if (picked) setCategory(picked);
   }
 
   const handleSave = useCallback(async () => {
@@ -199,6 +264,8 @@ export default function NewRecordScreen() {
         category_id: type === "transfer" ? null : (category?.id ?? null),
         note,
         occurred_at: toIsoLocal(occurredAt),
+        person_id: person?.id ?? null,
+        person_role: person ? personRole : null,
       };
       if (editId) await updateRecord(editId, payload);
       else {
@@ -229,6 +296,8 @@ export default function NewRecordScreen() {
     toAccount,
     type,
     note,
+    person?.id,
+    personRole,
   ]);
 
   const overlayOpen =
@@ -236,7 +305,9 @@ export default function NewRecordScreen() {
     categoryPickerOpen ||
     categoryEditorOpen ||
     dateOpen ||
-    timeOpen;
+    timeOpen ||
+    personPickerOpen ||
+    personEditorOpen;
 
   useKeydown(
     !overlayOpen,
@@ -495,21 +566,43 @@ export default function NewRecordScreen() {
             )}
           </View>
 
-          <TextInput
-            style={[
-              styles.notes,
-              {
-                borderColor: c.border,
-                color: c.text,
-                backgroundColor: c.inputBg,
-              },
-            ]}
-            placeholder="Add notes"
-            placeholderTextColor={c.textSecondary}
-            value={note}
-            onChangeText={setNote}
-            multiline
-          />
+          <View style={styles.pickRow}>
+            <PickerField onPress={() => setPersonPickerOpen(true)} colors={c}>
+              {person ? (
+                <>
+                  <Ionicons name="person-outline" size={18} color={c.accent} />
+                  <Text style={[styles.pickValue, { color: c.accent }]} numberOfLines={1}>
+                    {`${person.name} · ${personRoleLabel(personRole)}`}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Ionicons name="person-outline" size={18} color={c.accentMuted} />
+                  <Text style={[styles.pickPlaceholder, { color: c.textSecondary }]}>
+                    Person
+                  </Text>
+                </>
+              )}
+            </PickerField>
+          </View>
+
+          <View style={styles.notesWrap}>
+            <TextInput
+              style={[
+                styles.notes,
+                {
+                  borderColor: c.border,
+                  color: c.text,
+                  backgroundColor: c.inputBg,
+                },
+              ]}
+              placeholder="Add notes"
+              placeholderTextColor={c.textSecondary}
+              value={note}
+              onChangeText={setNote}
+              multiline
+            />
+          </View>
 
           <View style={styles.keypadBlock}>
             <CalculatorKeypad
@@ -595,6 +688,7 @@ export default function NewRecordScreen() {
         selectedId={category?.id}
         onClose={() => setCategoryPickerOpen(false)}
         onSelect={(c) => {
+          autoPersonCategory.current = false;
           setCategory(c);
           setCategoryPickerOpen(false);
         }}
@@ -613,7 +707,41 @@ export default function NewRecordScreen() {
           const created = await createCategory(values);
           await reloadMeta();
           setCategory(created);
+          autoPersonCategory.current = false;
           setCategoryEditorOpen(false);
+        }}
+      />
+
+      <PersonPickerModal
+        visible={personPickerOpen}
+        people={people}
+        selectedId={person?.id}
+        personRole={personRole}
+        roles={
+          type === "transfer"
+            ? PERSON_ROLES.filter((r) => isLifestyleRole(r))
+            : [...PERSON_ROLES]
+        }
+        onRoleChange={handleRoleChange}
+        onClose={() => setPersonPickerOpen(false)}
+        onSelect={(p) => {
+          attachPerson(p);
+          if (!p) setPersonPickerOpen(false);
+        }}
+        onAddNew={() => {
+          setPersonPickerOpen(false);
+          setPersonEditorOpen(true);
+        }}
+      />
+      <PersonEditorModal
+        visible={personEditorOpen}
+        mode="create"
+        onCancel={() => setPersonEditorOpen(false)}
+        onSave={async (values) => {
+          const created = await createPerson(values);
+          await reloadMeta();
+          attachPerson(created);
+          setPersonEditorOpen(false);
         }}
       />
 
@@ -818,6 +946,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  notesWrap: {
+    flex: 1,
+    minHeight: 72,
+    marginBottom: 8,
+  },
   notes: {
     flex: 1,
     borderWidth: 1,
@@ -825,9 +958,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 15,
-    minHeight: 72,
     textAlignVertical: "top",
-    marginBottom: 8,
   },
   keypadBlock: {
     flexShrink: 0,

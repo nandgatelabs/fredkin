@@ -8,6 +8,7 @@ import {
 import { toIsoLocal } from "@/lib/datetime";
 import { createId } from "@/lib/id";
 import { analysisColor } from "@/lib/analysisPalette";
+import { parsePersonRole } from "@/lib/personRole";
 
 import type { SQLiteDatabase } from "expo-sqlite";
 
@@ -32,6 +33,7 @@ export type ImportResult = {
   skippedOutOfRange: number;
   accountsCreated: number;
   categoriesCreated: number;
+  peopleCreated: number;
   errors: string[];
 };
 
@@ -95,11 +97,13 @@ export async function importMoneyCsv(
       skippedOutOfRange: 0,
       accountsCreated: 0,
       categoriesCreated: 0,
+      peopleCreated: 0,
       errors: [],
     };
 
     const accountIds = new Map<string, string>();
     const categoryIds = new Map<string, string>(); // key: type|name
+    const personIds = new Map<string, string>();
 
     async function ensureAccount(name: string): Promise<string> {
       const key = name.trim();
@@ -172,15 +176,43 @@ export async function importMoneyCsv(
       return id;
     }
 
+    async function ensurePerson(name: string): Promise<string> {
+      const key = name.trim();
+      const cached = personIds.get(key.toLowerCase());
+      if (cached) return cached;
+
+      const existing = await db.getFirstAsync<{ id: string }>(
+        "SELECT id FROM people WHERE name = ? COLLATE NOCASE LIMIT 1",
+        key,
+      );
+      if (existing) {
+        personIds.set(key.toLowerCase(), existing.id);
+        return existing.id;
+      }
+
+      const id = createId("per");
+      await db.runAsync(
+        `INSERT INTO people (id, name, note, archived, converted_from_account_id)
+         VALUES (?, ?, '', 0, NULL)`,
+        id,
+        key,
+      );
+      personIds.set(key.toLowerCase(), id);
+      result.peopleCreated += 1;
+      return id;
+    }
+
     await db.withTransactionAsync(async () => {
       if (mode === "replace") {
         // Full override: ledger matches the CSV only (settings kept).
         await db.runAsync("DELETE FROM budgets");
         await db.runAsync("DELETE FROM records");
+        await db.runAsync("DELETE FROM people");
         await db.runAsync("DELETE FROM categories");
         await db.runAsync("DELETE FROM accounts");
         accountIds.clear();
         categoryIds.clear();
+        personIds.clear();
       }
 
       for (let i = 0; i < rows.length; i++) {
@@ -196,7 +228,7 @@ export async function importMoneyCsv(
               result.skippedOutOfRange += 1;
               continue;
             }
-            await importOneRow(db, row, ensureAccount, ensureCategory);
+            await importOneRow(db, row, ensureAccount, ensureCategory, ensurePerson);
             result.imported += 1;
           }
         } catch (e) {
@@ -238,6 +270,7 @@ async function importOneRow(
   row: CsvRow,
   ensureAccount: (name: string) => Promise<string>,
   ensureCategory: (name: string, type: "income" | "expense") => Promise<string>,
+  ensurePerson: (name: string) => Promise<string>,
 ) {
   const type = mapType(row.type);
   if (!type) throw new Error(`Unknown TYPE "${row.type}"`);
@@ -250,6 +283,12 @@ async function importOneRow(
   const occurred = toIsoLocal(parseCsvTime(row.time));
   const note = row.notes ?? "";
   const id = createId("rec");
+  let personId: string | null = null;
+  let personRole: string | null = null;
+  if (row.person.trim()) {
+    personId = await ensurePerson(row.person);
+    personRole = parsePersonRole(row.personRole) ?? "with";
+  }
 
   if (type === "transfer") {
     const { from, to } = parseTransferAccounts(row.account);
@@ -260,14 +299,16 @@ async function importOneRow(
     }
     await db.runAsync(
       `INSERT INTO records
-         (id, type, amount, category_id, account_id, to_account_id, note, occurred_at)
-       VALUES (?, 'transfer', ?, NULL, ?, ?, ?, ?)`,
+         (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role)
+       VALUES (?, 'transfer', ?, NULL, ?, ?, ?, ?, ?, ?)`,
       id,
       amount,
       accountId,
       toAccountId,
       note,
       occurred,
+      personId,
+      personRole === "with" || personRole === "gift" ? personRole : personId ? "with" : null,
     );
     return;
   }
@@ -280,9 +321,9 @@ async function importOneRow(
   }
 
   await db.runAsync(
-    `INSERT INTO records
-       (id, type, amount, category_id, account_id, to_account_id, note, occurred_at)
-     VALUES (?, ?, ?, ?, ?, NULL, ?, ?)`,
+      `INSERT INTO records
+       (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role)
+     VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?)`,
     id,
     type,
     amount,
@@ -290,5 +331,7 @@ async function importOneRow(
     accountId,
     note,
     occurred,
+    personId,
+    personRole,
   );
 }

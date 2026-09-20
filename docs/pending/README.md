@@ -9,7 +9,7 @@ Do not treat this as a rewrite of wallets into a double-entry graph.
 | Sticky event date | **Shipped (this slice)** | Composer remembers last **new** event date |
 | Wallet check + adjustment | Pending | Kill fake “balance discrepancy” income/spend |
 | Occasions | Pending | Group related events (outing / trip) |
-| People (gift vs claim) | Pending | Counterparties; IOUs are not spend |
+| People (gift vs claim) | **Shipped (this slice)** | Optional person + roles; wallet convert |
 
 ---
 
@@ -64,7 +64,7 @@ Do not treat this as a rewrite of wallets into a double-entry graph.
 
 - People ≠ wallets. Wallets are where **your** money sits.
 - Optional people on an event, with a **role**: *with / gift* (still spend or income) vs *they owe you / you owe them* (claim; excluded from SPEND like a transfer) vs *settled*.
-- Person screen: **spent on them** vs **open claims** as two stacks, never one blended number.
+- Person screen: **spent on them** vs **open claims** as two stacks, never one blended number. They-owe / you-owe follow the role (spend or income); settled income pays they-owe, settled spend pays you-owe.
 - Default role from category (Gift → gift, Loan → they owe you) with a one-tap override.
 - Shared lunch + person *with* is not a loan unless you mark a claim.
 

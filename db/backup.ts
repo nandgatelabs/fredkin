@@ -1,12 +1,13 @@
 import { getDb } from "./client";
 import { seedDefaultsIfEmpty } from "./seed";
-import type { Account, Budget, Category, MoneyRecord } from "./types";
+import type { Account, Budget, Category, MoneyRecord, Person } from "./types";
 
 export type MoneyBackup = {
-  version: 1;
+  version: 1 | 2;
   exportedAt: string;
   accounts: Account[];
   categories: Category[];
+  people?: Person[];
   records: MoneyRecord[];
   budgets: Budget[];
   settings: { key: string; value: string }[];
@@ -14,18 +15,20 @@ export type MoneyBackup = {
 
 export async function createBackupPayload(): Promise<MoneyBackup> {
   const db = await getDb();
-  const [accounts, categories, records, budgets, settings] = await Promise.all([
+  const [accounts, categories, people, records, budgets, settings] = await Promise.all([
     db.getAllAsync<Account>(`SELECT * FROM accounts ORDER BY sort_order, name`),
     db.getAllAsync<Category>(`SELECT * FROM categories ORDER BY type, sort_order, name`),
+    db.getAllAsync<Person>(`SELECT * FROM people ORDER BY name`),
     db.getAllAsync<MoneyRecord>(`SELECT * FROM records ORDER BY occurred_at, id`),
     db.getAllAsync<Budget>(`SELECT * FROM budgets ORDER BY year, month, category_id`),
     db.getAllAsync<{ key: string; value: string }>(`SELECT key, value FROM settings`),
   ]);
   return {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     accounts,
     categories,
+    people,
     records,
     budgets,
     settings,
@@ -39,13 +42,14 @@ export function backupFileName() {
 }
 
 export async function restoreBackupPayload(payload: MoneyBackup): Promise<void> {
-  if (payload.version !== 1) {
+  if (payload.version !== 1 && payload.version !== 2) {
     throw new Error(`Unsupported backup version: ${String(payload.version)}`);
   }
   const db = await getDb();
   await db.withTransactionAsync(async () => {
     await db.runAsync("DELETE FROM budgets");
     await db.runAsync("DELETE FROM records");
+    await db.runAsync("DELETE FROM people");
     await db.runAsync("DELETE FROM categories");
     await db.runAsync("DELETE FROM accounts");
     await db.runAsync("DELETE FROM settings");
@@ -75,11 +79,22 @@ export async function restoreBackupPayload(payload: MoneyBackup): Promise<void> 
         c.archived ?? 0,
       );
     }
+    for (const p of payload.people ?? []) {
+      await db.runAsync(
+        `INSERT INTO people (id, name, note, archived, converted_from_account_id)
+         VALUES (?, ?, ?, ?, ?)`,
+        p.id,
+        p.name,
+        p.note ?? "",
+        p.archived ?? 0,
+        p.converted_from_account_id ?? null,
+      );
+    }
     for (const r of payload.records ?? []) {
       await db.runAsync(
         `INSERT INTO records
-           (id, type, amount, category_id, account_id, to_account_id, note, occurred_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+           (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         r.id,
         r.type,
         r.amount,
@@ -88,6 +103,8 @@ export async function restoreBackupPayload(payload: MoneyBackup): Promise<void> 
         r.to_account_id,
         r.note ?? "",
         r.occurred_at,
+        r.person_id ?? null,
+        r.person_role ?? null,
       );
     }
     for (const b of payload.budgets ?? []) {
@@ -122,6 +139,7 @@ export async function wipeData(mode: WipeMode): Promise<void> {
     }
     await db.runAsync("DELETE FROM budgets");
     await db.runAsync("DELETE FROM records");
+    await db.runAsync("DELETE FROM people");
     await db.runAsync("DELETE FROM categories");
     await db.runAsync("DELETE FROM accounts");
     if (mode === "factory") {

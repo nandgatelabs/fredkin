@@ -26,6 +26,7 @@ import {
   listAccounts,
   updateAccount,
 } from "@/db/accounts";
+import { convertAccountToPerson } from "@/db/people";
 import type { AccountWithBalance, Totals } from "@/db/types";
 import { accountIcon } from "@/lib/icons";
 import { colors } from "@/theme";
@@ -50,6 +51,7 @@ export function WalletsPane({
     account: AccountWithBalance;
     related: number;
   } | null>(null);
+  const [convertTarget, setConvertTarget] = useState<AccountWithBalance | null>(null);
   const [editor, setEditor] = useState<
     | { mode: "create" }
     | { mode: "edit"; account: AccountWithBalance }
@@ -181,6 +183,12 @@ export function WalletsPane({
                 );
             },
           },
+          {
+            label: "Convert to person",
+            onPress: () => {
+              if (menuAccount) setConvertTarget(menuAccount);
+            },
+          },
         ]}
       />
 
@@ -205,6 +213,28 @@ export function WalletsPane({
             .then(reload)
             .catch((e) =>
               setError(e instanceof Error ? e.message : "Delete failed"),
+            );
+        }}
+      />
+
+      <ConfirmModal
+        visible={convertTarget != null}
+        title="Convert to person?"
+        message={
+          convertTarget
+            ? `Create a person named “${convertTarget.name}” and ignore this wallet? Past events on the wallet stay. Tag the person on new events instead of using this wallet.`
+            : ""
+        }
+        confirmLabel="Convert"
+        onCancel={() => setConvertTarget(null)}
+        onConfirm={() => {
+          if (!convertTarget) return;
+          const id = convertTarget.id;
+          setConvertTarget(null);
+          void convertAccountToPerson(id)
+            .then(reload)
+            .catch((e) =>
+              setError(e instanceof Error ? e.message : "Convert failed"),
             );
         }}
       />

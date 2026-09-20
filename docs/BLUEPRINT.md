@@ -32,8 +32,8 @@ Persistent chrome on main tabs. **Native and web share one repo/core; shells div
 - **Native top:** **Fredkin** · oval search · header menu · plain right-edge More pill (also swipe-in from the right edge)  
 - **Native bottom:** Events · in-bar `+` · Insights  
 - **Native dismiss:** chevron **Back** when returning to a parent (More stack, wallet/type details); icon **Close** / **Discard** for sheets and modals. Stack screens opened from More (Settings, Data, …) **Back** to the drawer still open.  
-- **Web desktop:** full-bleed shell, no bottom tab bar. Header: **Fredkin** · search · period (split) · pane icons (Events / Insights / Wallets / Types) · **+** · Split · shortcuts · **More** (App only). Default **Split** with any left|right pair; details stay in-pane. Below ~900px, split falls back to single. Web dialogs use text **← BACK** / **✕ CLOSE**.  
-- **More drawer:** Manage (Wallets, Event Type) + App (Settings, Data, Support, Reset, Export Logs). Native panel is edge-flush with a rounded leading edge.
+- **Web desktop:** full-bleed shell, no bottom tab bar. Header: **Fredkin** · search · period (split) · pane icons (Events / Insights / Wallets / Types / People) · **+** · Split · shortcuts · **More** (App). Default **Split** with any left|right pair; details stay in-pane. Below ~900px, split falls back to single. Web dialogs use text **← BACK** / **✕ CLOSE**.  
+- Native More: Manage (Wallets, Event Type, People) + App (Settings, Data, Support, Reset, Export Logs). Native panel is edge-flush with a rounded leading edge.
 
 Attribution line: **Fredkin by NandGateLabs**.
 
@@ -83,7 +83,8 @@ Attribution line: **Fredkin by NandGateLabs**.
 - Custom calculator keypad: `0–9`, `.`, `+ − × ÷ =`, backspace
 - Footer: tappable date + time → calendar / clock modals
 - **New events:** reuse the last saved **date and time** (settings `lastNewEventOccurredAt`) with no month/year/age cutoff. Edit does not read/write that memory. Footer is **date · time · Today** (Today = now). Date opens a **month calendar** (tap a day; chevrons / year title to jump); time is hour grid + minutes.
-- Validation: amount > 0; **account required** (transfer: both From and To, and From ≠ To); **category optional** for income/expense
+- **Person:** one row under wallet/type (`Name · role`). Tap opens the person sheet (list + With / Gift / They owe / You owe / Settled). Notes stay the large field above the keypad — same as the original composer. IOU roles do not count as spend/income. Wallet still required. Picking a person with no event type selected attaches a default type (Social / Loan / Gift / Grants by role; first matching type if those names are missing) — user can change it.
+- Validation: amount > 0; **account required** (transfer: both From and To, and From ≠ To); **category optional** for income/expense unless a person is tagged (then a default type is attached)
 - Save: write record + update balances in one transaction
 
 ### Account picker
@@ -175,6 +176,13 @@ Refs: `private/new/account-details-period.jpeg`, `private/new/account-details-al
 
 ---
 
+## 7b. People
+
+- **Web:** People is a header pane (with Events / Insights / Wallets / Types). Person details stay in-pane.
+- **Native:** More → People.
+- List: name · IOU / spend summary · `⋯` (Edit / Delete). **+ ADD PERSON**. They-owe and you-owe both show when present (role, not spend vs income tab).
+- Convert a wallet to a person from Wallets (archives the wallet; old rows are not rewritten).
+
 ## 8. Categories
 
 - Same all-accounts summary header as Accounts.
@@ -231,7 +239,7 @@ Refs: `private/new/category-details-expense.jpeg`, `private/new/category-details
 ### Backup & Restore
 
 - **BACKUP NOW** · **RESTORE** · **SELECT/CHANGE DIRECTORY**
-- Backup includes records, categories, accounts, budgets, settings.
+- Backup includes records, categories, accounts, people, budgets, settings.
 - Restore lists `.mbak` files with modified timestamps.
 
 ### Delete & Reset
@@ -262,12 +270,13 @@ Patterns: period chevrons + filter; category = colored circle + white glyph; acc
 Columns:
 
 ```
-TIME, TYPE, AMOUNT, CATEGORY, ACCOUNT, NOTES
+TIME, TYPE, AMOUNT, CATEGORY, ACCOUNT, NOTES, PERSON, PERSON_ROLE
 ```
 
 TYPE values: `(#) Opening`, `(-) Expense`, `(+) Income`, `(*) Transfer`.  
 Transfers: `ACCOUNT` = `From->To`, category `-`.  
 Openings: `Jan 01, 2000 12:00 AM`, category `-`, note `Opening balance`.
+`PERSON` / `PERSON_ROLE` optional on import (blank = none). Roles: `with`, `gift`, `they_owe`, `you_owe`, `settled`.
 
 ### Demo fixture (safe for screenshots / demos)
 

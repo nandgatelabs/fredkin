@@ -45,7 +45,7 @@ Detailed specs: [`docs/pending/README.md`](./pending/README.md).
 | Sticky event date | Shipped — composer remembers last new-event date |
 | Wallet check + adjustment | Pending — reconcile wallet vs real cash/bank without fake spend/income |
 | Occasions | Pending — group related events (e.g. outing) |
-| People | Pending — gift vs IOU, not extra wallets |
+| People | Shipped — person on events; IOU roles; wallet → person; web People pane |
 
 ## Later / out of band
 

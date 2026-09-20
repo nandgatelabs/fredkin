@@ -8,6 +8,8 @@ import { CategoriesPane } from "@/components/categories/CategoriesPane";
 import { CategoryDetailPane } from "@/components/category/CategoryDetailPane";
 import { EventsPane } from "@/components/events/EventsPane";
 import { InsightsPane } from "@/components/insights/InsightsPane";
+import { PeoplePane } from "@/components/people/PeoplePane";
+import { PersonDetailPane } from "@/components/people/PersonDetailPane";
 import { WalletsPane } from "@/components/wallets/WalletsPane";
 import { webClickable, webFocusableProps, webTitle } from "@/lib/web";
 import {
@@ -20,6 +22,7 @@ import { colors } from "@/theme";
 type Detail =
   | { kind: "category"; id: string }
   | { kind: "account"; id: string }
+  | { kind: "person"; id: string }
   | null;
 
 type Props = {
@@ -53,6 +56,7 @@ export function PaneSlot({
 
   const goCategory = (id: string) => setDetail({ kind: "category", id });
   const goAccount = (id: string) => setDetail({ kind: "account", id });
+  const goPerson = (id: string) => setDetail({ kind: "person", id });
   const showChrome = splitChrome || onMaximize != null;
 
   return (
@@ -108,6 +112,12 @@ export function PaneSlot({
             embedded
             onClose={() => setDetail(null)}
           />
+        ) : detail?.kind === "person" ? (
+          <PersonDetailPane
+            id={detail.id}
+            embedded
+            onClose={() => setDetail(null)}
+          />
         ) : paneId === "events" ? (
           <EventsPane
             listBottomPad={24}
@@ -125,6 +135,8 @@ export function PaneSlot({
           />
         ) : paneId === "wallets" ? (
           <WalletsPane listBottomPad={40} onOpenAccount={goAccount} />
+        ) : paneId === "people" ? (
+          <PeoplePane listBottomPad={40} onOpenPerson={goPerson} />
         ) : (
           <CategoriesPane listBottomPad={40} onOpenCategory={goCategory} />
         )}

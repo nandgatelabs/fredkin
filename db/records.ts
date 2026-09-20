@@ -1,4 +1,5 @@
 import { createId } from "@/lib/id";
+import { isLifestyleRole, isPersonRole, sqlLifestyle, type PersonRole } from "@/lib/personRole";
 
 import { getDb } from "./client";
 import type { MoneyRecord, RecordType } from "./types";
@@ -11,6 +12,8 @@ export type CreateRecordInput = {
   to_account_id?: string | null;
   note?: string;
   occurred_at: string;
+  person_id?: string | null;
+  person_role?: PersonRole | null;
 };
 
 export type RecordListItem = MoneyRecord & {
@@ -20,6 +23,7 @@ export type RecordListItem = MoneyRecord & {
   account_name: string;
   account_icon_key: string;
   to_account_name: string | null;
+  person_name: string | null;
 };
 
 export type PeriodTotals = {
@@ -42,6 +46,13 @@ function validateRecordInput(input: CreateRecordInput): void {
       throw new Error("From and To accounts must be different");
     }
   }
+  const role = input.person_id ? input.person_role ?? "with" : null;
+  if (input.person_id && role && !isPersonRole(role)) {
+    throw new Error("Invalid person role");
+  }
+  if (input.type === "transfer" && role && !isLifestyleRole(role)) {
+    throw new Error("IOU roles are only for spend or income");
+  }
 }
 
 function toIsoBound(d: Date) {
@@ -59,12 +70,18 @@ export async function createRecord(input: CreateRecordInput): Promise<MoneyRecor
   const note = input.note?.trim() ?? "";
   const categoryId = input.type === "transfer" ? null : (input.category_id ?? null);
   const toAccountId = input.type === "transfer" ? (input.to_account_id ?? null) : null;
+  const personId = input.person_id ?? null;
+  const personRole = personId
+    ? input.type === "transfer" && !isLifestyleRole(input.person_role)
+      ? "with"
+      : (input.person_role ?? "with")
+    : null;
 
   await db.withTransactionAsync(async () => {
     await db.runAsync(
       `INSERT INTO records
-         (id, type, amount, category_id, account_id, to_account_id, note, occurred_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+         (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       id,
       input.type,
       input.amount,
@@ -73,6 +90,8 @@ export async function createRecord(input: CreateRecordInput): Promise<MoneyRecor
       toAccountId,
       note,
       input.occurred_at,
+      personId,
+      personRole,
     );
   });
 
@@ -85,6 +104,8 @@ export async function createRecord(input: CreateRecordInput): Promise<MoneyRecor
     to_account_id: toAccountId,
     note,
     occurred_at: input.occurred_at,
+    person_id: personId,
+    person_role: personRole,
   };
 }
 
@@ -97,11 +118,17 @@ export async function updateRecord(
   const note = input.note?.trim() ?? "";
   const categoryId = input.type === "transfer" ? null : (input.category_id ?? null);
   const toAccountId = input.type === "transfer" ? (input.to_account_id ?? null) : null;
+  const personId = input.person_id ?? null;
+  const personRole = personId
+    ? input.type === "transfer" && !isLifestyleRole(input.person_role)
+      ? "with"
+      : (input.person_role ?? "with")
+    : null;
 
   const result = await db.runAsync(
     `UPDATE records SET
        type = ?, amount = ?, category_id = ?, account_id = ?,
-       to_account_id = ?, note = ?, occurred_at = ?
+       to_account_id = ?, note = ?, occurred_at = ?, person_id = ?, person_role = ?
      WHERE id = ?`,
     input.type,
     input.amount,
@@ -110,6 +137,8 @@ export async function updateRecord(
     toAccountId,
     note,
     input.occurred_at,
+    personId,
+    personRole,
     id,
   );
   if (result.changes === 0) throw new Error("Record not found");
@@ -142,11 +171,13 @@ SELECT
   c.color AS category_color,
   a.name AS account_name,
   a.icon_key AS account_icon_key,
-  ta.name AS to_account_name
+  ta.name AS to_account_name,
+  p.name AS person_name
 FROM records r
 LEFT JOIN categories c ON c.id = r.category_id
 JOIN accounts a ON a.id = r.account_id
 LEFT JOIN accounts ta ON ta.id = r.to_account_id
+LEFT JOIN people p ON p.id = r.person_id
 `;
 
 export async function listRecordsInRange(
@@ -215,6 +246,18 @@ export async function listRecordsForCategory(
   );
 }
 
+export async function listRecordsForPerson(
+  personId: string,
+): Promise<RecordListItem[]> {
+  const db = await getDb();
+  return db.getAllAsync<RecordListItem>(
+    `${LIST_SELECT}
+     WHERE r.person_id = ?
+     ORDER BY r.occurred_at DESC, r.id DESC`,
+    personId,
+  );
+}
+
 export async function getPeriodTotals(start: Date, end: Date): Promise<PeriodTotals> {
   const db = await getDb();
   const row = await db.getFirstAsync<{ expense: number; income: number }>(
@@ -222,7 +265,8 @@ export async function getPeriodTotals(start: Date, end: Date): Promise<PeriodTot
        COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) AS expense,
        COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) AS income
      FROM records
-     WHERE occurred_at >= ? AND occurred_at <= ?`,
+     WHERE occurred_at >= ? AND occurred_at <= ?
+       AND ${sqlLifestyle()}`,
     toIsoBound(start),
     toIsoBound(end),
   );
@@ -241,7 +285,8 @@ export async function getCarryOverBefore(before: Date): Promise<number> {
        - COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) AS net
      FROM records
      WHERE occurred_at < ?
-       AND type IN ('income', 'expense')`,
+       AND type IN ('income', 'expense')
+       AND ${sqlLifestyle()}`,
     toIsoBound(before),
   );
   return row?.net ?? 0;
@@ -268,8 +313,10 @@ export async function searchRecords(query: string): Promise<RecordListItem[]> {
        OR IFNULL(c.name, '') LIKE ? COLLATE NOCASE ESCAPE '\\'
        OR a.name LIKE ? COLLATE NOCASE ESCAPE '\\'
        OR IFNULL(ta.name, '') LIKE ? COLLATE NOCASE ESCAPE '\\'
+       OR IFNULL(p.name, '') LIKE ? COLLATE NOCASE ESCAPE '\\'
      ORDER BY r.occurred_at DESC, r.id DESC
      LIMIT 500`,
+    like,
     like,
     like,
     like,

@@ -34,7 +34,7 @@ export function MoreEdge() {
       }
     });
 
-  if (open) return null;
+  if (open || pathname.startsWith("/record")) return null;
 
   return (
     <>
