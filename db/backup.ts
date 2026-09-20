@@ -3,7 +3,7 @@ import { seedDefaultsIfEmpty } from "./seed";
 import type { Account, Budget, Category, MoneyRecord, Person } from "./types";
 
 export type MoneyBackup = {
-  version: 1 | 2;
+  version: 1 | 2 | 3;
   exportedAt: string;
   accounts: Account[];
   categories: Category[];
@@ -24,7 +24,7 @@ export async function createBackupPayload(): Promise<MoneyBackup> {
     db.getAllAsync<{ key: string; value: string }>(`SELECT key, value FROM settings`),
   ]);
   return {
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
     accounts,
     categories,
@@ -42,7 +42,7 @@ export function backupFileName() {
 }
 
 export async function restoreBackupPayload(payload: MoneyBackup): Promise<void> {
-  if (payload.version !== 1 && payload.version !== 2) {
+  if (payload.version !== 1 && payload.version !== 2 && payload.version !== 3) {
     throw new Error(`Unsupported backup version: ${String(payload.version)}`);
   }
   const db = await getDb();
@@ -56,14 +56,16 @@ export async function restoreBackupPayload(payload: MoneyBackup): Promise<void> 
 
     for (const a of payload.accounts ?? []) {
       await db.runAsync(
-        `INSERT INTO accounts (id, name, icon_key, opening_balance, sort_order, archived)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO accounts (id, name, icon_key, opening_balance, sort_order, archived, last_checked_balance, last_checked_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         a.id,
         a.name,
         a.icon_key,
         a.opening_balance,
         a.sort_order,
         a.archived ?? 0,
+        a.last_checked_balance ?? null,
+        a.last_checked_at ?? null,
       );
     }
     for (const c of payload.categories ?? []) {
@@ -93,8 +95,8 @@ export async function restoreBackupPayload(payload: MoneyBackup): Promise<void> 
     for (const r of payload.records ?? []) {
       await db.runAsync(
         `INSERT INTO records
-           (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           (id, type, amount, category_id, account_id, to_account_id, note, occurred_at, person_id, person_role, is_adjustment)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         r.id,
         r.type,
         r.amount,
@@ -105,6 +107,7 @@ export async function restoreBackupPayload(payload: MoneyBackup): Promise<void> 
         r.occurred_at,
         r.person_id ?? null,
         r.person_role ?? null,
+        r.is_adjustment ? 1 : 0,
       );
     }
     for (const b of payload.budgets ?? []) {

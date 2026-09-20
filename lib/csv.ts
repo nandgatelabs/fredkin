@@ -16,6 +16,8 @@ export const CSV_TYPE_OPENING = "(#) Opening";
 export const CSV_TYPE_EXPENSE = "(-) Expense";
 export const CSV_TYPE_INCOME = "(+) Income";
 export const CSV_TYPE_TRANSFER = "(*) Transfer";
+export const CSV_TYPE_ADJUSTMENT_IN = "(~+) Adjustment";
+export const CSV_TYPE_ADJUSTMENT_OUT = "(~-) Adjustment";
 
 /** Placeholder TIME for opening-balance rows (not used as a transaction date). */
 export const CSV_OPENING_TIME = "Jan 01, 2000 12:00 AM";

@@ -11,6 +11,7 @@ Versioning follows [Semantic Versioning](https://semver.org/) — see [`docs/VER
 
 - Add-event composer remembers the last **new** event **date and time** (any month/year) until **Today**; month calendar + hour/minute pickers on web and native
 - **People:** person on an event with roles (With / Gift / They owe / You owe / Settled). IOUs do not count as spend or income. Web: People header pane. Native: More → People. Convert a wallet to a person. CSV `PERSON` / `PERSON_ROLE`; `.mbak` v2 includes people. Picking a person without an event type attaches a default type (overridable)
+- **Wallet check:** on a wallet, enter the real cash/bank balance. Absorb a gap as an Adjustment (not spend/income), or add missing events and leave an Off-by warning. Stale after 14 days. CSV `(~+)/ (~-) Adjustment`; `.mbak` v3
 - Native More: header menu, larger plain edge pill, edge swipe-in; Back from Settings/Data reopens the drawer
 - Event row swipe: right = Edit, left = Delete; in-app delete confirm
 - Verbose `__DEV__` logging trail (nav / UI); prod keeps milestones for Export Logs

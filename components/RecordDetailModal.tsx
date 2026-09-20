@@ -15,7 +15,7 @@ import {
   categoryIcon,
 } from "@/lib/icons";
 import { formatMoney } from "@/lib/money";
-import { personRoleLabel } from "@/lib/personRole";
+import { isAdjustmentFlag, personRoleLabel } from "@/lib/personRole";
 import { parseOccurredAt, signedDisplayAmount } from "@/lib/recordsUi";
 import { webClickable } from "@/lib/web";
 import { layout } from "@/theme/layout";
@@ -48,9 +48,10 @@ export function RecordDetailModal({ record, onClose, onEdit, onDelete }: Props) 
   const amount = signedDisplayAmount(record);
   const when = parseOccurredAt(record.occurred_at);
   const amountLabel =
-    record.type === "transfer"
+    record.type === "transfer" && !isAdjustmentFlag(record.is_adjustment)
       ? formatMoney(record.amount, { sign: "never" })
       : formatMoney(amount, { sign: "auto" });
+  const adj = isAdjustmentFlag(record.is_adjustment);
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
@@ -75,17 +76,19 @@ export function RecordDetailModal({ record, onClose, onEdit, onDelete }: Props) 
                 >
                   <Ionicons name="trash-outline" size={20} color={c.onAccent} />
                 </Pressable>
-                <Pressable
-                  onPress={() => onEdit(record)}
-                  hitSlop={10}
-                  style={webClickable}
-                >
-                  <Ionicons name="pencil" size={20} color={c.onAccent} />
-                </Pressable>
+                {adj ? null : (
+                  <Pressable
+                    onPress={() => onEdit(record)}
+                    hitSlop={10}
+                    style={webClickable}
+                  >
+                    <Ionicons name="pencil" size={20} color={c.onAccent} />
+                  </Pressable>
+                )}
               </View>
             </View>
             <Text style={[styles.type, { color: c.onAccent }]}>
-              {record.type.toUpperCase()}
+              {adj ? "ADJUSTMENT" : record.type.toUpperCase()}
             </Text>
             <Text style={[styles.amount, { color: c.onAccent }]}>{amountLabel}</Text>
             <Text style={[styles.when, { color: c.onAccent, opacity: 0.9 }]}>
@@ -94,7 +97,7 @@ export function RecordDetailModal({ record, onClose, onEdit, onDelete }: Props) 
           </View>
 
           <View style={[styles.body, { backgroundColor: c.dialog }]}>
-            {record.type === "transfer" ? (
+            {record.type === "transfer" && !adj ? (
               <>
                 <DetailRow
                   label="From"
@@ -130,7 +133,7 @@ export function RecordDetailModal({ record, onClose, onEdit, onDelete }: Props) 
                     record.category_color ??
                     categoryColor(record.category_icon_key ?? "pricetag")
                   }
-                  value={record.category_name ?? "Uncategorized"}
+                  value={adj ? "Wallet check" : (record.category_name ?? "Uncategorized")}
                   accent={c.accent}
                   accentMuted={c.accentMuted}
                   border={c.border}

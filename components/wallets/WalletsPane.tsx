@@ -29,6 +29,7 @@ import {
 import { convertAccountToPerson } from "@/db/people";
 import type { AccountWithBalance, Totals } from "@/db/types";
 import { accountIcon } from "@/lib/icons";
+import { walletCheckChip } from "@/lib/walletCheck";
 import { colors } from "@/theme";
 
 type Props = {
@@ -106,7 +107,9 @@ export function WalletsPane({
               />
             </View>
           }
-          renderItem={({ item }) => (
+          renderItem={({ item }) => {
+            const chip = walletCheckChip(item);
+            return (
             <View style={styles.card}>
               <Pressable
                 accessibilityRole="button"
@@ -130,6 +133,7 @@ export function WalletsPane({
                     <Text style={styles.balanceLabel}>Balance: </Text>
                     <MoneyText amount={item.balance} />
                   </View>
+                  {chip ? <Text style={styles.chip}>{chip}</Text> : null}
                 </View>
               </Pressable>
               <Pressable
@@ -146,7 +150,8 @@ export function WalletsPane({
                 />
               </Pressable>
             </View>
-          )}
+          );
+          }}
         />
       )}
 
@@ -313,6 +318,7 @@ const styles = StyleSheet.create({
   cardBody: { flex: 1, gap: 4 },
   name: { color: colors.accent, fontSize: 16, fontWeight: "500" },
   balanceRow: { flexDirection: "row", alignItems: "center" },
+  chip: { color: colors.expense, fontSize: 12, fontWeight: "600" },
   balanceLabel: { color: colors.textSecondary, fontSize: 13 },
   more: { padding: 4 },
   error: {

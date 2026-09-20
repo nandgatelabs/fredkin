@@ -82,7 +82,11 @@ export function parsePersonRole(raw: string | null | undefined): PersonRole | nu
 /** SQL predicate: counts toward SPEND/INCOME. `alias` empty = unprefixed columns. */
 export function sqlLifestyle(alias = ""): string {
   const p = alias ? `${alias}.` : "";
-  return `(${p}person_id IS NULL OR IFNULL(${p}person_role, 'with') IN ('with', 'gift'))`;
+  return `(IFNULL(${p}is_adjustment, 0) = 0 AND (${p}person_id IS NULL OR IFNULL(${p}person_role, 'with') IN ('with', 'gift')))`;
+}
+
+export function isAdjustmentFlag(value: number | boolean | null | undefined): boolean {
+  return value === 1 || value === true;
 }
 
 export type PersonClaimTotals = {

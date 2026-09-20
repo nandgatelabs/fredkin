@@ -7,7 +7,7 @@ Do not treat this as a rewrite of wallets into a double-entry graph.
 | Feature | Status | Notes |
 |---------|--------|--------|
 | Sticky event date | **Shipped (this slice)** | Composer remembers last **new** event date |
-| Wallet check + adjustment | Pending | Kill fake “balance discrepancy” income/spend |
+| Wallet check + adjustment | **Shipped (this slice)** | Reconcile vs real cash/bank without fake spend/income |
 | Occasions | Pending | Group related events (outing / trip) |
 | People (gift vs claim) | **Shipped (this slice)** | Optional person + roles; wallet convert |
 
@@ -31,13 +31,13 @@ Do not treat this as a rewrite of wallets into a double-entry graph.
 
 **Problem:** Ledger vs cash/bank drift is “fixed” with fake Refunds/Awards/Bills rows named discrepancy. That poisons Insights.
 
-**Direction:**
+**Behavior (implemented):**
 
-- On a wallet: enter **real** balance (optional as-of).
+- On a wallet: **Check wallet** — enter **real** balance (as-of date/time).
 - Show App vs Real vs Gap.
 - **Add missing events** (leave gap as a warning) or **Absorb** into an **Adjustment** that does **not** count as spend or income.
-- Store last checked balance + time; show stale / off-by chips.
-- Tiny cash gaps (e.g. under ₹5) may one-tap absorb; larger gaps should prefer logging missing events.
+- Store last checked balance + time; **Off by** / **Stale** (14 days) chips on the wallet list.
+- Tiny cash gaps (≤ ₹5) may one-tap absorb; larger gaps should prefer logging missing events.
 
 ---
 

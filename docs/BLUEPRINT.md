@@ -147,9 +147,17 @@ FAB still opens add-event.
 ## 7. Wallets
 
 - Header: `[ All Wallets ₹… ]` + **SPEND SO FAR** / **INCOME SO FAR**.
-- Card (gold border): illustrative icon · name · `Balance:` (signed color) · `⋯`.
+- Card: icon · name · `Balance:` · optional **Off by / Stale** chip · `⋯`.
 - **+ ADD NEW ACCOUNT** ghost button at list end (and FAB still available).
-- Balance = opening + income − expense ± transfers.
+- Balance = opening + income − expense ± transfers ± wallet-check adjustments (adjustments are not spend/income).
+
+### Wallet check
+
+On wallet details: **CHECK WALLET**. Enter real balance (as-of date/time). Shows App vs Real vs Gap.
+
+- **Add missing event** stores the check (gap stays a warning) and opens the composer on that wallet with the gap amount.
+- **Absorb** writes an **Adjustment** that moves the wallet but does **not** count as spend or income. Gaps of ₹5 or less may absorb in one tap; larger gaps should prefer adding events.
+- Last real balance + time stored on the wallet. List chips: **Off by** while app ≠ last real; **Stale** if the check is older than 14 days.
 
 ### Account `⋯` menu
 
@@ -240,6 +248,7 @@ Refs: `private/new/category-details-expense.jpeg`, `private/new/category-details
 
 - **BACKUP NOW** · **RESTORE** · **SELECT/CHANGE DIRECTORY**
 - Backup includes records, categories, accounts, people, budgets, settings.
+- Version 3 JSON (v1/v2 restore still work).
 - Restore lists `.mbak` files with modified timestamps.
 
 ### Delete & Reset
@@ -273,7 +282,7 @@ Columns:
 TIME, TYPE, AMOUNT, CATEGORY, ACCOUNT, NOTES, PERSON, PERSON_ROLE
 ```
 
-TYPE values: `(#) Opening`, `(-) Expense`, `(+) Income`, `(*) Transfer`.  
+TYPE values: `(#) Opening`, `(-) Expense`, `(+) Income`, `(*) Transfer`, `(~+) Adjustment`, `(~-) Adjustment`.  
 Transfers: `ACCOUNT` = `From->To`, category `-`.  
 Openings: `Jan 01, 2000 12:00 AM`, category `-`, note `Opening balance`.
 `PERSON` / `PERSON_ROLE` optional on import (blank = none). Roles: `with`, `gift`, `they_owe`, `you_owe`, `settled`.
@@ -295,6 +304,7 @@ Personal worksheets for migration testing stay under `private/` only.
 - [ ] Analysis: overview donuts, flow lines, day calendar, account bars  
 - [ ] Budgets with spent vs limit progress  
 - [ ] Account balances and lifetime expense/income headers  
+- [ ] Wallet check: real vs app, absorb Adjustment (not spend/income), Off-by / Stale chips  
 - [ ] CSV export + local backup/restore + wipe options  
 - [ ] Import `fixtures/demo_ledger_3years.csv` for demo / load testing (optional: `private/` CSV for personal migration)  
 

@@ -18,6 +18,8 @@ export type Account = {
   opening_balance: number;
   sort_order: number;
   archived: number;
+  last_checked_balance: number | null;
+  last_checked_at: string | null;
 };
 
 export type AccountWithBalance = Account & {
@@ -45,6 +47,7 @@ export type MoneyRecord = {
   occurred_at: string;
   person_id: string | null;
   person_role: PersonRole | null;
+  is_adjustment: number;
 };
 
 export type Totals = {

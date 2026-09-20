@@ -81,7 +81,8 @@ export default function ExportCsvScreen() {
       >
         <Text style={styles.body}>
           Download your ledger as a worksheet CSV (TIME, TYPE, AMOUNT, CATEGORY,
-          ACCOUNT, NOTES, optional PERSON / PERSON_ROLE).
+          ACCOUNT, NOTES, optional PERSON / PERSON_ROLE). Adjustment rows use
+          (~+) / (~-) and do not count as spend or income.
         </Text>
         <Text style={styles.body}>
           Each account’s initial (opening) balance is written as a{" "}

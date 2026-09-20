@@ -1,4 +1,5 @@
 import type { RecordListItem } from "@/db/records";
+import { isAdjustmentFlag } from "@/lib/personRole";
 
 const WEEKDAYS = [
   "Sunday",
@@ -67,6 +68,7 @@ export function groupRecordsByDate(records: RecordListItem[]) {
 }
 
 export function recordTitle(item: RecordListItem): string {
+  if (isAdjustmentFlag(item.is_adjustment)) return "Adjustment";
   if (item.type === "transfer") {
     return `${item.account_name} → ${item.to_account_name ?? "?"}`;
   }
